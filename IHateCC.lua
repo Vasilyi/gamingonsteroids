@@ -64,7 +64,6 @@ function IHateCC:LoadMenu()
   cleanseslotS = GrabSummSpell("SummonerBoost")
   if myHero.charName == "Gangplank" then
     cleanseslotS2 = _W
-	PrintChat("GP FOUND")
   elseif myHero.charName == "Olaf" then
     cleanseslotS2 = _R
   else
