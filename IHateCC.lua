@@ -42,7 +42,6 @@ function IHateCC:LoadMenu()
   cleanseslotS = GrabSummSpell("SummonerBoost")
   if myHero.charName == "Gangplank" then
     cleanseslotS2 = _W
-	PrintChat("GP FOUND")
   elseif myHero.charName == "Olaf" then
     cleanseslotS2 = _R
   else
@@ -75,7 +74,7 @@ function IHateCC:Tick()
   if self.IHateCCMenu.Enabled:Value() == false and self.IHateCCMenu.HKEnabled:Value() == false then return end
   if cleanseslotS2 and self:IsReady(cleanseslotS2) then
     cleanseslot = cleanseslotS2
-	
+
   elseif cleanseslotS and self:IsReady(cleanseslotS) then
     cleanseslot = cleanseslotS
   else
@@ -88,12 +87,12 @@ function IHateCC:Tick()
     if buff.count > 0 then
       if buff.duration>=self.IHateCCMenu.duration:Value() then
         if ((buff.type == 5 and self.IHateCCMenu.CCTypes.STUNS:Value())
-		or 	(buff.type == 7 and  self.IHateCCMenu.CCTypes.SILENCE:Value())
-		or (buff.type == 8 and  self.IHateCCMenu.CCTypes.TAUNTS:Value())
-		or (buff.type == 21 and  self.IHateCCMenu.CCTypes.FEARS:Value())
-        or (buff.type == 22 and  self.IHateCCMenu.CCTypes.CHARMS:Value()) 
-		or (buff.type == 25 and  self.IHateCCMenu.CCTypes.BLINDS:Value())
-		or (buff.type == 11 and  self.IHateCCMenu.CCTypes.ROOTS:Value())
+        or 	(buff.type == 7 and  self.IHateCCMenu.CCTypes.SILENCE:Value())
+        or (buff.type == 8 and  self.IHateCCMenu.CCTypes.TAUNTS:Value())
+        or (buff.type == 21 and  self.IHateCCMenu.CCTypes.FEARS:Value())
+        or (buff.type == 22 and  self.IHateCCMenu.CCTypes.CHARMS:Value())
+        or (buff.type == 25 and  self.IHateCCMenu.CCTypes.BLINDS:Value())
+        or (buff.type == 11 and  self.IHateCCMenu.CCTypes.ROOTS:Value())
         or (buff.type == 24 and  self.IHateCCMenu.CCTypes.SUPPRESS:Value())
         or (buff.type == 10 and  self.IHateCCMenu.CCTypes.SLOWS:Value())) then
           self:UseCleanse(cleanseslot)
