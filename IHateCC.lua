@@ -1,5 +1,5 @@
 class "IHateCC"
-
+local Scriptname,Version,Author,LVersion = "IHateCC","v1.0","TRUS","7.4"
 local function GrabSummSpell(summName)
   local retval = 0;
   local spellName = myHero:GetSpellData(SUMMONER_1).name;
@@ -21,7 +21,7 @@ function IHateCC:__init()
 end
 
 function IHateCC:LoadMenu()
-  self.IHateCCMenu = MenuElement({type = MENU, id = "IHateCCMenu", name = "IHateCC", leftIcon = "http://vignette4.wikia.nocookie.net/leagueoflegends/images/f/f9/Quicksilver_Sash_item.png"})
+  self.IHateCCMenu = MenuElement({type = MENU, id = "IHateCCMenu", name = Scriptname, leftIcon = "http://vignette4.wikia.nocookie.net/leagueoflegends/images/f/f9/Quicksilver_Sash_item.png"})
   self.IHateCCMenu:MenuElement({id = "CCTypes", name = "Control to cleanse", type = MENU})
   self.IHateCCMenu.CCTypes:MenuElement({id = "STUNS", name = "STUNS", value = true})
   self.IHateCCMenu.CCTypes:MenuElement({id = "SILENCE", name = "SILENCE", value = false})
