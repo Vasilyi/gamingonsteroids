@@ -15,6 +15,27 @@ local function GrabSummSpell(summName)
 end
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6, [_W] = HK_W, [_R] = HK_R }
 
+
+local delayedActions, delayedActionsExecuter = {}, nil
+function DelayAction(func, delay, args) --delay in seconds
+    if not delayedActionsExecuter then
+        function delayedActionsExecuter()
+            for t, funcs in pairs(delayedActions) do
+                if t <= os.clock() then
+                    for _, f in ipairs(funcs) do f.func(table.unpack(f.args or {})) end
+                    delayedActions[t] = nil
+                end
+            end
+        end
+		Callback.Add("Tick", function() delayedActionsExecuter() end)
+    end
+    local t = os.clock() + (delay or 0)
+    if delayedActions[t] then table.insert(delayedActions[t], { func = func, args = args })
+    else delayedActions[t] = { { func = func, args = args } }
+    end
+end
+
+
 function IHateCC:__init()
   self:LoadMenu()
   Callback.Add("Tick", function() self:Tick() end)
@@ -35,6 +56,7 @@ function IHateCC:LoadMenu()
   self.IHateCCMenu.CCTypes:MenuElement({id = "SUPPRESS", name = "SUPPRESS", value = true})
   self.IHateCCMenu.CCTypes:MenuElement({id = "Exhaust", name = "Exhaust", value = true})
   self.IHateCCMenu:MenuElement({id = "duration", name = "Min CC duration", value = 1.5, min = 0, max = 3, step = 0.1, identifier = ""})
+  self.IHateCCMenu:MenuElement({id = "delay", name = "Cleanse delay", value = 0, min = 0, max = 0.7, step = 0.1, identifier = ""})
 
   self.IHateCCMenu:MenuElement({id = "Enabled", name = "Always enabled", value = false})
   self.IHateCCMenu:MenuElement({id = "HKEnabled", name = "Enable when keypressed", key = 32})
@@ -42,6 +64,7 @@ function IHateCC:LoadMenu()
   cleanseslotS = GrabSummSpell("SummonerBoost")
   if myHero.charName == "Gangplank" then
     cleanseslotS2 = _W
+	PrintChat("GP FOUND")
   elseif myHero.charName == "Olaf" then
     cleanseslotS2 = _R
   else
@@ -63,7 +86,12 @@ end
 
 
 function IHateCC:UseCleanse(cleanseslot)
+local cleansedelay = self.IHateCCMenu.delay:Value()
+if cleansedelay > 0 then
+DelayAction(Control.CastSpell, cleansedelay, { keybindings[cleanseslot] }) --ForceQuit
+else
   Control.CastSpell(keybindings[cleanseslot]);
+  end
 end
 function IHateCC:IsReady(spellSlot)
   return myHero:GetSpellData(spellSlot).currentCd == 0
@@ -74,7 +102,7 @@ function IHateCC:Tick()
   if self.IHateCCMenu.Enabled:Value() == false and self.IHateCCMenu.HKEnabled:Value() == false then return end
   if cleanseslotS2 and self:IsReady(cleanseslotS2) then
     cleanseslot = cleanseslotS2
-
+	
   elseif cleanseslotS and self:IsReady(cleanseslotS) then
     cleanseslot = cleanseslotS
   else
@@ -87,12 +115,12 @@ function IHateCC:Tick()
     if buff.count > 0 then
       if buff.duration>=self.IHateCCMenu.duration:Value() then
         if ((buff.type == 5 and self.IHateCCMenu.CCTypes.STUNS:Value())
-        or 	(buff.type == 7 and  self.IHateCCMenu.CCTypes.SILENCE:Value())
-        or (buff.type == 8 and  self.IHateCCMenu.CCTypes.TAUNTS:Value())
-        or (buff.type == 21 and  self.IHateCCMenu.CCTypes.FEARS:Value())
-        or (buff.type == 22 and  self.IHateCCMenu.CCTypes.CHARMS:Value())
-        or (buff.type == 25 and  self.IHateCCMenu.CCTypes.BLINDS:Value())
-        or (buff.type == 11 and  self.IHateCCMenu.CCTypes.ROOTS:Value())
+		or 	(buff.type == 7 and  self.IHateCCMenu.CCTypes.SILENCE:Value())
+		or (buff.type == 8 and  self.IHateCCMenu.CCTypes.TAUNTS:Value())
+		or (buff.type == 21 and  self.IHateCCMenu.CCTypes.FEARS:Value())
+        or (buff.type == 22 and  self.IHateCCMenu.CCTypes.CHARMS:Value()) 
+		or (buff.type == 25 and  self.IHateCCMenu.CCTypes.BLINDS:Value())
+		or (buff.type == 11 and  self.IHateCCMenu.CCTypes.ROOTS:Value())
         or (buff.type == 24 and  self.IHateCCMenu.CCTypes.SUPPRESS:Value())
         or (buff.type == 10 and  self.IHateCCMenu.CCTypes.SLOWS:Value())) then
           self:UseCleanse(cleanseslot)
