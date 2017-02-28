@@ -5,7 +5,7 @@ Champs = {
 
   ["Aatrox"] = {
     [_Q] = { speed = 2000, delay = 0.6, range = 650, minionCollisionWidth = 250,circular = true, ignorecol = true},
-    [_E] = { speed = 1250, delay = 1, range = 1075, minionCollisionWidth = 35, ignorecol = true}
+    [_E] = { speed = 1250, delay = 0.25, range = 1075, minionCollisionWidth = 35, ignorecol = true}
   },
 
   ["Ahri"] = {
