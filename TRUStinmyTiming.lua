@@ -130,9 +130,11 @@ function OnDraw()
   for i, v in ipairs(drawobjects) do
     if GetTickCount() > v.endtick + 500 then
       table.remove(drawobjects, i)
-    elseif ((v.endtick - GetTickCount())/1000)>0 then
-      Draw.Text(string.sub(tostring((v.endtick - GetTickCount())/1000),0, 3), fontsize, v.object.pos:To2D().x, v.object.pos:To2D().y, Draw.Color(0xFFFFFFFF))
+    else
+      local bufftime = ((v.endtick - GetTickCount())/1000)
+      if bufftime>0 then
+        Draw.Text(string.sub(bufftime,0, 3), fontsize, v.object.pos:To2D().x, v.object.pos:To2D().y, Draw.Color(0xFFFFFFFF))
+      end
     end
-
   end
 end
