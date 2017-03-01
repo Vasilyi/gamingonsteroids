@@ -1,5 +1,5 @@
 class "IHateSkillshots"
-local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.0","TRUS","7.4"
+local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.1","TRUS","7.4"
 
 Champs = {
 
@@ -370,12 +370,17 @@ function IHateSkillshots:GetEnemyHeroes()
   end
   return self.EnemyHeroes
 end
+function IHateSkillshots:ValidTarget(unit,range,from)
+	from = from or myHero.pos
+	range = range or math.huge
+	return unit and unit.valid and not unit.dead and unit.visible and unit.isTargetable and GetDistanceSqr(unit.pos,from) <= range*range
+end
 
 function IHateSkillshots:GetTarget(range)
   local selected
   for i, _gameHero in ipairs(self:GetEnemyHeroes()) do
     local distance = GetDistanceSqr(_gameHero.pos)
-    if not selected or distance < value then
+    if self:ValidTarget(_gameHero,range) and (not selected or distance < value) then
       selected = _gameHero
       value = distance
     end
@@ -419,10 +424,16 @@ function IHateSkillshots:Tick()
         if (temptarget:GetCollision(spell.minionCollisionWidth,spell.speed,spell.delay)) >0 then
           return end
         end
-        local temppred = temptarget:GetPrediction(spell.speed,spell.delay)
+        local temppred = temptarget:GetPrediction(spell.speed,spell.delay/1000)
 		if temppred == nil then return end
 		
-        Control.CastSpell(castbuttons[i],temppred)
+		if spell.circular then 
+		Control.CastSpell(castbuttons[i],temppred)
+		else
+		local newpos = myHero.pos:Extended(temppred,math.random(0,spell.range))
+		Control.CastSpell(castbuttons[i],newpos)
+		end
+        
       end
     end
   end
