@@ -40,6 +40,9 @@ function WardJump:GetInventorySlotItem(itemID, target)
 	return nil
 end
 
+function WardJump:IsWrongTarget(unit)
+	return unit == nil or not unit.valid or not unit.visible or unit.dead or not unit.isTargetable
+end
 
 function WardJump:findWardNearestMouse()
 	local closestDistance, closest = math.huge, nil
@@ -47,11 +50,13 @@ function WardJump:findWardNearestMouse()
 		local object = Game.Object(i)
 		if object~=nil then
 			if object.team ~= TEAM_ENEMY then
-				if object.charName == "SightWard" or object.charName == "VisionWard" or object.charName == "YellowTrinket" and myHero.pos:DistanceTo(object.pos) < 625 then
-					local currentDistance = object.pos:DistanceTo(mousePos)
-					if currentDistance < closestDistance then
-						closestDistance = currentDistance
-						closest = object
+				if (myHero.charName ~= "LeeSin" or object.isAlly) then
+					if not self:IsWrongTarget(object) and myHero.pos:DistanceTo(object.pos) < 625 then
+						local currentDistance = object.pos:DistanceTo(mousePos)
+						if currentDistance < closestDistance then
+							closestDistance = currentDistance
+							closest = object
+						end
 					end
 				end
 			end
