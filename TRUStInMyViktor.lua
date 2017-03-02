@@ -14,6 +14,18 @@ function Viktor:__init()
 	Callback.Add("WndMsg", function() self:OnWndMsg() end)
 	
 end
+
+function Viktor:Tick()
+
+end
+
+function Viktor:Draw()
+end
+
+function Viktor:OnWndMsg(msg,key)
+
+end
+
 --[[Spells]]
 function Viktor:LoadSpells()
 	Q = {Range = 665}
@@ -109,12 +121,15 @@ function Viktor:LoadMenu()
 	
 	--[[Draw]]
 	self.Menu:MenuElement({type = MENU, id = "Draw", name = "Drawing Settings"})
-	self.Menu.Draw:MenuElement({id = "DrawQ", name = "Draw Q Range", value = true, color = Draw.Color(0)})
-	
+	self.Menu.Draw:MenuElement({id = "DrawQ", name = "Draw Q Range", value = true})
+	self.Menu.Draw:MenuElement({id = "QRangeC", name = "Q Range color", color = Draw.Color(0xBF3F3FFF)})
 	self.Menu.Draw:MenuElement({id = "DrawW", name = "Draw W Range", value = true})
+	self.Menu.Draw:MenuElement({id = "WRangeC", name = "W Range color", color = Draw.Color(0xBFBF3FFF)})
 	self.Menu.Draw:MenuElement({id = "DrawE", name = "Draw E Range", value = true})
 	self.Menu.Draw:MenuElement({id = "DrawEMax", name = "Draw E Max Range", value = true})
+		self.Menu.Draw:MenuElement({id = "ERangeC", name = "E Range color", color = Draw.Color(0x3FBFBFFF)})
 	self.Menu.Draw:MenuElement({id = "DrawR", name = "Draw R Range", value = true})
+	self.Menu.Draw:MenuElement({id = "RRangeC", name = "R Range color", color = Draw.Color(0xBF3FBFFF)})
 	
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
