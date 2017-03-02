@@ -2,8 +2,6 @@ local Scriptname,Version,Author,LVersion = "TRUSt in my Viktor","v1.0","TRUS","7
 
 class "Viktor"
 
-
-
 function Viktor:__init()
 	if myHero.charName ~= "Viktor" then return end
 	PrintChat(Scriptname.." "..Version.." - Loaded....")
@@ -15,17 +13,110 @@ function Viktor:__init()
 	
 end
 
+local InterruptSpellsList = {
+	{ charName = "Katarina", spell = _R},
+	{ charName = "Galio", spell = _R},
+	{ charName = "FiddleSticks", spell = _R},
+	{ charName = "FiddleSticks", spell = _W},
+	{ charName = "Nunu", spell = _R},
+	{ charName = "Shen", spell = _R},
+	{ charName = "Urgot", spell = _R},
+	{ charName = "Malzahar",spell = _R},
+	{ charName = "Karthus", spell = _R},
+	{ charName = "Pantheon",spell = _R, suppresed = true},
+	{ charName = "Varus", spell = _Q, suppresed = true},
+	{ charName = "Caitlyn", spell = _R, suppresed = true},
+	{ charName = "MissFortune", spell = _R},
+	{ charName = "Warwick", spell = _R, wait = true}
+}
+
+
 function Viktor:Tick()
 	
 end
 
 function Viktor:Draw()
+	if myHero.dead then return end
+	if self.Menu.Draw.DrawQ:Value() then
+		Draw.Circle(myHero.pos, Q.Range, 3, self.Menu.Draw.QRangeC:Value())
+	end
+	if self.Menu.Draw.DrawW:Value() then
+		Draw.Circle(myHero.pos, W.Range, 3, self.Menu.Draw.WRangeC:Value())
+	end
+	if self.Menu.Draw.DrawE:Value() then
+		Draw.Circle(myHero.pos, E.Range, 3, self.Menu.Draw.ERangeC:Value())
+	end
+	if self.Menu.Draw.DrawEMax:Value() then
+		Draw.Circle(myHero.pos, E.MaxRange, 3, self.Menu.Draw.ERangeC:Value())
+	end
+	if self.Menu.Draw.DrawR:Value() then
+		Draw.Circle(myHero.pos, R.Range, 3, self.Menu.Draw.RRangeC:Value())
+	end
+end
+
+function Viktor:Stunned(enemy)
+	for i = 0, enemy.buffCount do
+		local buff = enemy:GetBuff(i);
+		if (buff.type == 5 or buff.type == 11 or buff.type == 24) and buff.duration > 0.5 then
+			return true
+		end
+	end
+	return false
+end
+
+function Viktor:GetEnemyHeroes()
+	self.EnemyHeroes = {}
+	for i = 1, Game.HeroCount() do
+		local Hero = Game.Hero(i)
+		if Hero.isEnemy then
+			table.insert(self.EnemyHeroes, Hero)
+		end
+	end
+	return self.EnemyHeroes
+end
+
+function Viktor:GetImmobileTarget()
+	local GetEnemyHeroes = self:GetEnemyHeroes()
+	local Target = nil
+	for i = 1, #GetEnemyHeroes do
+		local Enemy = GetEnemyHeroes[i]
+		if Enemy and self:Stunned(Enemy) then
+			return Enemy
+		end
+	end
+	return false
 end
 
 function Viktor:OnWndMsg(msg,key)
 	
 end
 
+function Viktor:AutoW()
+	if not self.Menu.MiscMenu.autoW:Value() then return end
+	local ImmobileEnemy = self:GetImmobileTarget()
+	if ImmobileEnemy then
+		self:CastSpell(HK_W,ImmobileEnemy.pos)
+	end
+end
+function Viktor:IsReady(spellSlot)
+	return myHero:GetSpellData(spellSlot).currentCd == 0 and myHero:GetSpellData(spellSlot).level > 0
+end
+
+function Viktor:CheckMana(spellSlot)
+	return myHero:GetSpellData(spellSlot).mana < myHero.mana
+end
+
+function Viktor:CanCast(spellSlot)
+	return self:IsReady(spellSlot) and self:CheckMana(spellSlot)
+end
+
+function Viktor:AutoInterrupt()
+	if self.Menu.MiscMenu.wInterrupt:Value() and self;CanCast(_W) then
+		
+	elseif self.Menu.MiscMenu.rInterrupt:Value() and self;CanCast(_R) then
+		
+	end
+end
 --[[Spells]]
 function Viktor:LoadSpells()
 	Q = {Range = 665}
