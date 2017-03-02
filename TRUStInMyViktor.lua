@@ -55,13 +55,38 @@ function Viktor:LoadMenu()
 	self.Menu.Combo:MenuElement({id = "comboActive", name = "Combo key", key = string.byte(" ")})
 	
 	
-		--[[Harass]]
+	--[[Harass]]
 	self.Menu:MenuElement({type = MENU, id = "Harass", name = "Harass Settings"})
 	self.Menu.Harass:MenuElement({id = "harassUseQ", name = "Use Q", value = true})
 	self.Menu.Harass:MenuElement({id = "harassUseE", name = "Use W", value = true})
-	self.Menu.Harass:MenuElement({id = "harassMana", name = "Mana usage in percent:", value = 30, min = 0, max = 100, identifier = "%", leftIcon = "http://puu.sh/rUZPt/da7fadf9d1.png"})
+	self.Menu.Harass:MenuElement({id = "harassMana", name = "Mana usage in percent:", value = 30, min = 0, max = 100, identifier = "%"})
 	self.Menu.Harass:MenuElement({id = "eDistance", name = "Harass range with E", value = 1000, min = E.Range, max = E.MaxRange, step = 50, identifier = ""})
 	
+	
+	--[[WaveClear]]
+	self.Menu:MenuElement({type = MENU, id = "WaveClear", name = "WaveClear Settings"})
+	self.Menu.WaveClear:MenuElement({id = "waveUseQ", name = "Use Q", value = true})
+	self.Menu.WaveClear:MenuElement({id = "waveUseE", name = "Use W", value = true})
+	self.Menu.WaveClear:MenuElement({id = "waveMana", name = "Mana usage in percent:", value = 30, min = 0, max = 100, identifier = "%"})
+	self.Menu.WaveClear:MenuElement({id = "waveNumE", name = "Minions to hit with E", value = 2, min = 1, max = 10, step = 1, identifier = ""})
+	self.Menu.WaveClear:MenuElement({id = "waveActive", name = "WaveClear key", key = string.byte("G")})
+	self.Menu.WaveClear:MenuElement({id = "jungleActive", name = "JungleClear key", key = string.byte("G")})
+	
+	
+	--[[LastHit]]
+	self.Menu:MenuElement({type = MENU, id = "LastHit", name = "LastHit Settings"})
+	self.Menu.LastHit:MenuElement({id = "waveUseQLH", name = "Use Q for lasthit", key = string.byte("A")})
+	
+	--[[Flee]]
+	self.Menu:MenuElement({type = MENU, id = "Flee", name = "Flee Settings"})
+	self.Menu.Flee:MenuElement({id = "FleeActive", name = "Flee key", key = string.byte("A")})
+	
+	--[[MiscMenu]]
+	self.Menu:MenuElement({type = MENU, id = "MiscMenu", name = "Misc Settings"})
+	self.Menu.MiscMenu:MenuElement({id = "rInterrupt", name = "Use R to interrupt dangerous spells", value = true})
+	self.Menu.MiscMenu:MenuElement({id = "wInterrupt", name = "Use W to interrupt dangerous spells", value = true})
+	self.Menu.MiscMenu:MenuElement({id = "autoW", name = "Use W to continue CC", value = true})
+	self.Menu.MiscMenu:MenuElement({id = "miscGapcloser", name = "Use W against gapclosers", value = true})
 	
 	--[[RMenu]]
 	self.Menu:MenuElement({type = MENU, id = "RMenu", name = "R config"})
@@ -84,7 +109,8 @@ function Viktor:LoadMenu()
 	
 	--[[Draw]]
 	self.Menu:MenuElement({type = MENU, id = "Draw", name = "Drawing Settings"})
-	self.Menu.Draw:MenuElement({id = "DrawQ", name = "Draw Q Range", value = true})
+	self.Menu.Draw:MenuElement({id = "DrawQ", name = "Draw Q Range", value = true, color = Draw.Color(0)})
+	
 	self.Menu.Draw:MenuElement({id = "DrawW", name = "Draw W Range", value = true})
 	self.Menu.Draw:MenuElement({id = "DrawE", name = "Draw E Range", value = true})
 	self.Menu.Draw:MenuElement({id = "DrawEMax", name = "Draw E Max Range", value = true})
