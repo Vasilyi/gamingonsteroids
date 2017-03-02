@@ -16,14 +16,14 @@ function Viktor:__init()
 end
 
 function Viktor:Tick()
-
+	
 end
 
 function Viktor:Draw()
 end
 
 function Viktor:OnWndMsg(msg,key)
-
+	
 end
 
 --[[Spells]]
@@ -59,26 +59,26 @@ function Viktor:LoadMenu()
 	
 	--[[Combo]]
 	self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
-	self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
-	self.Menu.Combo:MenuElement({id = "comboUseW", name = "Use W", value = true})
-	self.Menu.Combo:MenuElement({id = "comboUseE", name = "Use E", value = true})
-	self.Menu.Combo:MenuElement({id = "comboUseR", name = "Use R", value = true})
+	self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true, leftIcon=Icons["Q"]})
+	self.Menu.Combo:MenuElement({id = "comboUseW", name = "Use W", value = true, leftIcon=Icons["W"]})
+	self.Menu.Combo:MenuElement({id = "comboUseE", name = "Use E", value = true, leftIcon=Icons["E"]})
+	self.Menu.Combo:MenuElement({id = "comboUseR", name = "Use R", value = true, leftIcon=Icons["R"]})
 	self.Menu.Combo:MenuElement({id = "qAuto", name = "Dont autoattack without passive", value = true})
 	self.Menu.Combo:MenuElement({id = "comboActive", name = "Combo key", key = string.byte(" ")})
 	
 	
 	--[[Harass]]
 	self.Menu:MenuElement({type = MENU, id = "Harass", name = "Harass Settings"})
-	self.Menu.Harass:MenuElement({id = "harassUseQ", name = "Use Q", value = true})
-	self.Menu.Harass:MenuElement({id = "harassUseE", name = "Use W", value = true})
+	self.Menu.Harass:MenuElement({id = "harassUseQ", name = "Use Q", value = true, leftIcon=Icons["Q"]})
+	self.Menu.Harass:MenuElement({id = "harassUseE", name = "Use W", value = true, leftIcon=Icons["E"]})
 	self.Menu.Harass:MenuElement({id = "harassMana", name = "Mana usage in percent:", value = 30, min = 0, max = 100, identifier = "%"})
 	self.Menu.Harass:MenuElement({id = "eDistance", name = "Harass range with E", value = 1000, min = E.Range, max = E.MaxRange, step = 50, identifier = ""})
 	
 	
 	--[[WaveClear]]
 	self.Menu:MenuElement({type = MENU, id = "WaveClear", name = "WaveClear Settings"})
-	self.Menu.WaveClear:MenuElement({id = "waveUseQ", name = "Use Q", value = true})
-	self.Menu.WaveClear:MenuElement({id = "waveUseE", name = "Use W", value = true})
+	self.Menu.WaveClear:MenuElement({id = "waveUseQ", name = "Use Q", value = true, leftIcon=Icons["Q"]})
+	self.Menu.WaveClear:MenuElement({id = "waveUseE", name = "Use W", value = true, leftIcon=Icons["E"]})
 	self.Menu.WaveClear:MenuElement({id = "waveMana", name = "Mana usage in percent:", value = 30, min = 0, max = 100, identifier = "%"})
 	self.Menu.WaveClear:MenuElement({id = "waveNumE", name = "Minions to hit with E", value = 2, min = 1, max = 10, step = 1, identifier = ""})
 	self.Menu.WaveClear:MenuElement({id = "waveActive", name = "WaveClear key", key = string.byte("G")})
@@ -87,7 +87,7 @@ function Viktor:LoadMenu()
 	
 	--[[LastHit]]
 	self.Menu:MenuElement({type = MENU, id = "LastHit", name = "LastHit Settings"})
-	self.Menu.LastHit:MenuElement({id = "waveUseQLH", name = "Use Q for lasthit", key = string.byte("A")})
+	self.Menu.LastHit:MenuElement({id = "waveUseQLH", name = "Use Q for lasthit", key = string.byte("A"), leftIcon=Icons["Q"]})
 	
 	--[[Flee]]
 	self.Menu:MenuElement({type = MENU, id = "Flee", name = "Flee Settings"})
@@ -95,9 +95,9 @@ function Viktor:LoadMenu()
 	
 	--[[MiscMenu]]
 	self.Menu:MenuElement({type = MENU, id = "MiscMenu", name = "Misc Settings"})
-	self.Menu.MiscMenu:MenuElement({id = "rInterrupt", name = "Use R to interrupt dangerous spells", value = true})
-	self.Menu.MiscMenu:MenuElement({id = "wInterrupt", name = "Use W to interrupt dangerous spells", value = true})
-	self.Menu.MiscMenu:MenuElement({id = "autoW", name = "Use W to continue CC", value = true})
+	self.Menu.MiscMenu:MenuElement({id = "rInterrupt", name = "R to interrupt", value = true, tooltip = "Use R to interrupt dangerous spells", leftIcon=Icons["R"]})
+	self.Menu.MiscMenu:MenuElement({id = "wInterrupt", name = "W to interrupt",tooltip = "Use W to interrupt dangerous spells", value = true, leftIcon=Icons["W"]})
+	self.Menu.MiscMenu:MenuElement({id = "autoW", name = "Use W to continue CC", value = true, leftIcon=Icons["W"]})
 	self.Menu.MiscMenu:MenuElement({id = "miscGapcloser", name = "Use W against gapclosers", value = true})
 	
 	--[[RMenu]]
@@ -121,14 +121,14 @@ function Viktor:LoadMenu()
 	
 	--[[Draw]]
 	self.Menu:MenuElement({type = MENU, id = "Draw", name = "Drawing Settings"})
-	self.Menu.Draw:MenuElement({id = "DrawQ", name = "Draw Q Range", value = true})
+	self.Menu.Draw:MenuElement({id = "DrawQ", name = "Draw Q Range", value = true, leftIcon=Icons["Q"]})
 	self.Menu.Draw:MenuElement({id = "QRangeC", name = "Q Range color", color = Draw.Color(0xBF3F3FFF)})
-	self.Menu.Draw:MenuElement({id = "DrawW", name = "Draw W Range", value = true})
+	self.Menu.Draw:MenuElement({id = "DrawW", name = "Draw W Range", value = true, leftIcon=Icons["W"]})
 	self.Menu.Draw:MenuElement({id = "WRangeC", name = "W Range color", color = Draw.Color(0xBFBF3FFF)})
-	self.Menu.Draw:MenuElement({id = "DrawE", name = "Draw E Range", value = true})
+	self.Menu.Draw:MenuElement({id = "DrawE", name = "Draw E Range", value = true, leftIcon=Icons["E"]})
 	self.Menu.Draw:MenuElement({id = "DrawEMax", name = "Draw E Max Range", value = true})
-		self.Menu.Draw:MenuElement({id = "ERangeC", name = "E Range color", color = Draw.Color(0x3FBFBFFF)})
-	self.Menu.Draw:MenuElement({id = "DrawR", name = "Draw R Range", value = true})
+	self.Menu.Draw:MenuElement({id = "ERangeC", name = "E Range color", color = Draw.Color(0x3FBFBFFF)})
+	self.Menu.Draw:MenuElement({id = "DrawR", name = "Draw R Range", value = true, leftIcon=Icons["R"]})
 	self.Menu.Draw:MenuElement({id = "RRangeC", name = "R Range color", color = Draw.Color(0xBF3FBFFF)})
 	
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
