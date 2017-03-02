@@ -40,7 +40,7 @@ function TwistedFate:LoadMenu()
 	self.Menu.CardPicker:MenuElement({id = "GoldCard", name = "Gold", leftIcon=Icons["Gold"], key = string.byte(" ")})
 	self.Menu.CardPicker:MenuElement({id = "RedCard", name = "Red", leftIcon=Icons["Red"], key = string.byte("T")})
 	self.Menu.CardPicker:MenuElement({id = "BlueCard", name = "Blue",leftIcon=Icons["Blue"], key = string.byte("E")})
-	self.Menu.CardPicker:MenuElement({id = "UseQ", name = "Use Q",leftIcon=Icons["Q"], key = string.byte("Z")})
+	self.Menu:MenuElement({id = "UseQ", name = "Use Q",leftIcon=Icons["Q"], key = string.byte("Z")})
 	
 	
 	self.Menu:MenuElement({id = "AutoQ", name = "AutoQ on immobile", value = true})
@@ -52,24 +52,27 @@ function TwistedFate:LoadMenu()
 	self.Menu.Draw:MenuElement({id = "DrawRMinimap", name = "Draw R Range on minimap", value = true})
 	
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
-	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 250, min = 0, max = 1000, step = 50, identifier = ""})
+	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 end
---[[Update]]
+
 function TwistedFate:Tick()
 	if myHero.dead then return end
 	
-	if self:CanCast(_Q) and self.Menu.AutoQ:Value() then
-		
-		local immobiletarget = self:GetImmobileTarget()
-		if immobiletarget and self:IsValidTarget(immobiletarget,Q.Range) then
-			self:CastQ(immobiletarget)
+	if self:CanCast(_Q) then 
+		if self.Menu.AutoQ:Value() then
+			local immobiletarget = self:GetImmobileTarget()
+			if immobiletarget and self:IsValidTarget(immobiletarget,Q.Range) then
+				self:CastQ(immobiletarget)
+			end
+		end
+		if self.Menu.UseQ:Value() then
+			self:CastQ()
 		end
 	end
-	
 	WName = myHero:GetSpellData(_W).name
 	
 	if (ToSelect == "GOLD" and WName == "GoldCardLock")
@@ -124,7 +127,7 @@ end
 
 --[[CastQ]]
 function TwistedFate:CastQ(target)
-	local target = self:GetTarget(Q.range)
+	local target = target or self:GetTarget(Q.range)
 	if target and self:CanCast(_Q) and self:IsValidTarget(target, Q.Range, false, myHero.pos) then
 		local qTarget = self:GetTarget(Q.Range)
 		if qTarget then
