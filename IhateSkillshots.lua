@@ -318,7 +318,7 @@ function IHateSkillshots:__init()
 	-- self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
-	-- Callback.Add("Draw", function() self:Draw() end)
+	--Callback.Add("Draw", function() self:Draw() end)
 	--Callback.Add("WndMsg", function() self:OnWndMsg() end)
 	
 end
@@ -341,7 +341,7 @@ function IHateSkillshots:LoadMenu()
 		self.Menu.Skillshots:MenuElement({id = str[i], name = "Use"..str[i], key = keybindings[i]})
 	end
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
-	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 250, min = 0, max = 1000, step = 50, identifier = ""})
+	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
@@ -412,8 +412,20 @@ end
 
 
 local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
+
+
+function ReturnCursor(pos)
+	Control.SetCursorPos(pos)
+	castSpell.state = 0
+end
+
+function LeftClick(pos)
+	Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
+	Control.mouse_event(MOUSEEVENTF_LEFTUP)
+	DelayAction(ReturnCursor,0.05,{pos})
+end
+
 function IHateSkillshots:CastSpell(spell,pos)
-	
 	local customcast = self.Menu.CustomSpellCast:Value()
 	if not customcast then
 		Control.CastSpell(spell, pos)
@@ -421,7 +433,7 @@ function IHateSkillshots:CastSpell(spell,pos)
 	else
 		local delay = self.Menu.delay:Value()
 		local ticker = GetTickCount()
-		if castSpell.state == 0 and ticker - castSpell.casting > delay + Game.Latency() then
+		if castSpell.state == 0 then
 			castSpell.state = 1
 			castSpell.mouse = mousePos
 			castSpell.tick = ticker
@@ -431,19 +443,8 @@ function IHateSkillshots:CastSpell(spell,pos)
 				Control.SetCursorPos(pos)
 				Control.KeyDown(spell)
 				Control.KeyUp(spell)
-				Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
-				Control.mouse_event(MOUSEEVENTF_LEFTUP)
+				DelayAction(LeftClick,delay/1000,{castSpell.mouse})
 				castSpell.casting = ticker + delay
-				DelayAction(function()
-					if castSpell.state == 1 then
-						Control.SetCursorPos(castSpell.mouse)
-						castSpell.state = 0
-					end
-				end,Game.Latency()/1000)
-			end
-			if ticker - castSpell.casting > Game.Latency() then
-				Control.SetCursorPos(castSpell.mouse)
-				castSpell.state = 0
 			end
 		end
 	end
@@ -462,7 +463,7 @@ function IHateSkillshots:Tick()
 				return end
 			end
 			local temppred = temptarget:GetPrediction(spell.speed,spell.delay/1000)
-			if temppred == nil then return end
+			if temppred == nil or GetDistance(temppred)>spell.range then return end
 			
 			if spell.circular then 
 				self:CastSpell(castbuttons[i],temppred)
@@ -474,7 +475,6 @@ function IHateSkillshots:Tick()
 		end
 	end
 end
-
 
 function OnLoad()
 	IHateSkillshots()

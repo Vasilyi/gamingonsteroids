@@ -81,9 +81,22 @@ function TwistedFate:Tick()
 	
 end
 
+
 local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
+
+
+function ReturnCursor(pos)
+	Control.SetCursorPos(pos)
+	castSpell.state = 0
+end
+
+function LeftClick(pos)
+	Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
+	Control.mouse_event(MOUSEEVENTF_LEFTUP)
+	DelayAction(ReturnCursor,0.05,{pos})
+end
+
 function TwistedFate:CastSpell(spell,pos)
-	
 	local customcast = self.Menu.CustomSpellCast:Value()
 	if not customcast then
 		Control.CastSpell(spell, pos)
@@ -91,7 +104,7 @@ function TwistedFate:CastSpell(spell,pos)
 	else
 		local delay = self.Menu.delay:Value()
 		local ticker = GetTickCount()
-		if castSpell.state == 0 and ticker - castSpell.casting > delay + Game.Latency() then
+		if castSpell.state == 0 then
 			castSpell.state = 1
 			castSpell.mouse = mousePos
 			castSpell.tick = ticker
@@ -101,19 +114,8 @@ function TwistedFate:CastSpell(spell,pos)
 				Control.SetCursorPos(pos)
 				Control.KeyDown(spell)
 				Control.KeyUp(spell)
-				Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
-				Control.mouse_event(MOUSEEVENTF_LEFTUP)
+				DelayAction(LeftClick,delay/1000,{castSpell.mouse})
 				castSpell.casting = ticker + delay
-				DelayAction(function()
-					if castSpell.state == 1 then
-						Control.SetCursorPos(castSpell.mouse)
-						castSpell.state = 0
-					end
-				end,Game.Latency()/1000)
-			end
-			if ticker - castSpell.casting > Game.Latency() then
-				Control.SetCursorPos(castSpell.mouse)
-				castSpell.state = 0
 			end
 		end
 	end
@@ -276,21 +278,24 @@ local lastpick = 0
 function TwistedFate:OnWndMsg(key, param)
 	WName = myHero:GetSpellData(_W).name
 	if (self:CanCast(_W)) and WName == "PickACard" and GetTickCount() > lastpick + 200 then
-		lastpick = GetTickCount()
+		
 		if self.Menu.CardPicker.GoldCard:Value() then
 			--PrintChat("gold")
 			ToSelect = "GOLD"
 			Control.CastSpell(HK_W)
+			lastpick = GetTickCount()
 		end
 		if self.Menu.CardPicker.RedCard:Value() then
 			--PrintChat("red")
 			ToSelect = "RED"
 			Control.CastSpell(HK_W)
+			lastpick = GetTickCount()
 		end
 		if self.Menu.CardPicker.BlueCard:Value() then
 			--PrintChat("blue")
 			ToSelect = "BLUE"
 			Control.CastSpell(HK_W)
+			lastpick = GetTickCount()
 		end
 	end
 end
