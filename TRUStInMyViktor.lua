@@ -215,8 +215,9 @@ end
 
 function Viktor:CastE(target)
 	local pos1,pos2 = CalcEPos(target)
-	
-	
+	if pos1 and pos2 then 
+		self:CastESpell(pos1, pos2)
+	end
 end
 
 
@@ -400,11 +401,49 @@ function ReturnCursor(pos)
 	castSpell.state = 0
 end
 
+function SecondPosE(pos)
+	Control.SetCursorPos(pos)
+	Control.KeyUp(HK_E)
+	Control.mouse_event(MOUSEEVENTF_LEFTUP)
+end
+
+
+function LeftClickE(returnpos, laserpos))
+	Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
+	DelayAction(SecondPosE,0.01,{laserpos})
+	DelayAction(SecondPosE,0.05,{returnpos})
+end
+
 function LeftClick(pos)
 	Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
 	Control.mouse_event(MOUSEEVENTF_LEFTUP)
 	DelayAction(ReturnCursor,0.05,{pos})
 end
+
+function Viktor:CastESpell(pos1, pos2)
+	local customcast = self.Menu.CustomSpellCast:Value()
+	if not customcast then
+		Control.CastSpell(HK_E, pos1)
+		return
+	else
+		local delay = self.Menu.delay:Value()
+		local ticker = GetTickCount()
+		if castSpell.state == 0 then
+			castSpell.state = 1
+			castSpell.mouse = mousePos
+			castSpell.tick = ticker
+		end
+		if castSpell.state == 1 then
+			if ticker - castSpell.tick < Game.Latency() then
+				Control.SetCursorPos(pos1)
+				Control.KeyDown(HK_E)
+				DelayAction(LeftClickE,delay/1000,{castSpell.mouse,pos2})
+				castSpell.casting = ticker + delay
+			end
+		end
+	end
+end
+
 
 function Viktor:CastSpell(spell,pos)
 	local customcast = self.Menu.CustomSpellCast:Value()
