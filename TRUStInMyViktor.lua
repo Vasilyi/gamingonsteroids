@@ -180,6 +180,7 @@ function Viktor:CalcMagicalDamage(source, target, amount)
 end
 function Viktor:IsValidTarget(unit, range, checkTeam, from)
 	local range = range == nil and math.huge or range
+	if GetDistance(unit)>range then return false end 
 	if unit == nil or not unit.valid or not unit.visible or unit.dead or not unit.isTargetable or (checkTeam and unit.isAlly) then
 		return false
 	end
@@ -205,17 +206,22 @@ function Viktor:GetETargets()
 	self.outertargets = {}
 	for i, _gameHero in ipairs(self:GetEnemyHeroes()) do
 		if self:IsValidTarget(_gameHero,E.Range) then
-			table.insert(self.innertargets, Hero)
-		elseif self:IsValidTarget(_gameHero,E.Range) then
-			table.insert(self.outertargets, Hero)
+			table.insert(self.innertargets, _gameHero)
+		elseif self:IsValidTarget(_gameHero,E.MaxRange) then
+			table.insert(self.outertargets, _gameHero)
 		end
 	end
 	return self.innertargets,self.outertargets
 end
-
+drawpos1 = {0,0,0}
+drawpos2 = {0,0,0}
 function Viktor:CastE(target)
-	local pos1,pos2 = CalcEPos(target)
+	local pos1,pos2 = self:CalcEPos(target)
+	
 	if pos1 and pos2 then 
+		drawpos1 = pos1
+		drawpos2 = pos2
+		--	PrintChat("both pos")
 		self:CastESpell(pos1, pos2)
 	end
 end
@@ -227,24 +233,23 @@ function Viktor:CalcEPos(target)
 	local innertargets, outertargets = self:GetETargets()
 	local innerminions = self:GetEnemyMinions(E.Range)
 	local outerminions = self:GetEnemyMinions(E.MaxRange)
-	local pos1, pos2, sourcepos, startPoint
+	local pos1, pos2, sourcepos, startPoint, predictedminion
 	local closetopredict = {}
 	local firsttargetminion = {}
 	-- check if main target in close range
 	local inRange = self:IsValidTarget(target,E.Range)
 	local startradius = 150
 	local closetopredictionhero
+	local espeed = E.Speed * 0.90
 	local predictmaintarget = target:GetPrediction(espeed, E.Delay)
 	if inRange then 
-		local espeed = E.Speed * 0.90
-		
-		
 		--prediction in range
 		if GetDistance(predictmaintarget) < E.Range then 
 			pos1 = predictmaintarget
 		else
 			pos1 = target.pos
 		end
+		
 		-- Set new sourcePosition
 		sourcepos = pos1;
 		--get next target
@@ -253,30 +258,53 @@ function Viktor:CalcEPos(target)
 				-- should be new predict source
 				local newpred = outtarg:GetPrediction(espeed, E.Delay)
 				if GetDistance(newpred,predictmaintarget) < E.length then
+					
 					table.insert(closetopredict, outtarg)
 				end
 			end
-			
-			if #closetopredict > 0 then
-				for i, closetopredicthero in ipairs(closetopredict) do
-					local health = closetopredicthero.health * (100 / self:CalcMagicalDamage(myHero,closetopredicthero, 100))
-					if self:IsValidTarget(closetopredicthero,range) and (not closetopredictionhero or health < value) then
-						closetopredictionhero = closetopredicthero
-						value = health
-					end
-					
-				end
-				pos2 = closetopredictionhero:GetPrediction(espeed, E.Delay)
-				return pos1,pos2
-			end
-			
 		end
+		if #innertargets > 0 then
+			for i, inntarg in ipairs(innertargets) do
+				-- should be new predict source
+				local newpred = inntarg:GetPrediction(espeed, E.Delay)
+				if GetDistance(newpred,predictmaintarget) < E.length then
+					table.insert(closetopredict, inntarg)
+				end
+			end
+		end 
+		
+		
+		if #closetopredict > 0 then
+			for i, closetopredicthero in ipairs(closetopredict) do
+				local health = closetopredicthero.health * (100 / self:CalcMagicalDamage(myHero,closetopredicthero, 100))
+				if (not closetopredictionhero or health < value) and closetopredicthero ~= target then
+					closetopredictionhero = closetopredicthero
+					value = health
+				end
+				
+			end
+		end
+		if closetopredictionhero then 
+			pos2 = closetopredictionhero:GetPrediction(espeed, E.Delay)
+		else
+			pos2 = pos1
+		end
+		
+		return pos1,pos2
 	else
 		-- Get initial start point at the border of cast radius
-		startPoint = myHero.pos + (target.pos - myHero.pos):Normalized * E.Range
-		
+		startPoint = myHero.pos:Extended(predictmaintarget,E.Range)
 		-- potential start target from position
 		if #innertargets > 0 then
+			for i, innertarg in ipairs(innertargets) do
+				-- should be new predict source
+				local newpred = innertarg:GetPrediction(espeed, E.Delay)
+				if GetDistance(newpred,predictmaintarget) < E.length and GetDistance(newpred)<E.Range then
+					table.insert(closetopredict, innertarg)
+				end
+			end
+			
+			
 			for i, innertarg in ipairs(outertargets) do
 				-- should be new predict source
 				local newpred = innertarg:GetPrediction(espeed, E.Delay)
@@ -289,27 +317,36 @@ function Viktor:CalcEPos(target)
 			if #closetopredict > 0 then
 				for i, closetopredicthero in ipairs(closetopredict) do
 					local health = closetopredicthero.health * (100 / self:CalcMagicalDamage(myHero,closetopredicthero, 100))
-					if self:IsValidTarget(closetopredicthero,range) and (not closetopredictionhero or health < value) then
+					if self:IsValidTarget(closetopredicthero,range) and (not closetopredictionhero or health < value) and closetopredicthero ~= target then
 						closetopredictionhero = closetopredicthero
 						value = health
 					end
 					
 				end
+				
+			end
+			if closetopredictionhero then 
 				pos2 = closetopredictionhero:GetPrediction(espeed, E.Delay)
-				return pos2,predictmaintarget
+			else
+				return startPoint,predictmaintarget
 			end
 			--start from minion
 		else
 			if #innerminions > 0 then
 				for i, closetopredictminion in ipairs(innerminions) do
 					if GetDistance(closetopredictminion,predictmaintarget) < E.length then
-						pos1 = closetopredictminion
+						predictedminion = closetopredictminion
 					end
 					
 				end
 			end
 			
 			
+		end
+		if predictedminion then 
+			pos2 = predictedminion.pos
+		else
+			return startPoint,predictmaintarget
 		end
 		return pos2,predictmaintarget
 	end
@@ -354,6 +391,11 @@ function Viktor:Draw()
 	if self.Menu.Draw.DrawR:Value() then
 		Draw.Circle(myHero.pos, R.Range, 3, self.Menu.Draw.RRangeC:Value())
 	end
+	if drawpos1 and drawpos2 then 
+		Draw.Circle(drawpos1, 80, 3, self.Menu.Draw.RRangeC:Value())
+		Draw.Circle(drawpos2, 80, 3, self.Menu.Draw.RRangeC:Value())
+	end
+	
 end
 
 function Viktor:Stunned(enemy)
@@ -408,12 +450,6 @@ function SecondPosE(pos)
 end
 
 
-function LeftClickE(returnpos, laserpos))
-	Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
-	DelayAction(SecondPosE,0.01,{laserpos})
-	DelayAction(SecondPosE,0.05,{returnpos})
-end
-
 function LeftClick(pos)
 	Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
 	Control.mouse_event(MOUSEEVENTF_LEFTUP)
@@ -423,7 +459,7 @@ end
 function Viktor:CastESpell(pos1, pos2)
 	local customcast = self.Menu.CustomSpellCast:Value()
 	if not customcast then
-		Control.CastSpell(HK_E, pos1)
+		Control.CastSpell(spell, pos)
 		return
 	else
 		local delay = self.Menu.delay:Value()
@@ -437,7 +473,9 @@ function Viktor:CastESpell(pos1, pos2)
 			if ticker - castSpell.tick < Game.Latency() then
 				Control.SetCursorPos(pos1)
 				Control.KeyDown(HK_E)
-				DelayAction(LeftClickE,delay/1000,{castSpell.mouse,pos2})
+				Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
+				DelayAction(SecondPosE,0.05,{pos2})
+				DelayAction(ReturnCursor,delay/1000+0.05,{castSpell.mouse})
 				castSpell.casting = ticker + delay
 			end
 		end
@@ -490,7 +528,7 @@ end
 function GetDistanceSqr(p1, p2)
 	assert(p1, "GetDistance: invalid argument: cannot calculate distance to "..type(p1))
 	p2 = p2 or myHero.pos
-	
+	p1 = p1.x and p1 or p1.pos
 	return (p1.x - p2.x) ^ 2 + ((p1.z or p1.y) - (p2.z or p2.y)) ^ 2
 end
 
