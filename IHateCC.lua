@@ -109,7 +109,7 @@ function IHateCC:Tick()
     return
   end
 
-  for i = 0, 63 do
+  for i = 0, myHero.buffCount do
     local buff = myHero:GetBuff(i);
     if buff.count > 0 then
       if buff.duration>=self.IHateCCMenu.duration:Value() then

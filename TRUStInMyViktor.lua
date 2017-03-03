@@ -27,7 +27,6 @@ local InterruptSpellsList = {
 	["Varus"] = { spell = _Q, suppresed = true},
 	["Caitlyn"] = { spell = _R, suppresed = true},
 	["MissFortune"] = { spell = _R},
-	["Viktor"] = { spell = _Q},
 	["Warwick"] = { spell = _R, wait = true}
 }
 
@@ -75,6 +74,87 @@ function Viktor:ProcessSpellCallback()
 end
 function Viktor:Tick()
 	self:ProcessSpellCallback()
+	if 	self.Menu.Flee.FleeActive:Value() then
+		self:Flee()
+	end
+end
+
+function Viktor:HasBuff(unit, buffname)
+	for K, Buff in pairs(self:GetBuffs(unit)) do
+		if Buff.name:lower() == buffname:lower() then
+			return true
+		end
+	end
+	return false
+end
+
+function Viktor:GetBuffs(unit)
+	self.T = {}
+	for i = 0, unit.buffCount do
+		local Buff = unit:GetBuff(i)
+		if Buff.count > 0 then
+			table.insert(self.T, Buff)
+		end
+	end
+	return self.T
+end
+
+function Viktor:ClosestEnemy()
+	local selected
+	local selected2
+	local value
+	local value2
+	for i, _gameHero in ipairs(self:GetEnemyHeroes()) do
+		local distance = GetDistance(_gameHero.pos)
+		if _gameHero:IsValidTarget(Q.Range) and (not selected or distance < value) then
+			selected = _gameHero
+			value = distance
+		end
+		
+	end
+	
+	
+	for i, _minion in ipairs(self:GetEnemyMinions()) do
+		local distance = GetDistance(_minion.pos)
+		PrintChat(distance)
+		if _minion:IsValidTarget(Q.Range) and (not selected2 or distance < value2) then
+			selected2 = _minion
+			value2 = distance
+		end
+		
+	end
+	if value and value2 then
+		if value > value2 then 
+			return selected2
+		else
+			return selected1
+		end
+	elseif value and not value2 then
+		return selected1
+	elseif value2 and not value then
+		PrintChat("LOL")
+		return selected2
+	end
+end
+
+function Viktor:Flee()
+	if self:CanCast(_Q) and self:HasBuff(myHero,"viktorqeaug") or self:HasBuff(myHero,"viktorqeaug") or self:HasBuff(myHero,"viktorqwaug") or self:HasBuff(myHero,"viktorqweaug") then 
+		local closestenemy = self:ClosestEnemy()
+		if closestenemy and closestenemy.valid then
+			self:CastSpell(HK_Q,closestenemy.pos)
+		end
+	end
+end
+function Viktor:RSolo(target)
+	if self.Menu.RSolo["RU"..target.charName]:Value() then
+		self:CastSpell(HK_R,target.pos)
+	end
+end
+
+function Viktor:UltControl(target)
+	if myHero:GetSpellData(_R).name == "viktorchaosstormguide" then
+		self:CastSpell(HK_R,target.pos)
+	end
 end
 
 function Viktor:Draw()
@@ -202,7 +282,7 @@ end
 function Viktor:AutoInterrupt(target)
 	if self.Menu.MiscMenu.wInterrupt:Value() and self:CanCast(_W) and GetDistance(target.pos)<W.Range then
 		self:CastSpell(HK_W,target.pos)
-	elseif self.Menu.MiscMenu.rInterrupt:Value() and self:CanCast(_R) and GetDistance(target.pos)<R.Range then
+	elseif self.Menu.MiscMenu.rInterrupt:Value() and self:CanCast(_R) and GetDistance(target.pos)<R.Range and myHero:GetSpellData(_R).name ~= "viktorchaosstormguide" then
 		self:CastSpell(HK_R,target.pos)
 	end
 end
@@ -231,6 +311,18 @@ function Viktor:GetEnemyHeroes()
 		end
 	end
 	return self.EnemyHeroes
+end
+
+
+function Viktor:GetEnemyMinions()
+	self.EnemyMinions = {}
+	for i = 1, Game.MinionCount() do
+		local minion = Game.Minion(i)
+		if minion.isEnemy then
+			table.insert(self.EnemyMinions, minion)
+		end
+	end
+	return self.EnemyMinions
 end
 
 function Viktor:LoadMenu()
