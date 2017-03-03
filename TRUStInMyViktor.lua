@@ -127,12 +127,11 @@ function Viktor:ClosestEnemy()
 		if value > value2 then 
 			return selected2
 		else
-			return selected1
+			return selected
 		end
 	elseif value and not value2 then
-		return selected1
+		return selected
 	elseif value2 and not value then
-		PrintChat("LOL")
 		return selected2
 	end
 end
