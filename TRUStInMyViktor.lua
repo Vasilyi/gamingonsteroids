@@ -10,6 +10,7 @@ function Viktor:__init()
 	Callback.Add("Tick", function() self:Tick() end)
 	Callback.Add("Draw", function() self:Draw() end)
 	Callback.Add("WndMsg", function() self:OnWndMsg() end)
+	self:ProcessSpellsLoad()
 	
 end
 
@@ -30,9 +31,44 @@ local InterruptSpellsList = {
 	{ charName = "Warwick", spell = _R, wait = true}
 }
 
+local spellslist = {_Q,_W,_E,_R,SUMMONER_1,SUMMONER_2}
+lastcallback = {}
 
+
+function ReturnState(champion,spell)
+	lastcallback[champion.charName..spell.name] = false
+end
+
+function Viktor:OnProcessSpell(champion,spell)
+	PrintChat(champion.charName.." casted: "..spell.name)
+end
+
+function Viktor:ProcessSpellsLoad()
+	for i, spell in pairs(spellslist) do
+		local tempname = myHero.charName
+		lastcallback[tempname..myHero:GetSpellData(spell).name] = false
+	end
+end
+
+function Viktor:ProcessSpellCallback()
+	for i = 1, Game.HeroCount() do
+		local Hero = Game.Hero(i)
+		if Hero.valid then
+			for i, spell in pairs(spellslist) do
+				local tempname = Hero.charName
+				local spelldata = Hero:GetSpellData(spell)
+				if spelldata.castTime > Game.Timer() and 
+				not lastcallback[tempname..spelldata.name] then
+					self:OnProcessSpell(Hero,spelldata)
+					lastcallback[tempname..spelldata.name] = true
+					DelayAction(ReturnState,spelldata.currentCd,{Hero,spelldata})
+				end		
+			end
+		end
+	end
+end
 function Viktor:Tick()
-	
+	self:ProcessSpellCallback()
 end
 
 function Viktor:Draw()
@@ -111,9 +147,9 @@ function Viktor:CanCast(spellSlot)
 end
 
 function Viktor:AutoInterrupt()
-	if self.Menu.MiscMenu.wInterrupt:Value() and self;CanCast(_W) then
+	if self.Menu.MiscMenu.wInterrupt:Value() and self:CanCast(_W) then
 		
-	elseif self.Menu.MiscMenu.rInterrupt:Value() and self;CanCast(_R) then
+	elseif self.Menu.MiscMenu.rInterrupt:Value() and self:CanCast(_R) then
 		
 	end
 end
@@ -202,8 +238,10 @@ function Viktor:LoadMenu()
 	self.Menu.RSolo:MenuElement({id = "forceR", name = "Force R on target",leftIcon=Icons["R"], key = string.byte("T")})
 	self.Menu.RSolo:MenuElement({id = "rLastHit", name = "1 target ulti", value = true})
 	for i, hero in pairs(self:GetEnemyHeroes()) do
-		self.Menu.RSolo:MenuElement({id = "RU" + hero.ChampionName, name = "Use R on: " + hero.ChampionName, value = true})
+		self.Menu.RSolo:MenuElement({id = "RU"..hero.charName, name = "Use R on: "..hero.charName, value = true})
 	end
+	
+	
 	
 	
 	-- { "1 target", "2 targets", "3 targets", "4 targets", "5 targets" })
