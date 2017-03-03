@@ -201,18 +201,117 @@ function Viktor:GetSpellTarget(range)
 end
 
 function Viktor:GetETargets()
+	self.innertargets = {}
+	self.outertargets = {}
 	for i, _gameHero in ipairs(self:GetEnemyHeroes()) do
-		if self:IsValidTarget(_gameHero,E.MaxRange) then
-			table.insert(self.eTargets, Hero)
+		if self:IsValidTarget(_gameHero,E.Range) then
+			table.insert(self.innertargets, Hero)
+		elseif self:IsValidTarget(_gameHero,E.Range) then
+			table.insert(self.outertargets, Hero)
 		end
 	end
-	return self.eTargets
+	return self.innertargets,self.outertargets
 end
 
 function Viktor:CastE(target)
+	local pos1,pos2 = CalcEPos(target)
 	
-	local etargets = self:GetETargets()
 	
+end
+
+
+function Viktor:CalcEPos(target)
+	
+	--build tables with targets
+	local innertargets, outertargets = self:GetETargets()
+	local innerminions = self:GetEnemyMinions(E.Range)
+	local outerminions = self:GetEnemyMinions(E.MaxRange)
+	local pos1, pos2, sourcepos, startPoint
+	local closetopredict = {}
+	local firsttargetminion = {}
+	-- check if main target in close range
+	local inRange = self:IsValidTarget(target,E.Range)
+	local startradius = 150
+	local closetopredictionhero
+	local predictmaintarget = target:GetPrediction(espeed, E.Delay)
+	if inRange then 
+		local espeed = E.Speed * 0.90
+		
+		
+		--prediction in range
+		if GetDistance(predictmaintarget) < E.Range then 
+			pos1 = predictmaintarget
+		else
+			pos1 = target.pos
+		end
+		-- Set new sourcePosition
+		sourcepos = pos1;
+		--get next target
+		if #outertargets > 0 then
+			for i, outtarg in ipairs(outertargets) do
+				-- should be new predict source
+				local newpred = outtarg:GetPrediction(espeed, E.Delay)
+				if GetDistance(newpred,predictmaintarget) < E.length then
+					table.insert(closetopredict, outtarg)
+				end
+			end
+			
+			if #closetopredict > 0 then
+				for i, closetopredicthero in ipairs(closetopredict) do
+					local health = closetopredicthero.health * (100 / self:CalcMagicalDamage(myHero,closetopredicthero, 100))
+					if self:IsValidTarget(closetopredicthero,range) and (not closetopredictionhero or health < value) then
+						closetopredictionhero = closetopredicthero
+						value = health
+					end
+					
+				end
+				pos2 = closetopredictionhero:GetPrediction(espeed, E.Delay)
+				return pos1,pos2
+			end
+			
+		end
+	else
+		-- Get initial start point at the border of cast radius
+		startPoint = myHero.pos + (target.pos - myHero.pos):Normalized * E.Range
+		
+		-- potential start target from position
+		if #innertargets > 0 then
+			for i, innertarg in ipairs(outertargets) do
+				-- should be new predict source
+				local newpred = innertarg:GetPrediction(espeed, E.Delay)
+				if GetDistance(newpred,predictmaintarget) < E.length and GetDistance(newpred)<E.Range then
+					table.insert(closetopredict, innertarg)
+				end
+			end
+			
+			
+			if #closetopredict > 0 then
+				for i, closetopredicthero in ipairs(closetopredict) do
+					local health = closetopredicthero.health * (100 / self:CalcMagicalDamage(myHero,closetopredicthero, 100))
+					if self:IsValidTarget(closetopredicthero,range) and (not closetopredictionhero or health < value) then
+						closetopredictionhero = closetopredicthero
+						value = health
+					end
+					
+				end
+				pos2 = closetopredictionhero:GetPrediction(espeed, E.Delay)
+				return pos2,predictmaintarget
+			end
+			--start from minion
+		else
+			if #innerminions > 0 then
+				for i, closetopredictminion in ipairs(innerminions) do
+					if GetDistance(closetopredictminion,predictmaintarget) < E.length then
+						pos1 = closetopredictminion
+					end
+					
+				end
+			end
+			
+			
+		end
+		return pos2,predictmaintarget
+	end
 end
 
 function Viktor:Harass()
@@ -394,11 +493,11 @@ function Viktor:GetEnemyHeroes()
 end
 
 
-function Viktor:GetEnemyMinions()
+function Viktor:GetEnemyMinions(range)
 	self.EnemyMinions = {}
 	for i = 1, Game.MinionCount() do
 		local minion = Game.Minion(i)
-		if minion.isEnemy then
+		if minion.isEnemy and (not range or GetDistance(minion)<range)then
 			table.insert(self.EnemyMinions, minion)
 		end
 	end
