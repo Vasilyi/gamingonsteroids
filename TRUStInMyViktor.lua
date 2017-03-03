@@ -1,4 +1,4 @@
-local Scriptname,Version,Author,LVersion = "TRUSt in my Viktor","v1.0","TRUS","7.4"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Viktor","v0.1","TRUS","7.4"
 
 class "Viktor"
 
@@ -15,20 +15,20 @@ function Viktor:__init()
 end
 
 local InterruptSpellsList = {
-	{ charName = "Katarina", spell = _R},
-	{ charName = "Galio", spell = _R},
-	{ charName = "FiddleSticks", spell = _R},
-	{ charName = "FiddleSticks", spell = _W},
-	{ charName = "Nunu", spell = _R},
-	{ charName = "Shen", spell = _R},
-	{ charName = "Urgot", spell = _R},
-	{ charName = "Malzahar",spell = _R},
-	{ charName = "Karthus", spell = _R},
-	{ charName = "Pantheon",spell = _R, suppresed = true},
-	{ charName = "Varus", spell = _Q, suppresed = true},
-	{ charName = "Caitlyn", spell = _R, suppresed = true},
-	{ charName = "MissFortune", spell = _R},
-	{ charName = "Warwick", spell = _R, wait = true}
+	["Katarina"] = {spell = _R},
+	["Galio"] = { spell = _R},
+	["FiddleSticks"] = { spell = _R, spell2 = _W},
+	["Nunu"] = { spell = _R},
+	["Shen"] = { spell = _R},
+	["Urgot"] = { spell = _R},
+	["Malzahar"] = {spell = _R},
+	["Karthus"] = { spell = _R},
+	["Pantheon"] = { spell = _R, suppresed = true},
+	["Varus"] = { spell = _Q, suppresed = true},
+	["Caitlyn"] = { spell = _R, suppresed = true},
+	["MissFortune"] = { spell = _R},
+	["Viktor"] = { spell = _Q},
+	["Warwick"] = { spell = _R, wait = true}
 }
 
 local spellslist = {_Q,_W,_E,_R,SUMMONER_1,SUMMONER_2}
@@ -40,7 +40,13 @@ function ReturnState(champion,spell)
 end
 
 function Viktor:OnProcessSpell(champion,spell)
-	PrintChat(champion.charName.." casted: "..spell.name)
+	if InterruptSpellsList[champion.charName] then
+		for i, spell2 in pairs(InterruptSpellsList[champion.charName]) do
+			if spell == spell2 then
+				self:AutoInterrupt(champion)
+			end
+		end
+	end
 end
 
 function Viktor:ProcessSpellsLoad()
@@ -59,7 +65,7 @@ function Viktor:ProcessSpellCallback()
 				local spelldata = Hero:GetSpellData(spell)
 				if spelldata.castTime > Game.Timer() and 
 				not lastcallback[tempname..spelldata.name] then
-					self:OnProcessSpell(Hero,spelldata)
+					self:OnProcessSpell(Hero,spell)
 					lastcallback[tempname..spelldata.name] = true
 					DelayAction(ReturnState,spelldata.currentCd,{Hero,spelldata})
 				end		
@@ -127,6 +133,44 @@ function Viktor:OnWndMsg(msg,key)
 	
 end
 
+local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
+
+
+function ReturnCursor(pos)
+	Control.SetCursorPos(pos)
+	castSpell.state = 0
+end
+
+function LeftClick(pos)
+	Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
+	Control.mouse_event(MOUSEEVENTF_LEFTUP)
+	DelayAction(ReturnCursor,0.05,{pos})
+end
+
+function Viktor:CastSpell(spell,pos)
+	local customcast = self.Menu.CustomSpellCast:Value()
+	if not customcast then
+		Control.CastSpell(spell, pos)
+		return
+	else
+		local delay = self.Menu.delay:Value()
+		local ticker = GetTickCount()
+		if castSpell.state == 0 then
+			castSpell.state = 1
+			castSpell.mouse = mousePos
+			castSpell.tick = ticker
+		end
+		if castSpell.state == 1 then
+			if ticker - castSpell.tick < Game.Latency() then
+				Control.SetCursorPos(pos)
+				Control.KeyDown(spell)
+				Control.KeyUp(spell)
+				DelayAction(LeftClick,delay/1000,{castSpell.mouse})
+				castSpell.casting = ticker + delay
+			end
+		end
+	end
+end
 function Viktor:AutoW()
 	if not self.Menu.MiscMenu.autoW:Value() then return end
 	local ImmobileEnemy = self:GetImmobileTarget()
@@ -145,12 +189,21 @@ end
 function Viktor:CanCast(spellSlot)
 	return self:IsReady(spellSlot) and self:CheckMana(spellSlot)
 end
+function GetDistanceSqr(p1, p2)
+	assert(p1, "GetDistance: invalid argument: cannot calculate distance to "..type(p1))
+	p2 = p2 or myHero.pos
+	
+	return (p1.x - p2.x) ^ 2 + ((p1.z or p1.y) - (p2.z or p2.y)) ^ 2
+end
 
-function Viktor:AutoInterrupt()
-	if self.Menu.MiscMenu.wInterrupt:Value() and self:CanCast(_W) then
-		
-	elseif self.Menu.MiscMenu.rInterrupt:Value() and self:CanCast(_R) then
-		
+function GetDistance(p1, p2)
+	return math.sqrt(GetDistanceSqr(p1, p2))
+end
+function Viktor:AutoInterrupt(target)
+	if self.Menu.MiscMenu.wInterrupt:Value() and self:CanCast(_W) and GetDistance(target.pos)<W.Range then
+		self:CastSpell(HK_W,target.pos)
+	elseif self.Menu.MiscMenu.rInterrupt:Value() and self:CanCast(_R) and GetDistance(target.pos)<R.Range then
+		self:CastSpell(HK_R,target.pos)
 	end
 end
 --[[Spells]]
@@ -259,6 +312,8 @@ function Viktor:LoadMenu()
 	self.Menu.Draw:MenuElement({id = "ERangeC", name = "E Range color", color = Draw.Color(0x3FBFBFFF)})
 	self.Menu.Draw:MenuElement({id = "DrawR", name = "Draw R Range", value = true, leftIcon=Icons["R"]})
 	self.Menu.Draw:MenuElement({id = "RRangeC", name = "R Range color", color = Draw.Color(0xBF3FBFFF)})
+	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
+	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
