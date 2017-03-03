@@ -81,6 +81,12 @@ function Viktor:Tick()
 	if self.Menu.Harass.HarassActive:Value() then
 		self:Harass()
 	end
+	
+	if self.Menu.RSolo.forceR:Value() then
+		self:RSolo()
+	end
+	
+	
 end
 
 function Viktor:HasBuff(unit, buffname)
@@ -120,7 +126,6 @@ function Viktor:ClosestEnemy()
 	
 	for i, _minion in ipairs(self:GetEnemyMinions()) do
 		local distance = GetDistance(_minion.pos)
-		PrintChat(distance)
 		if _minion:IsValidTarget(Q.Range) and (not selected2 or distance < value2) then
 			selected2 = _minion
 			value2 = distance
@@ -141,14 +146,16 @@ function Viktor:ClosestEnemy()
 end
 
 function Viktor:Flee()
-	if self:CanCast(_Q) and self:HasBuff(myHero,"viktorqeaug") or self:HasBuff(myHero,"viktorqeaug") or self:HasBuff(myHero,"viktorqwaug") or self:HasBuff(myHero,"viktorqweaug") then 
+	if self:CanCast(_Q) and (self:HasBuff(myHero,"viktorqaug") or self:HasBuff(myHero,"viktorqeaug") or self:HasBuff(myHero,"viktorqwaug") or self:HasBuff(myHero,"viktorqweaug")) then 
+		
 		local closestenemy = self:ClosestEnemy()
 		if closestenemy and closestenemy.valid then
 			self:CastSpell(HK_Q,closestenemy.pos)
 		end
 	end
 end
-function Viktor:RSolo(target)
+function Viktor:RSolo()
+	local target = TargetSelector()
 	if self.Menu.RSolo["RU"..target.charName]:Value() then
 		self:CastSpell(HK_R,target.pos)
 	end
@@ -159,16 +166,73 @@ function Viktor:UltControl(target)
 		self:CastSpell(HK_R,target.pos)
 	end
 end
+function Viktor:CalcMagicalDamage(source, target, amount)
+	local mr = target.magicResist
+	local value = 100 / (100 + (mr * source.magicPenPercent) - source.magicPen)
+	
+	if mr < 0 then
+		value = 2 - 100 / (100 - mr)
+	elseif (mr * source.magicPenPercent) - source.magicPen < 0 then
+		value = 1
+	end
+	
+	return math.max(0, math.floor(value * amount))
+end
+function Viktor:IsValidTarget(unit, range, checkTeam, from)
+	local range = range == nil and math.huge or range
+	if unit == nil or not unit.valid or not unit.visible or unit.dead or not unit.isTargetable or (checkTeam and unit.isAlly) then
+		return false
+	end
+	return true 
+end
+
+function Viktor:GetSpellTarget(range)
+	local selected
+	
+	for i, _gameHero in ipairs(self:GetEnemyHeroes()) do
+		local health = _gameHero.health * (100 / self:CalcMagicalDamage(myHero,_gameHero, 100))
+		if self:IsValidTarget(_gameHero,range) and (not selected or health < value) then
+			selected = _gameHero
+			value = health
+		end
+		
+	end
+	return selected
+end
+
+function Viktor:GetETargets()
+	for i, _gameHero in ipairs(self:GetEnemyHeroes()) do
+		if self:IsValidTarget(_gameHero,E.MaxRange) then
+			table.insert(self.eTargets, Hero)
+		end
+	end
+	return self.eTargets
+end
+
+function Viktor:CastE(target)
+	
+	local etargets = self:GetETargets()
+	
+end
 
 function Viktor:Harass()
 	local UseQ = self.Menu.Harass.harassUseQ:Value()
 	local UseE = self.Menu.Harass.harassUseE:Value()
 	local DistanceForE = self.Menu.Harass.eDistance:Value()
 	local HarassMinMana = self.Menu.Harass.harassMana:Value()
+	
 	if myHero.maxMana * HarassMinMana * 0.01 < myHero.mana then
-		
-		if self:CanCast(_Q) then
-			
+		if UseQ and self:CanCast(_Q) then
+			local qTarget = self:GetSpellTarget(Q.Range)
+			if qTarget and qTarget.valid then
+				self:CastSpell(HK_Q,qTarget.pos)
+			end
+		end
+		if UseE and self:CanCast(_E) then
+			local eTarget = self:GetSpellTarget(DistanceForE)
+			if eTarget and eTarget.valid then
+				self:CastE(eTarget)
+			end
 		end
 	end
 end
