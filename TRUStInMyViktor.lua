@@ -77,6 +77,10 @@ function Viktor:Tick()
 	if 	self.Menu.Flee.FleeActive:Value() then
 		self:Flee()
 	end
+	
+	if self.Menu.Harass.HarassActive:Value() then
+		self:Harass()
+	end
 end
 
 function Viktor:HasBuff(unit, buffname)
@@ -153,6 +157,19 @@ end
 function Viktor:UltControl(target)
 	if myHero:GetSpellData(_R).name == "viktorchaosstormguide" then
 		self:CastSpell(HK_R,target.pos)
+	end
+end
+
+function Viktor:Harass()
+	local UseQ = self.Menu.Harass.harassUseQ:Value()
+	local UseE = self.Menu.Harass.harassUseE:Value()
+	local DistanceForE = self.Menu.Harass.eDistance:Value()
+	local HarassMinMana = self.Menu.Harass.harassMana:Value()
+	if myHero.maxMana * HarassMinMana * 0.01 < myHero.mana then
+		
+		if self:CanCast(_Q) then
+			
+		end
 	end
 end
 
@@ -342,8 +359,9 @@ function Viktor:LoadMenu()
 	self.Menu:MenuElement({type = MENU, id = "Harass", name = "Harass Settings"})
 	self.Menu.Harass:MenuElement({id = "harassUseQ", name = "Use Q", value = true, leftIcon=Icons["Q"]})
 	self.Menu.Harass:MenuElement({id = "harassUseE", name = "Use W", value = true, leftIcon=Icons["E"]})
-	self.Menu.Harass:MenuElement({id = "harassMana", name = "Mana usage in percent:", value = 30, min = 0, max = 100, identifier = "%"})
+	self.Menu.Harass:MenuElement({id = "harassMana", name = "Mana usage in percent:", value = 30, min = 0, max = 101, identifier = "%"})
 	self.Menu.Harass:MenuElement({id = "eDistance", name = "Harass range with E", value = 1000, min = E.Range, max = E.MaxRange, step = 50, identifier = ""})
+	self.Menu.Harass:MenuElement({id = "HarassActive", name = "Harass key", key = string.byte("C")})
 	
 	
 	--[[WaveClear]]
@@ -388,6 +406,7 @@ function Viktor:LoadMenu()
 	
 	
 	
+	self.Menu.RMenu:MenuElement({id = "hitR", name = "Auto R if: ", value = 1, drop = {"1 target", "2 targets", "3 targets", "4 targets", "5 targets"}})
 	-- { "1 target", "2 targets", "3 targets", "4 targets", "5 targets" })
 	self.Menu.RMenu:MenuElement({id = "rTicks", name = "Ultimate ticks to count", value = 2, min = 1, max = 14, step = 1, identifier = ""})
 	
