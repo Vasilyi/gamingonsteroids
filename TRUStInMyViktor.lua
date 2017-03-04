@@ -72,6 +72,8 @@ function Viktor:ProcessSpellCallback()
 		end
 	end
 end
+
+
 function Viktor:Tick()
 	self:ProcessSpellCallback()
 	if 	self.Menu.Flee.FleeActive:Value() then
@@ -92,6 +94,13 @@ function Viktor:Tick()
 	end
 	
 	
+	if self.Menu.WaveClear.waveActive:Value() then
+		self:WaveClear(false)
+	end
+	
+	if self.Menu.WaveClear.jungleActive:Value() then
+		self:WaveClear(true)
+	end
 end
 
 function Viktor:HasBuff(unit, buffname)
@@ -387,6 +396,60 @@ function Viktor:GetCircularAOECastPosition(unit, delay, radius, range, speed)
 		return CastPosition
 	end
 end
+function VectorPointProjectionOnLineSegment(v1, v2, v)
+	assert(v1 and v2 and v, "VectorPointProjectionOnLineSegment: wrong argument types (3 <Vector> expected)")
+	local cx, cy, ax, ay, bx, by = v.x, (v.z or v.y), v1.x, (v1.z or v1.y), v2.x, (v2.z or v2.y)
+	local rL = ((cx - ax) * (bx - ax) + (cy - ay) * (by - ay)) / ((bx - ax) ^ 2 + (by - ay) ^ 2)
+	local pointLine = { x = ax + rL * (bx - ax), y = ay + rL * (by - ay) }
+	local rS = rL < 0 and 0 or (rL > 1 and 1 or rL)
+	local isOnSegment = rS == rL
+	local pointSegment = isOnSegment and pointLine or { x = ax + rS * (bx - ax), y = ay + rS * (by - ay) }
+	return pointSegment, pointLine, isOnSegment
+end
+
+function Viktor:PredictCastMinionE(tohit, jungle)
+	local bestendpos, beststartpos
+	local minionCount = 0
+	local minimalhit = tohit
+	local oldcount = 0 
+	local allminions = self:GetEnemyMinions(E.MaxRange)
+	local innerminions = self:GetEnemyMinions(E.Range)
+	local startpos,endpos
+	local pointSegment, pointLine, isOnSegment
+	local jungle = jungle
+	for i, minion in ipairs(innerminions) do
+		if (jungle == true and minion.team == 300) or (jungle == false and minion.team ~= 300) then
+			for i2, minion2 in ipairs(allminions) do
+				if (jungle == true and minion.team == 300) or (jungle == false and minion.team ~= 300) then
+					if minion ~= minion2 and GetDistance(minion.pos,minion2.pos)<E.length then 
+						local count = 0
+						for i3, minion3 in ipairs(allminions) do
+							local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(minion.pos, minion2.pos, minion3.pos)
+							if isOnSegment then 
+								count = count+1
+							end
+						end
+						if oldcount <= count then
+							oldcount = count
+							startpos = minion.pos
+							endpos = minion2.pos
+						end
+					end
+				end
+			end
+		end
+	end
+	if oldcount >= minimalhit then
+		self:CastESpell(startpos, endpos)
+	end
+end
+function Viktor:WaveClear(jungle)
+	local UseQ = self.Menu.WaveClear.waveUseQ:Value()
+	local UseE = self.Menu.WaveClear.waveUseE:Value()
+	local MinsAmount = self.Menu.WaveClear.waveNumE:Value()
+	local WaveClearMinMana = self.Menu.WaveClear.waveMana:Value()
+	self:PredictCastMinionE(MinsAmount,jungle)
+end
 
 
 function Viktor:Combo()
@@ -671,7 +734,7 @@ function Viktor:GetEnemyMinions(range)
 	self.EnemyMinions = {}
 	for i = 1, Game.MinionCount() do
 		local minion = Game.Minion(i)
-		if minion.isEnemy and (not range or GetDistance(minion)<range)then
+		if minion.isEnemy and (not range or GetDistance(minion)<range) then
 			table.insert(self.EnemyMinions, minion)
 		end
 	end
