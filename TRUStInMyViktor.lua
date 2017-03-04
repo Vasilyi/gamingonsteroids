@@ -428,14 +428,26 @@ function Viktor:Combo()
 	if UseR and self:CanCast(_R) then
 		local Rtargets = self.Menu.RMenu.hitR:Value()
 		local rTarget = self:GetSpellTarget(R.Range)
-		local predictpos, amounts = self:GetCircularAOECastPosition(unit, delay, radius, range, speed)
-		if rTarget > amounts then
-			self:CastSpell(_R,predictpos)
+		local predictpos = rTarget:GetPrediction(R.Speed,R.Delay)
+		--local predictpos, amounts = self:GetCircularAOECastPosition(unit, delay, radius, range, speed)
+		local amount = self:EnemyInRange(rTarget, R.Radius)
+		
+		if Rtargets <= amount and myHero:GetSpellData(_R).name ~= "ViktorChaosStormGuide" then
+			self:CastSpell(HK_R,predictpos)
 		end
 		
 	end
 end
 
+function Viktor:EnemyInRange(source,radius)
+	local count = 0
+	for i, target in ipairs(self:GetEnemyHeroes()) do
+		if GetDistance(target,source.pos) < radius then 
+			count = count + 1
+		end
+	end
+	return count
+end
 
 function Viktor:Harass()
 	local UseQ = self.Menu.Harass.harassUseQ:Value()
@@ -623,7 +635,7 @@ end
 function Viktor:AutoInterrupt(target)
 	if self.Menu.MiscMenu.wInterrupt:Value() and self:CanCast(_W) and GetDistance(target.pos)<W.Range then
 		self:CastSpell(HK_W,target.pos)
-	elseif self.Menu.MiscMenu.rInterrupt:Value() and self:CanCast(_R) and GetDistance(target.pos)<R.Range and myHero:GetSpellData(_R).name ~= "viktorchaosstormguide" then
+	elseif self.Menu.MiscMenu.rInterrupt:Value() and self:CanCast(_R) and GetDistance(target.pos)<R.Range and myHero:GetSpellData(_R).name ~= "ViktorChaosStormGuide" then
 		self:CastSpell(HK_R,target.pos)
 	end
 end
@@ -632,7 +644,7 @@ function Viktor:LoadSpells()
 	Q = {Range = 665}
 	W = {Range = 700, Delay = 0.5, Radius = 300, Speed = math.huge,aoe = true, type = "circular"}
 	E = {Range = 525, MaxRange = 1225, length = 700, width = 90, Delay = 0.5, Speed = 1050, type = "linear"}
-	R = {Range = 700, width = nil, Delay = 0.25, Radius = 40, Speed = 1000, Collision = false, aoe = false, type = "linear"}
+	R = {Range = 700, width = nil, Delay = 0.25, Radius = 300, Speed = 1000, Collision = false, aoe = false, type = "linear"}
 end
 --[[Menu Icons]]
 local Icons = {
@@ -676,7 +688,7 @@ function Viktor:LoadMenu()
 	self.Menu.Combo:MenuElement({id = "comboUseW", name = "Use W", value = true, leftIcon=Icons["W"]})
 	self.Menu.Combo:MenuElement({id = "comboUseE", name = "Use E", value = true, leftIcon=Icons["E"]})
 	self.Menu.Combo:MenuElement({id = "comboUseR", name = "Use R", value = true, leftIcon=Icons["R"]})
-	self.Menu.Combo:MenuElement({id = "qAuto", name = "Dont autoattack without passive", value = true})
+	self.Menu.Combo:MenuElement({id = "qAuto", name = "Dont AA without passive [WIP]", value = true})
 	self.Menu.Combo:MenuElement({id = "comboActive", name = "Combo key", key = string.byte(" ")})
 	
 	
@@ -690,7 +702,7 @@ function Viktor:LoadMenu()
 	
 	
 	--[[WaveClear]]
-	self.Menu:MenuElement({type = MENU, id = "WaveClear", name = "WaveClear Settings"})
+	self.Menu:MenuElement({type = MENU, id = "WaveClear", name = "WaveClear Settings [WIP]"})
 	self.Menu.WaveClear:MenuElement({id = "waveUseQ", name = "Use Q", value = true, leftIcon=Icons["Q"]})
 	self.Menu.WaveClear:MenuElement({id = "waveUseE", name = "Use W", value = true, leftIcon=Icons["E"]})
 	self.Menu.WaveClear:MenuElement({id = "waveMana", name = "Mana usage in percent:", value = 30, min = 0, max = 100, identifier = "%"})
@@ -700,7 +712,7 @@ function Viktor:LoadMenu()
 	
 	
 	--[[LastHit]]
-	self.Menu:MenuElement({type = MENU, id = "LastHit", name = "LastHit Settings"})
+	self.Menu:MenuElement({type = MENU, id = "LastHit", name = "LastHit Settings [WIP]"})
 	self.Menu.LastHit:MenuElement({id = "waveUseQLH", name = "Use Q for lasthit", key = string.byte("A"), leftIcon=Icons["Q"]})
 	
 	--[[Flee]]
@@ -712,13 +724,14 @@ function Viktor:LoadMenu()
 	self.Menu.MiscMenu:MenuElement({id = "rInterrupt", name = "R to interrupt", value = true, tooltip = "Use R to interrupt dangerous spells", leftIcon=Icons["R"]})
 	self.Menu.MiscMenu:MenuElement({id = "wInterrupt", name = "W to interrupt",tooltip = "Use W to interrupt dangerous spells", value = true, leftIcon=Icons["W"]})
 	self.Menu.MiscMenu:MenuElement({id = "autoW", name = "Use W to continue CC", value = true, leftIcon=Icons["W"]})
-	self.Menu.MiscMenu:MenuElement({id = "miscGapcloser", name = "Use W against gapclosers", value = true})
+	self.Menu.MiscMenu:MenuElement({id = "miscGapcloser", name = "Use W against gapclosers [WIP]", value = true})
 	
 	--[[RMenu]]
 	self.Menu:MenuElement({type = MENU, id = "RMenu", name = "R config"})
-	self.Menu.RMenu:MenuElement({id = "AutoFollowR", name = "Auto Follow R", value = true})
-	-- { "1 target", "2 targets", "3 targets", "4 targets", "5 targets" })
-	self.Menu.RMenu:MenuElement({id = "rTicks", name = "Ultimate ticks to count", value = 2, min = 1, max = 14, step = 1, identifier = ""})
+	self.Menu.RMenu:MenuElement({id = "AutoFollowR", name = "Auto Follow R [WIP]", value = true})
+	self.Menu.RMenu:MenuElement({id = "hitR", name = "Min R hits: ", value = 1, drop = {"1 target", "2 targets", "3 targets", "4 targets", "5 targets"}})
+	self.Menu.RMenu:MenuElement({id = "rTicks", name = "Ultimate ticks to count [WIP]", value = 2, min = 1, max = 14, step = 1, identifier = ""})
+	
 	
 	--[[RSolo]]
 	self.Menu:MenuElement({type = MENU, id = "RSolo", name = "R one target"})
@@ -730,10 +743,6 @@ function Viktor:LoadMenu()
 	
 	
 	
-	
-	self.Menu.RMenu:MenuElement({id = "hitR", name = "Auto R if: ", value = 1, drop = {"1 target", "2 targets", "3 targets", "4 targets", "5 targets"}})
-	-- { "1 target", "2 targets", "3 targets", "4 targets", "5 targets" })
-	self.Menu.RMenu:MenuElement({id = "rTicks", name = "Ultimate ticks to count", value = 2, min = 1, max = 14, step = 1, identifier = ""})
 	
 	
 	--[[Draw]]
