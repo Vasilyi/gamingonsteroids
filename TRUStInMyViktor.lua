@@ -448,7 +448,18 @@ function Viktor:WaveClear(jungle)
 	local UseE = self.Menu.WaveClear.waveUseE:Value()
 	local MinsAmount = self.Menu.WaveClear.waveNumE:Value()
 	local WaveClearMinMana = self.Menu.WaveClear.waveMana:Value()
-	self:PredictCastMinionE(MinsAmount,jungle)
+	if myHero.maxMana * WaveClearMinMana * 0.01 < myHero.mana then
+		local QMinions = self:GetEnemyMinions(Q.Range)
+		if UseQ and self:CanCast(_Q) then
+			local QTarget = self:GetQTarget(jungle)
+			if #QTarget > 0 then
+				self:CastSpell(HK_Q,QTarget[1].pos)
+			end
+		end
+		if UseE and self:CanCast(_E) then
+			self:PredictCastMinionE(MinsAmount,jungle)
+		end
+	end
 end
 
 
@@ -728,6 +739,19 @@ function Viktor:GetEnemyHeroes()
 	end
 	return self.EnemyHeroes
 end
+
+function Viktor:GetQTarget(jungle)
+	local range = Q.Range
+	self.EnemyMinions = {}
+	for i = 1, Game.MinionCount() do
+		local minion = Game.Minion(i)
+		if minion.isEnemy and (not range or GetDistance(minion)<range) and ((jungle == true and minion.team == 300) or (jungle == false and minion.team ~= 300)) then
+			table.insert(self.EnemyMinions, minion)
+		end
+	end
+	return self.EnemyMinions
+end
+
 
 
 function Viktor:GetEnemyMinions(range)
