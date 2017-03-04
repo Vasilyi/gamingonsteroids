@@ -82,6 +82,11 @@ function Viktor:Tick()
 		self:Harass()
 	end
 	
+	if self.Menu.Combo.comboActive:Value() then
+		self:Combo()
+	end
+	
+	
 	if self.Menu.RSolo.forceR:Value() then
 		self:RSolo()
 	end
@@ -351,6 +356,86 @@ function Viktor:CalcEPos(target)
 		return pos2,predictmaintarget
 	end
 end
+
+function Viktor:isFacing(source)
+	local sourceVector = Vector(source.posTo.x, source.posTo.z)
+	local sourcePos = Vector(source.pos.x, source.pos.z)
+	sourceVector = (sourceVector-sourcePos):Normalized()
+	sourceVector = sourcePos + (sourceVector*(GetDistance(source)))
+	return GetDistance(sourceVector) <= (90000)
+end
+
+
+function Viktor:GetCircularAOECastPosition(unit, delay, radius, range, speed)
+	local CastPosition = unit:GetPrediction(speed,delay)
+	local points = {}
+	
+	table.insert(points, CastPosition)
+	
+	for i, target in ipairs(GetEnemyHeroes()) do
+		if target.networkID ~= unit.networkID and self:IsValidTarget(target, range * 1.5) then
+			local Position = target:GetPrediction(speed,delay)
+			if GetDistance(Position) < (range + radius) then
+				table.insert(points, Position)
+			end
+		end
+	end
+	
+	if #points > 1 then
+		--calculate MEC pos
+		
+		return CastPosition
+	end
+end
+
+
+function Viktor:Combo()
+	local UseQ = self.Menu.Combo.comboUseQ:Value()
+	local UseW = self.Menu.Combo.comboUseW:Value()
+	local UseE = self.Menu.Combo.comboUseE:Value()
+	local UseR = self.Menu.Combo.comboUseR:Value()
+	local DontAAPassive = self.Menu.Combo.qAuto:Value()
+	
+	
+	if UseQ and self:CanCast(_Q) then
+		local qTarget = self:GetSpellTarget(Q.Range)
+		if qTarget and qTarget.valid then
+			self:CastSpell(HK_Q,qTarget.pos)
+		end
+	end
+	if UseE and self:CanCast(_E) then
+		local eTarget = self:GetSpellTarget(DistanceForE)
+		if eTarget and eTarget.valid then
+			self:CastE(eTarget)
+		end
+	end
+	if UseW and self:CanCast(_W) then
+		local wTarget = self:GetSpellTarget(W.Range)
+		if wTarget then
+			local posw = wTarget:GetPrediction(W.Speed, W.Delay)
+			if posw ~= nil then
+				if self:isFacing(wTarget,myHero) then
+					pw = Vector(posw) - 150 * (Vector(posw) - Vector(myHero)):Normalized()
+				else
+					pw = Vector(posw) + 150 * (Vector(posw) - Vector(myHero)):Normalized()
+				end
+				self:CastSpell(HK_W,pw)
+			end
+		end
+	end
+	
+	
+	if UseR and self:CanCast(_R) then
+		local Rtargets = self.Menu.RMenu.hitR:Value()
+		local rTarget = self:GetSpellTarget(R.Range)
+		local predictpos, amounts = self:GetCircularAOECastPosition(unit, delay, radius, range, speed)
+		if rTarget > amounts then
+			self:CastSpell(_R,predictpos)
+		end
+		
+	end
+end
+
 
 function Viktor:Harass()
 	local UseQ = self.Menu.Harass.harassUseQ:Value()
