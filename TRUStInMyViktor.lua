@@ -57,7 +57,6 @@ function Viktor:OnProcessSpell(champion,spell)
 	end
 end
 
-
 function Viktor:ProcessSpellsLoad()
 	for i, spell in pairs(spellslist) do
 		local tempname = myHero.charName
@@ -261,7 +260,13 @@ function Viktor:CalcEPos(target)
 	local startradius = 150
 	local closetopredictionhero
 	local espeed = E.Speed * 0.90
-	local predictmaintarget = target:GetPrediction(espeed, E.Delay)
+	local predictmaintarget
+	local tempdist = myHero.pos:DistanceTo(target.pos)
+	if tempdist > 525 then
+		predictmaintarget = target:GetPrediction(math.huge, E.Delay + (tempdist-525)/espeed)
+	else
+		predictmaintarget = target:GetPrediction(math.huge, E.Delay)
+	end
 	if inRange then 
 		--prediction in range
 		if myHero.pos:DistanceTo(predictmaintarget) < E.Range then 
@@ -276,9 +281,8 @@ function Viktor:CalcEPos(target)
 		if #outertargets > 0 then
 			for i, outtarg in ipairs(outertargets) do
 				-- should be new predict source
-				local newpred = outtarg:GetPrediction(espeed, E.Delay)
+				local newpred = outtarg:GetPrediction(math.huge, E.Delay + outtarg.pos:DistanceTo(predictmaintarget)/E.Speed)
 				if newpred:DistanceTo(predictmaintarget) < E.length then
-					
 					table.insert(closetopredict, outtarg)
 				end
 			end
@@ -286,7 +290,7 @@ function Viktor:CalcEPos(target)
 		if #innertargets > 0 then
 			for i, inntarg in ipairs(innertargets) do
 				-- should be new predict source
-				local newpred = inntarg:GetPrediction(espeed, E.Delay)
+				local newpred = inntarg:GetPrediction(math.huge, E.Delay + inntarg.pos:DistanceTo(predictmaintarget)/E.Speed)
 				if newpred:DistanceTo(predictmaintarget) < E.length then
 					table.insert(closetopredict, inntarg)
 				end
@@ -318,7 +322,7 @@ function Viktor:CalcEPos(target)
 		if #innertargets > 0 then
 			for i, innertarg in ipairs(innertargets) do
 				-- should be new predict source
-				local newpred = innertarg:GetPrediction(espeed, E.Delay)
+				local newpred = innertarg:GetPrediction(math.huge, E.Delay)
 				if newpred:DistanceTo(predictmaintarget) < E.length and myHero.pos:DistanceTo(newpred)<E.Range then
 					table.insert(closetopredict, innertarg)
 				end
@@ -714,7 +718,7 @@ end
 function Viktor:LoadSpells()
 	Q = {Range = 665}
 	W = {Range = 700, Delay = 0.5, Radius = 300, Speed = math.huge,aoe = true, type = "circular"}
-	E = {Range = 525, MaxRange = 1225, length = 700, width = 90, Delay = 0.5, Speed = 1050, type = "linear"}
+	E = {Range = 525, MaxRange = 1225, length = 700, width = 90, Delay = 0.25, Speed = 1050, type = "linear"}
 	R = {Range = 700, width = nil, Delay = 0.25, Radius = 300, Speed = 1000, Collision = false, aoe = false, type = "linear"}
 end
 --[[Menu Icons]]
