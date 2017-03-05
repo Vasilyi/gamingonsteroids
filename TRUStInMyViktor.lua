@@ -180,7 +180,7 @@ function Viktor:Flee()
 end
 function Viktor:RSolo()
 	local target = self:GetSpellTarget(R.Range)
-	if self.Menu.RMenu.RSolo["RU"..target.charName]:Value() then
+	if target and target.valid and self.Menu.RMenu.RSolo["RU"..target.charName]:Value() then
 		self:CastSpell(HK_R,target.pos)
 	end
 end
