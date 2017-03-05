@@ -241,7 +241,6 @@ drawpos1 = {0,0,0}
 drawpos2 = {0,0,0}
 function Viktor:CastE(target)
 	local pos1,pos2 = self:CalcEPos(target)
-	
 	if pos1 and pos2 then 
 		self:CastESpell(pos1, pos2)
 	end
@@ -348,6 +347,7 @@ function Viktor:CalcEPos(target)
 			end
 			if closetopredictionhero then 
 				pos2 = closetopredictionhero:GetPrediction(espeed, E.Delay)
+				return pos2,predictmaintarget
 			else
 				return startPoint,predictmaintarget
 			end
@@ -486,7 +486,7 @@ function Viktor:Combo()
 		end
 	end
 	if UseE and self:CanCast(_E) then
-		local eTarget = self:GetSpellTarget(DistanceForE)
+		local eTarget = self:GetSpellTarget(E.MaxRange)
 		if eTarget and eTarget.valid then
 			self:CastE(eTarget)
 		end
