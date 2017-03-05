@@ -27,7 +27,7 @@ local InterruptSpellsList = {
 	["Varus"] = { spell = _Q, suppresed = true},
 	["Caitlyn"] = { spell = _R, suppresed = true},
 	["MissFortune"] = { spell = _R},
-	["Warwick"] = { spell = _R, wait = true}
+	["Warwick"] = { spell = _R, wait = true},
 	["Ryze"] = { spell = _R}
 }
 
