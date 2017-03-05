@@ -28,6 +28,7 @@ local InterruptSpellsList = {
 	["Caitlyn"] = { spell = _R, suppresed = true},
 	["MissFortune"] = { spell = _R},
 	["Warwick"] = { spell = _R, wait = true}
+	["Ryze"] = { spell = _R}
 }
 
 local spellslist = {_Q,_W,_E,_R,SUMMONER_1,SUMMONER_2}
