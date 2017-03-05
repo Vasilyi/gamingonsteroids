@@ -48,6 +48,7 @@ function Viktor:OnProcessSpell(champion,spell)
 	end
 end
 
+
 function Viktor:ProcessSpellsLoad()
 	for i, spell in pairs(spellslist) do
 		local tempname = myHero.charName
@@ -89,7 +90,7 @@ function Viktor:Tick()
 	end
 	
 	
-	if self.Menu.RSolo.forceR:Value() then
+	if self.Menu.RMenu.RSolo.forceR:Value() then
 		self:RSolo()
 	end
 	
@@ -170,7 +171,7 @@ function Viktor:Flee()
 end
 function Viktor:RSolo()
 	local target = TargetSelector()
-	if self.Menu.RSolo["RU"..target.charName]:Value() then
+	if self.Menu.RMenu.RSolo["RU"..target.charName]:Value() then
 		self:CastSpell(HK_R,target.pos)
 	end
 end
@@ -344,25 +345,26 @@ function Viktor:CalcEPos(target)
 			else
 				return startPoint,predictmaintarget
 			end
-			--start from minion
+			
 		else
-			if #innerminions > 0 then
-				for i, closetopredictminion in ipairs(innerminions) do
-					if GetDistance(closetopredictminion,predictmaintarget) < E.length then
-						predictedminion = closetopredictminion
-					end
-					
-				end
-			end
+			-- if #innerminions > 0 then
+			-- for i, closetopredictminion in ipairs(innerminions) do
+			-- if GetDistance(closetopredictminion,predictmaintarget) < E.length then
+			-- predictedminion = closetopredictminion
+			-- end
+			
+			-- end
+			-- end
 			
 			
-		end
-		if predictedminion then 
-			pos2 = predictedminion.pos
-		else
+			-- end
+			-- if predictedminion then 
+			-- pos2 = predictedminion.pos
+			-- else
+			-- return startPoint,predictmaintarget
+			-- end
 			return startPoint,predictmaintarget
 		end
-		return pos2,predictmaintarget
 	end
 end
 
@@ -502,14 +504,15 @@ function Viktor:Combo()
 	if UseR and self:CanCast(_R) then
 		local Rtargets = self.Menu.RMenu.hitR:Value()
 		local rTarget = self:GetSpellTarget(R.Range)
-		local predictpos = rTarget:GetPrediction(R.Speed,R.Delay)
-		--local predictpos, amounts = self:GetCircularAOECastPosition(unit, delay, radius, range, speed)
-		local amount = self:EnemyInRange(rTarget, R.Radius)
-		
-		if Rtargets <= amount and myHero:GetSpellData(_R).name ~= "ViktorChaosStormGuide" then
-			self:CastSpell(HK_R,predictpos)
+		if self:IsValidTarget(rTarget) then
+			local predictpos = rTarget:GetPrediction(R.Speed,R.Delay)
+			--local predictpos, amounts = self:GetCircularAOECastPosition(unit, delay, radius, range, speed)
+			local amount = self:EnemyInRange(rTarget, R.Radius)
+			
+			if Rtargets <= amount and myHero:GetSpellData(_R).name ~= "ViktorChaosStormGuide" then
+				self:CastSpell(HK_R,predictpos)
+			end
 		end
-		
 	end
 end
 
@@ -609,9 +612,14 @@ end
 local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
 
 
+function EnableMovement()
+	--unblock movement
+end
+
 function ReturnCursor(pos)
 	Control.SetCursorPos(pos)
 	castSpell.state = 0
+	DelayAction(EnableMovement,0.05)
 end
 
 function SecondPosE(pos)
@@ -627,54 +635,48 @@ function LeftClick(pos)
 	DelayAction(ReturnCursor,0.05,{pos})
 end
 
+
+
 function Viktor:CastESpell(pos1, pos2)
-	local customcast = self.Menu.CustomSpellCast:Value()
-	if not customcast then
-		Control.CastSpell(spell, pos)
-		return
-	else
-		local delay = self.Menu.delay:Value()
-		local ticker = GetTickCount()
-		if castSpell.state == 0 then
-			castSpell.state = 1
-			castSpell.mouse = mousePos
-			castSpell.tick = ticker
-		end
-		if castSpell.state == 1 then
-			if ticker - castSpell.tick < Game.Latency() then
-				Control.SetCursorPos(pos1)
-				Control.KeyDown(HK_E)
+	local delay = self.Menu.delay:Value()
+	local ticker = GetTickCount()
+	if castSpell.state == 0 then
+		castSpell.state = 1
+		castSpell.mouse = mousePos
+		castSpell.tick = ticker
+	end
+	if castSpell.state == 1 then
+		if ticker - castSpell.tick < Game.Latency() then
+			--block movement
+			Control.SetCursorPos(pos1)
+			Control.KeyDown(HK_E)
+			if not self.Menu.smartcast:Value() then
 				Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
-				DelayAction(SecondPosE,0.05,{pos2})
-				DelayAction(ReturnCursor,delay/1000+0.05,{castSpell.mouse})
-				castSpell.casting = ticker + delay
 			end
+			DelayAction(SecondPosE,0.05,{pos2})
+			DelayAction(ReturnCursor,delay/1000+0.05,{castSpell.mouse})
+			castSpell.casting = ticker + delay
 		end
 	end
 end
 
 
 function Viktor:CastSpell(spell,pos)
-	local customcast = self.Menu.CustomSpellCast:Value()
-	if not customcast then
-		Control.CastSpell(spell, pos)
-		return
-	else
-		local delay = self.Menu.delay:Value()
-		local ticker = GetTickCount()
-		if castSpell.state == 0 then
-			castSpell.state = 1
-			castSpell.mouse = mousePos
-			castSpell.tick = ticker
-		end
-		if castSpell.state == 1 then
-			if ticker - castSpell.tick < Game.Latency() then
-				Control.SetCursorPos(pos)
-				Control.KeyDown(spell)
-				Control.KeyUp(spell)
-				DelayAction(LeftClick,delay/1000,{castSpell.mouse})
-				castSpell.casting = ticker + delay
-			end
+	local delay = self.Menu.delay:Value()
+	local ticker = GetTickCount()
+	if castSpell.state == 0 then
+		castSpell.state = 1
+		castSpell.mouse = mousePos
+		castSpell.tick = ticker
+	end
+	if castSpell.state == 1 then
+		if ticker - castSpell.tick < Game.Latency() then
+			--block movement
+			Control.SetCursorPos(pos)
+			Control.KeyDown(spell)
+			Control.KeyUp(spell)
+			DelayAction(LeftClick,delay/1000,{castSpell.mouse})
+			castSpell.casting = ticker + delay
 		end
 	end
 end
@@ -768,6 +770,7 @@ end
 function Viktor:LoadMenu()
 	self.Menu = MenuElement({type = MENU, id = Scriptname, name = Scriptname, leftIcon=Icons["ViktorIcon"]})
 	
+	self.Menu:MenuElement({id = "smartcast", name = "Smartcast E", tooltip = "Check this if you're using smartcasts", value = false, leftIcon=Icons["E"]})
 	
 	--[[Combo]]
 	self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
@@ -782,14 +785,14 @@ function Viktor:LoadMenu()
 	--[[Harass]]
 	self.Menu:MenuElement({type = MENU, id = "Harass", name = "Harass Settings"})
 	self.Menu.Harass:MenuElement({id = "harassUseQ", name = "Use Q", value = true, leftIcon=Icons["Q"]})
-	self.Menu.Harass:MenuElement({id = "harassUseE", name = "Use W", value = true, leftIcon=Icons["E"]})
+	self.Menu.Harass:MenuElement({id = "harassUseE", name = "Use E", value = true, leftIcon=Icons["E"]})
 	self.Menu.Harass:MenuElement({id = "harassMana", name = "Mana usage in percent:", value = 30, min = 0, max = 101, identifier = "%"})
 	self.Menu.Harass:MenuElement({id = "eDistance", name = "Harass range with E", value = 1000, min = E.Range, max = E.MaxRange, step = 50, identifier = ""})
 	self.Menu.Harass:MenuElement({id = "HarassActive", name = "Harass key", key = string.byte("C")})
 	
 	
 	--[[WaveClear]]
-	self.Menu:MenuElement({type = MENU, id = "WaveClear", name = "WaveClear Settings [WIP]"})
+	self.Menu:MenuElement({type = MENU, id = "WaveClear", name = "WaveClear Settings"})
 	self.Menu.WaveClear:MenuElement({id = "waveUseQ", name = "Use Q", value = true, leftIcon=Icons["Q"]})
 	self.Menu.WaveClear:MenuElement({id = "waveUseE", name = "Use W", value = true, leftIcon=Icons["E"]})
 	self.Menu.WaveClear:MenuElement({id = "waveMana", name = "Mana usage in percent:", value = 30, min = 0, max = 100, identifier = "%"})
@@ -821,11 +824,11 @@ function Viktor:LoadMenu()
 	
 	
 	--[[RSolo]]
-	self.Menu:MenuElement({type = MENU, id = "RSolo", name = "R one target"})
-	self.Menu.RSolo:MenuElement({id = "forceR", name = "Force R on target",leftIcon=Icons["R"], key = string.byte("T")})
-	self.Menu.RSolo:MenuElement({id = "rLastHit", name = "1 target ulti", value = true})
+	self.Menu.RMenu:MenuElement({type = MENU, id = "RSolo", name = "R one target"})
+	self.Menu.RMenu.RSolo:MenuElement({id = "forceR", name = "Force R on target",leftIcon=Icons["R"], key = string.byte("T")})
+	self.Menu.RMenu.RSolo:MenuElement({id = "rLastHit", name = "1 target ulti", value = true})
 	for i, hero in pairs(self:GetEnemyHeroes()) do
-		self.Menu.RSolo:MenuElement({id = "RU"..hero.charName, name = "Use R on: "..hero.charName, value = true})
+		self.Menu.RMenu.RSolo:MenuElement({id = "RU"..hero.charName, name = "Use R on: "..hero.charName, value = true})
 	end
 	
 	
@@ -843,8 +846,7 @@ function Viktor:LoadMenu()
 	self.Menu.Draw:MenuElement({id = "ERangeC", name = "E Range color", color = Draw.Color(0x3FBFBFFF)})
 	self.Menu.Draw:MenuElement({id = "DrawR", name = "Draw R Range", value = true, leftIcon=Icons["R"]})
 	self.Menu.Draw:MenuElement({id = "RRangeC", name = "R Range color", color = Draw.Color(0xBF3FBFFF)})
-	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
-	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
+	self.Menu:MenuElement({id = "delay", name = "spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
