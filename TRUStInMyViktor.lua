@@ -234,9 +234,6 @@ function Viktor:CastE(target)
 	local pos1,pos2 = self:CalcEPos(target)
 	
 	if pos1 and pos2 then 
-		drawpos1 = pos1
-		drawpos2 = pos2
-		--	PrintChat("both pos")
 		self:CastESpell(pos1, pos2)
 	end
 end
@@ -565,11 +562,6 @@ function Viktor:Draw()
 	if self.Menu.Draw.DrawR:Value() then
 		Draw.Circle(myHero.pos, R.Range, 3, self.Menu.Draw.RRangeC:Value())
 	end
-	if drawpos1 and drawpos2 then 
-		Draw.Circle(drawpos1, 80, 3, self.Menu.Draw.RRangeC:Value())
-		Draw.Circle(drawpos2, 80, 3, self.Menu.Draw.RRangeC:Value())
-	end
-	
 end
 
 function Viktor:Stunned(enemy)
