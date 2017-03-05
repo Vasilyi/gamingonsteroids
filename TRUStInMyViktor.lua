@@ -46,7 +46,7 @@ function Viktor:OnProcessSpell(champion,spell)
 	if InterruptSpellsList[champion.charName] then
 		for i, spell2 in pairs(InterruptSpellsList[champion.charName]) do
 			if spell == spell2 then
-				self:AutoInterrupt(champion)
+				self:AutoInterrupt(champion,spell == _R)
 			end
 		end
 	end
@@ -134,7 +134,7 @@ function Viktor:ClosestEnemy()
 	local value
 	local value2
 	for i, _gameHero in ipairs(self:GetEnemyHeroes()) do
-		local distance = GetDistance(_gameHero.pos)
+		local distance = myHero.pos:DistanceTo(_gameHero.pos)
 		if _gameHero:IsValidTarget(Q.Range) and (not selected or distance < value) then
 			selected = _gameHero
 			value = distance
@@ -144,7 +144,7 @@ function Viktor:ClosestEnemy()
 	
 	
 	for i, _minion in ipairs(self:GetEnemyMinions()) do
-		local distance = GetDistance(_minion.pos)
+		local distance = myHero.pos:DistanceTo(_minion.pos)
 		if _minion:IsValidTarget(Q.Range) and (not selected2 or distance < value2) then
 			selected2 = _minion
 			value2 = distance
@@ -174,7 +174,7 @@ function Viktor:Flee()
 	end
 end
 function Viktor:RSolo()
-	local target = TargetSelector()
+	local target = self:GetSpellTarget(R.Range)
 	if self.Menu.RMenu.RSolo["RU"..target.charName]:Value() then
 		self:CastSpell(HK_R,target.pos)
 	end
@@ -199,10 +199,10 @@ function Viktor:CalcMagicalDamage(source, target, amount)
 end
 function Viktor:IsValidTarget(unit, range, checkTeam, from)
 	local range = range == nil and math.huge or range
-	if GetDistance(unit)>range then return false end 
 	if unit == nil or not unit.valid or not unit.visible or unit.dead or not unit.isTargetable or (checkTeam and unit.isAlly) then
 		return false
 	end
+	if myHero.pos:DistanceTo(unit.pos)>range then return false end 
 	return true 
 end
 
@@ -260,7 +260,7 @@ function Viktor:CalcEPos(target)
 	local predictmaintarget = target:GetPrediction(espeed, E.Delay)
 	if inRange then 
 		--prediction in range
-		if GetDistance(predictmaintarget) < E.Range then 
+		if myHero.pos:DistanceTo(predictmaintarget) < E.Range then 
 			pos1 = predictmaintarget
 		else
 			pos1 = target.pos
@@ -273,7 +273,7 @@ function Viktor:CalcEPos(target)
 			for i, outtarg in ipairs(outertargets) do
 				-- should be new predict source
 				local newpred = outtarg:GetPrediction(espeed, E.Delay)
-				if GetDistance(newpred,predictmaintarget) < E.length then
+				if newpred:DistanceTo(predictmaintarget) < E.length then
 					
 					table.insert(closetopredict, outtarg)
 				end
@@ -283,7 +283,7 @@ function Viktor:CalcEPos(target)
 			for i, inntarg in ipairs(innertargets) do
 				-- should be new predict source
 				local newpred = inntarg:GetPrediction(espeed, E.Delay)
-				if GetDistance(newpred,predictmaintarget) < E.length then
+				if newpred:DistanceTo(predictmaintarget) < E.length then
 					table.insert(closetopredict, inntarg)
 				end
 			end
@@ -315,7 +315,7 @@ function Viktor:CalcEPos(target)
 			for i, innertarg in ipairs(innertargets) do
 				-- should be new predict source
 				local newpred = innertarg:GetPrediction(espeed, E.Delay)
-				if GetDistance(newpred,predictmaintarget) < E.length and GetDistance(newpred)<E.Range then
+				if newpred:DistanceTo(predictmaintarget) < E.length and myHero.pos:DistanceTo(newpred)<E.Range then
 					table.insert(closetopredict, innertarg)
 				end
 			end
@@ -324,7 +324,7 @@ function Viktor:CalcEPos(target)
 			for i, innertarg in ipairs(outertargets) do
 				-- should be new predict source
 				local newpred = innertarg:GetPrediction(espeed, E.Delay)
-				if GetDistance(newpred,predictmaintarget) < E.length and GetDistance(newpred)<E.Range then
+				if newpred:DistanceTo(predictmaintarget) < E.length and myHero.pos:DistanceTo(newpred)<E.Range then
 					table.insert(closetopredict, innertarg)
 				end
 			end
@@ -373,8 +373,8 @@ function Viktor:isFacing(source)
 	local sourceVector = Vector(source.posTo.x, source.posTo.z)
 	local sourcePos = Vector(source.pos.x, source.pos.z)
 	sourceVector = (sourceVector-sourcePos):Normalized()
-	sourceVector = sourcePos + (sourceVector*(GetDistance(source)))
-	return GetDistance(sourceVector) <= (90000)
+	sourceVector = sourcePos + (sourceVector*(myHero.pos:DistanceTo(source)))
+	return myHero.pos:DistanceTo(sourceVector) <= (90000)
 end
 
 
@@ -387,7 +387,7 @@ function Viktor:GetCircularAOECastPosition(unit, delay, radius, range, speed)
 	for i, target in ipairs(GetEnemyHeroes()) do
 		if target.networkID ~= unit.networkID and self:IsValidTarget(target, range * 1.5) then
 			local Position = target:GetPrediction(speed,delay)
-			if GetDistance(Position) < (range + radius) then
+			if Position and myHero.pos:DistanceTo(Position) < (range + radius) then
 				table.insert(points, Position)
 			end
 		end
@@ -424,7 +424,7 @@ function Viktor:PredictCastMinionE(tohit, jungle)
 		if (jungle == true and minion.team == 300) or (jungle == false and minion.team ~= 300) then
 			for i2, minion2 in ipairs(allminions) do
 				if (jungle == true and minion.team == 300) or (jungle == false and minion.team ~= 300) then
-					if minion ~= minion2 and GetDistance(minion.pos,minion2.pos)<E.length then 
+					if minion ~= minion2 and minion.pos:DistanceTo(minion2.pos)<E.length then 
 						local count = 0
 						for i3, minion3 in ipairs(allminions) do
 							local pointSegment, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(minion.pos, minion2.pos, minion3.pos)
@@ -520,7 +520,7 @@ end
 function Viktor:EnemyInRange(source,radius)
 	local count = 0
 	for i, target in ipairs(self:GetEnemyHeroes()) do
-		if GetDistance(target,source.pos) < radius then 
+		if target.pos:DistanceTo(source.pos) < radius then 
 			count = count + 1
 		end
 	end
@@ -640,8 +640,6 @@ function Viktor:CastESpell(pos1, pos2)
 		castSpell.state = 1
 		castSpell.mouse = mousePos
 		castSpell.tick = ticker
-	end
-	if castSpell.state == 1 then
 		if ticker - castSpell.tick < Game.Latency() then
 			--block movement
 			Control.SetCursorPos(pos1)
@@ -664,8 +662,6 @@ function Viktor:CastSpell(spell,pos)
 		castSpell.state = 1
 		castSpell.mouse = mousePos
 		castSpell.tick = ticker
-	end
-	if castSpell.state == 1 then
 		if ticker - castSpell.tick < Game.Latency() then
 			--block movement
 			Control.SetCursorPos(pos)
@@ -694,20 +690,11 @@ end
 function Viktor:CanCast(spellSlot)
 	return self:IsReady(spellSlot) and self:CheckMana(spellSlot)
 end
-function GetDistanceSqr(p1, p2)
-	assert(p1, "GetDistance: invalid argument: cannot calculate distance to "..type(p1))
-	p2 = p2 or myHero.pos
-	p1 = p1.x and p1 or p1.pos
-	return (p1.x - p2.x) ^ 2 + ((p1.z or p1.y) - (p2.z or p2.y)) ^ 2
-end
 
-function GetDistance(p1, p2)
-	return math.sqrt(GetDistanceSqr(p1, p2))
-end
-function Viktor:AutoInterrupt(target)
-	if self.Menu.MiscMenu.wInterrupt:Value() and self:CanCast(_W) and GetDistance(target.pos)<W.Range then
+function Viktor:AutoInterrupt(target,ultimate)
+	if self.Menu.MiscMenu.wInterrupt:Value() and self:CanCast(_W) and myHero.pos:DistanceTo(target.pos)<W.Range then
 		self:CastSpell(HK_W,target.pos)
-	elseif self.Menu.MiscMenu.rInterrupt:Value() and self:CanCast(_R) and GetDistance(target.pos)<R.Range and myHero:GetSpellData(_R).name ~= "ViktorChaosStormGuide" then
+	elseif self.Menu.MiscMenu.rInterrupt:Value() and self:CanCast(_R) and myHero.pos:DistanceTo(target.pos)<R.Range and myHero:GetSpellData(_R).name ~= "ViktorChaosStormGuide" and ultimate then
 		self:CastSpell(HK_R,target.pos)
 	end
 end
@@ -739,11 +726,11 @@ function Viktor:GetEnemyHeroes()
 end
 
 function Viktor:GetQTarget(jungle)
-	local range = Q.Range
+	local range = Q.Range-65
 	self.EnemyMinions = {}
 	for i = 1, Game.MinionCount() do
 		local minion = Game.Minion(i)
-		if minion.isEnemy and (not range or GetDistance(minion)<range) and ((jungle == true and minion.team == 300) or (jungle == false and minion.team ~= 300)) then
+		if minion.isEnemy and (not range or myHero.pos:DistanceTo(minion.pos)<range) and ((jungle == true and minion.team == 300) or (jungle == false and minion.team ~= 300)) then
 			table.insert(self.EnemyMinions, minion)
 		end
 	end
@@ -756,7 +743,7 @@ function Viktor:GetEnemyMinions(range)
 	self.EnemyMinions = {}
 	for i = 1, Game.MinionCount() do
 		local minion = Game.Minion(i)
-		if minion.isEnemy and (not range or GetDistance(minion)<range) then
+		if minion.isEnemy and (not range or myHero.pos:DistanceTo(minion.pos)<range) then
 			table.insert(self.EnemyMinions, minion)
 		end
 	end
