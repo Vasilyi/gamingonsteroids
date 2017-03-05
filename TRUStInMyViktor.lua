@@ -34,6 +34,7 @@ local InterruptSpellsList = {
 	["Ryze"] = { spell = _R}
 }
 
+local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
 local spellslist = {_Q,_W,_E,_R,SUMMONER_1,SUMMONER_2}
 lastcallback = {}
 
@@ -49,6 +50,10 @@ function Viktor:OnProcessSpell(champion,spell)
 				self:AutoInterrupt(champion,spell == _R)
 			end
 		end
+	end
+	
+	if champion.isMe then
+		castSpell.state = 0
 	end
 end
 
@@ -244,7 +249,7 @@ end
 
 
 function Viktor:CalcEPos(target)
-	
+	if not target then return end 
 	--build tables with targets
 	local innertargets, outertargets = self:GetETargets()
 	local innerminions = self:GetEnemyMinions(E.Range)
@@ -303,7 +308,7 @@ function Viktor:CalcEPos(target)
 		if closetopredictionhero then 
 			pos2 = closetopredictionhero:GetPrediction(espeed, E.Delay)
 		else
-			pos2 = pos1
+			pos2 = target.pos
 		end
 		
 		return pos1,pos2
@@ -566,6 +571,14 @@ function Viktor:Draw()
 	if self.Menu.Draw.DrawR:Value() then
 		Draw.Circle(myHero.pos, R.Range, 3, self.Menu.Draw.RRangeC:Value())
 	end
+	
+	if self.Menu.Draw.DrawPredict:Value() then
+		local pos1,pos2 = self:CalcEPos(self:GetSpellTarget(E.MaxRange))
+		if pos1 and pos2 then
+			Draw.Circle(pos1, 80, 3, self.Menu.Draw.RRangeC:Value())
+			Draw.Circle(pos2, 80, 3, self.Menu.Draw.RRangeC:Value())
+		end
+	end
 end
 
 function Viktor:Stunned(enemy)
@@ -605,7 +618,6 @@ function Viktor:OnWndMsg(msg,key)
 	
 end
 
-local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
 
 
 function EnableMovement()
@@ -820,6 +832,8 @@ function Viktor:LoadMenu()
 	
 	--[[Draw]]
 	self.Menu:MenuElement({type = MENU, id = "Draw", name = "Drawing Settings"})
+	self.Menu.Draw:MenuElement({id = "DrawPredict", name = "Draw Predict pos", value = true})
+	
 	self.Menu.Draw:MenuElement({id = "DrawQ", name = "Draw Q Range", value = true, leftIcon=Icons["Q"]})
 	self.Menu.Draw:MenuElement({id = "QRangeC", name = "Q Range color", color = Draw.Color(0xBF3F3FFF)})
 	self.Menu.Draw:MenuElement({id = "DrawW", name = "Draw W Range", value = true, leftIcon=Icons["W"]})
