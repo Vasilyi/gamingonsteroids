@@ -1,5 +1,7 @@
 local Scriptname,Version,Author,LVersion = "TRUStInMyTiming","v1.0","TRUS","7.4"
 
+class "TRUStInMyTiming"
+
 function GetDistanceSqr(p1, p2)
   assert(p1, "GetDistance: invalid argument: cannot calculate distance to "..type(p1))
   p2 = p2 and p2.pos or myHero.pos
@@ -12,11 +14,12 @@ function GetDistance(p1, p2)
 end
 
 function OnLoad()
-  Callback.Add("Tick", function() Tick() end)
-  LoadMenu()
+  TRUStInMyTiming()
 end
 
-function LoadMenu()
+function TRUStInMyTiming:__init()
+
+  Callback.Add("Tick", function() self:Tick() end)
 
   Menu = MenuElement({type = MENU, id = Scriptname, name = Scriptname})
   Menu:MenuElement({id = "fontsize", name = "Font size", value = 20, min = 4, max = 40, step = 1, identifier = ""})
@@ -116,7 +119,7 @@ end
 
 local lasttick = 0
 
-function Tick()
+function TRUStInMyTiming:Tick()
 
   local ticklimiter = Menu.ticklimiter:Value()
   if GetTickCount() > lasttick + ticklimiter then

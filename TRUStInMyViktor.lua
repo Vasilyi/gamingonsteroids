@@ -82,7 +82,6 @@ function Viktor:ProcessSpellCallback()
 	end
 end
 
-
 function Viktor:Tick()
 	self:ProcessSpellCallback()
 	if 	self.Menu.Flee.FleeActive:Value() then
