@@ -38,7 +38,8 @@ local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 
 local spellslist = {_Q,_W,_E,_R,SUMMONER_1,SUMMONER_2}
 lastcallback = {}
 
-
+blockattack = false
+blockmovement = false
 function ReturnState(champion,spell)
 	lastcallback[champion.charName..spell.name] = false
 end
@@ -81,6 +82,7 @@ function Viktor:ProcessSpellCallback()
 		end
 	end
 end
+
 
 function Viktor:Tick()
 	self:ProcessSpellCallback()
@@ -621,10 +623,22 @@ function Viktor:OnWndMsg(msg,key)
 	
 end
 
+_G.SDK.Orbwalker:OnPreMovement(function(process,target) 
+	if blockmovement then
+		process = false
+	end
+end)
 
+_G.SDK.Orbwalker:OnPreAttack(function(process,target) 
+	if blockattack then
+		process = false
+	end
+end)
 
 function EnableMovement()
 	--unblock movement
+	blockattack = false
+	blockmovement = false
 end
 
 function ReturnCursor(pos)
@@ -657,6 +671,8 @@ function Viktor:CastESpell(pos1, pos2)
 		castSpell.tick = ticker
 		if ticker - castSpell.tick < Game.Latency() then
 			--block movement
+			blockattack = true
+			blockmovement = true
 			Control.SetCursorPos(pos1)
 			Control.KeyDown(HK_E)
 			if not self.Menu.smartcast:Value() then
@@ -679,6 +695,8 @@ function Viktor:CastSpell(spell,pos)
 		castSpell.tick = ticker
 		if ticker - castSpell.tick < Game.Latency() then
 			--block movement
+			blockattack = true
+			blockmovement = true
 			Control.SetCursorPos(pos)
 			Control.KeyDown(spell)
 			Control.KeyUp(spell)
