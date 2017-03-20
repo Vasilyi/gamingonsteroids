@@ -648,7 +648,7 @@ end
 function ReturnCursor(pos)
 	Control.SetCursorPos(pos)
 	castSpell.state = 0
-	DelayAction(EnableMovement,0.05)
+	DelayAction(EnableMovement,0.1)
 end
 
 function SecondPosE(pos)
