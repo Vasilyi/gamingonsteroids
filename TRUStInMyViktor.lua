@@ -1,4 +1,4 @@
-local Scriptname,Version,Author,LVersion = "TRUSt in my Viktor","v0.1","TRUS","7.4"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Viktor","v0.8","TRUS","7.5"
 
 class "Viktor"
 
@@ -474,7 +474,7 @@ function Viktor:WaveClear(jungle)
 		end
 	end
 end
-
+DontAAPassive = false
 
 function Viktor:Combo()
 	local UseQ = self.Menu.Combo.comboUseQ:Value()
