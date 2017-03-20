@@ -481,7 +481,7 @@ function Viktor:Combo()
 	local UseW = self.Menu.Combo.comboUseW:Value()
 	local UseE = self.Menu.Combo.comboUseE:Value()
 	local UseR = self.Menu.Combo.comboUseR:Value()
-	local DontAAPassive = self.Menu.Combo.qAuto:Value()
+	DontAAPassive = self.Menu.Combo.qAuto:Value()
 	
 	
 	if UseQ and self:CanCast(_Q) then
@@ -623,15 +623,19 @@ function Viktor:OnWndMsg(msg,key)
 	
 end
 
-_G.SDK.Orbwalker:OnPreMovement(function(process,target) 
+_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 	if blockmovement then
-		process = false
+		arg.Process = false
 	end
 end)
 
-_G.SDK.Orbwalker:OnPreAttack(function(process,target) 
+_G.SDK.Orbwalker:OnPreAttack(function(arg) 
+	if arg.Target.type == "AIHeroClient" and DontAAPassive and not Viktor:HasBuff(myHero,"viktorpowertransferreturn") then
+		arg.Process = false
+	end
+	
 	if blockattack then
-		process = false
+		arg.Process = false
 	end
 end)
 
@@ -794,7 +798,7 @@ function Viktor:LoadMenu()
 	self.Menu.Combo:MenuElement({id = "comboUseW", name = "Use W", value = true, leftIcon=Icons["W"]})
 	self.Menu.Combo:MenuElement({id = "comboUseE", name = "Use E", value = true, leftIcon=Icons["E"]})
 	self.Menu.Combo:MenuElement({id = "comboUseR", name = "Use R", value = true, leftIcon=Icons["R"]})
-	self.Menu.Combo:MenuElement({id = "qAuto", name = "Dont AA without passive [WIP]", value = true})
+	self.Menu.Combo:MenuElement({id = "qAuto", name = "Dont AA without passive", value = true})
 	self.Menu.Combo:MenuElement({id = "comboActive", name = "Combo key", key = string.byte(" ")})
 	
 	
