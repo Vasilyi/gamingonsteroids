@@ -462,7 +462,6 @@ function Viktor:WaveClear(jungle)
 	local MinsAmount = self.Menu.WaveClear.waveNumE:Value()
 	local WaveClearMinMana = self.Menu.WaveClear.waveMana:Value()
 	if myHero.maxMana * WaveClearMinMana * 0.01 < myHero.mana then
-		local QMinions = self:GetEnemyMinions(Q.Range)
 		if UseQ and self:CanCast(_Q) then
 			local QTarget = self:GetQTarget(jungle)
 			if #QTarget > 0 then
@@ -806,7 +805,7 @@ function Viktor:LoadMenu()
 	self.Menu:MenuElement({type = MENU, id = "Harass", name = "Harass Settings"})
 	self.Menu.Harass:MenuElement({id = "harassUseQ", name = "Use Q", value = true, leftIcon=Icons["Q"]})
 	self.Menu.Harass:MenuElement({id = "harassUseE", name = "Use E", value = true, leftIcon=Icons["E"]})
-	self.Menu.Harass:MenuElement({id = "harassMana", name = "Mana usage in percent:", value = 30, min = 0, max = 101, identifier = "%"})
+	self.Menu.Harass:MenuElement({id = "harassMana", name = "Minimal mana percent:", value = 30, min = 0, max = 101, identifier = "%"})
 	self.Menu.Harass:MenuElement({id = "eDistance", name = "Harass range with E", value = 1000, min = E.Range, max = E.MaxRange, step = 50, identifier = ""})
 	self.Menu.Harass:MenuElement({id = "HarassActive", name = "Harass key", key = string.byte("C")})
 	
@@ -814,8 +813,8 @@ function Viktor:LoadMenu()
 	--[[WaveClear]]
 	self.Menu:MenuElement({type = MENU, id = "WaveClear", name = "WaveClear Settings"})
 	self.Menu.WaveClear:MenuElement({id = "waveUseQ", name = "Use Q", value = true, leftIcon=Icons["Q"]})
-	self.Menu.WaveClear:MenuElement({id = "waveUseE", name = "Use W", value = true, leftIcon=Icons["E"]})
-	self.Menu.WaveClear:MenuElement({id = "waveMana", name = "Mana usage in percent:", value = 30, min = 0, max = 100, identifier = "%"})
+	self.Menu.WaveClear:MenuElement({id = "waveUseE", name = "Use E", value = true, leftIcon=Icons["E"]})
+	self.Menu.WaveClear:MenuElement({id = "waveMana", name = "Minimal mana percent:", value = 30, min = 0, max = 100, identifier = "%"})
 	self.Menu.WaveClear:MenuElement({id = "waveNumE", name = "Minions to hit with E", value = 2, min = 1, max = 10, step = 1, identifier = ""})
 	self.Menu.WaveClear:MenuElement({id = "waveActive", name = "WaveClear key", key = string.byte("G")})
 	self.Menu.WaveClear:MenuElement({id = "jungleActive", name = "JungleClear key", key = string.byte("G")})
