@@ -1,5 +1,5 @@
 class "IHateSkillshots"
-local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.1","TRUS","7.4"
+local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.1","TRUS","7.6"
 
 Champs = {
 	

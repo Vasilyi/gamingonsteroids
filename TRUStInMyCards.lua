@@ -1,5 +1,5 @@
 --[v1.0]]
-local Scriptname,Version,Author,LVersion = "TRUSt in my Cards","v1.0","TRUS","7.4"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Cards","v1.0","TRUS","7.6"
 
 class "TwistedFate"
 

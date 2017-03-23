@@ -1,4 +1,4 @@
-local Scriptname,Version,Author,LVersion = "TRUSt in my Viktor","v0.8","TRUS","7.5"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Viktor","v0.9","TRUS","7.6"
 
 class "Viktor"
 
