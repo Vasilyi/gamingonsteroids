@@ -14,7 +14,6 @@ function TwistedFate:__init()
 	Callback.Add("Draw", function() self:Draw() end)
 	Callback.Add("WndMsg", function() self:OnWndMsg() end)
 	DelayAction(delayload,5)
-	
 end
 
 blockattack = false
@@ -32,9 +31,12 @@ function delayload()
 				arg.Process = false
 			end
 		end)
+	else
+		PrintChat("This script support IC Orbwalker only")
+		
 	end
 end
-
+local lastpick = 0
 --[[Spells]]
 function TwistedFate:LoadSpells()
 	Q = {Range = 1450, width = nil, Delay = 0.25, Radius = 40, Speed = 1000, Collision = false, aoe = false, type = "linear"}
@@ -63,6 +65,7 @@ function TwistedFate:LoadMenu()
 	self.Menu:MenuElement({id = "UseQ", name = "Use Q",leftIcon=Icons["Q"], key = string.byte("Z")})
 	
 	
+	self.Menu:MenuElement({id = "AutoW", name = "Autopick goldcard on ult", value = true})
 	self.Menu:MenuElement({id = "AutoQ", name = "AutoQ on immobile", value = true})
 	
 	--[[Draw]]
@@ -82,6 +85,23 @@ end
 function TwistedFate:Tick()
 	if myHero.dead then return end
 	
+	if self.Menu.AutoW:Value() and self:HasBuff(myHero, "Gate") then
+		local WName = myHero:GetSpellData(_W).name
+		if (self:CanCast(_W)) and WName == "PickACard" and GetTickCount() > lastpick + 200 and ToSelect == "NONE" then
+			ToSelect = "GOLD"
+			Control.CastSpell(HK_W)
+			lastpick = GetTickCount()
+		end
+	end
+	
+	if myHero.activeSpell and myHero.activeSpell.valid then
+		if string.find(myHero.activeSpell.name,"CardPreAttack") and onetimereset then
+			blockattack = true
+			local nextattack = 1000 / 0.651*myHero.attackSpeed
+			DelayAction(EnableMovement,nextattack/1000)
+			onetimereset = false
+		end
+	end
 	if self:CanCast(_Q) then 
 		if self.Menu.AutoQ:Value() then
 			local immobiletarget = self:GetImmobileTarget()
@@ -113,6 +133,7 @@ function EnableMovement()
 	--unblock movement
 	blockattack = false
 	blockmovement = false
+	onetimereset = true
 end
 
 function ReturnCursor(pos)
@@ -305,7 +326,7 @@ end
 function TwistedFate:CanCast(spellSlot)
 	return self:IsReady(spellSlot) and self:CheckMana(spellSlot)
 end
-local lastpick = 0
+
 
 function TwistedFate:OnWndMsg(key, param)
 	local WName = myHero:GetSpellData(_W).name
