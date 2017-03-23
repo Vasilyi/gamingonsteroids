@@ -1,28 +1,9 @@
 local Scriptname,Version,Author,LVersion = "TRUStInMyTiming","v1.0","TRUS","7.4"
 
 class "TRUStInMyTiming"
-
-function OnLoad()
-	TRUStInMyTiming()
-end
-
-function TRUStInMyTiming:__init()
-	
-	Callback.Add("Tick", function() self:Tick() end)
-	
-	Menu = MenuElement({type = MENU, id = Scriptname, name = Scriptname})
-	Menu:MenuElement({id = "fontsize", name = "Font size", value = 20, min = 4, max = 40, step = 1, identifier = ""})
-	Menu:MenuElement({id = "ticklimiter", name = "Limit ticks", value = 0, min = 0, max = 1000, step = 1, tooltip = "Increase it if you have lags", identifier = ""})
-	
-	Menu:MenuElement({id = "blank", type = SPACE , name = ""})
-	Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
-	Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
-	Callback.Add("Draw", function() self:Draw() end)
-	
-end
-
-objecttable = {
-	
+local lasttick = 0
+local drawobjectstab = {}
+local varobjecttable = {
 	["itemzhonya_base_stasis.troy"] = { lifetime = 2500 },
 	["vladimir_base_w_buf.troy"] = { lifetime = 2000 },
 	["maokai_base_r_aura.troy"] = { lifetime = 10000},
@@ -40,12 +21,12 @@ objecttable = {
 	["alistar_trample_"] = { lifetime = 7000},
 	["shen_standunited_shield_v2.troy"] = { lifetime = 3000},
 	["diplomaticimmunity_buf.troy"] = { lifetime = 7000} ,
-	["olaf_ragnorok_"] = { lifetime = 6000} ,
+	["olaf_ragnorok_"] = { lifetime = 6000},
 	["morgana_base_r_indicator_ring.troy"] = { lifetime = 3500},
-	["sion_base_r_cas.troy"] = { lifetime = 8000} ,
+	["sion_base_r_cas.troy"] = { lifetime = 8000},
 	["zac_r_tar.troy"] = { lifetime = 4000},
-	["dr_mundo_heal.troy"] = { lifetime = 12000} ,
-	["zhonyas_ring_activate.troy"] = { lifetime = 2500} ,
+	["dr_mundo_heal.troy"] = { lifetime = 12000},
+	["zhonyas_ring_activate.troy"] = { lifetime = 2500},
 	["kennen_ss_aoe_"] = { lifetime = 3500},
 	["akali_base_smoke_bomb_tar_team_"] = { lifetime = 8000},
 	["masteryi_base_w_buf.troy"] = { lifetime = 4000},
@@ -82,44 +63,56 @@ objecttable = {
 	["reapthewhirlwind_"] = { lifetime = 3000}
 }
 
-function table.contains(table, element)
+function OnLoad()
+	TRUStInMyTiming()
+end
+
+function TRUStInMyTiming:__init()
+	
+	Menu = MenuElement({type = MENU, id = Scriptname, name = Scriptname})
+	Menu:MenuElement({id = "fontsize", name = "Font size", value = 20, min = 4, max = 40, step = 1, identifier = ""})
+	Menu:MenuElement({id = "ticklimiter", name = "Limit ticks", value = 0, min = 0, max = 1000, step = 1, tooltip = "Increase it if you have lags", identifier = ""})
+	
+	Menu:MenuElement({id = "blank", type = SPACE , name = ""})
+	Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+	Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
+	
+	Callback.Add("Tick", function() self:Tick() end)
+	Callback.Add("Draw", function() self:Draw() end)
+	
+end
+function TRUStInMyTiming:alreadyintable(table, element)
 	for _, value in pairs(table) do
 		if element.networkID == value.networkID then
 			return true
 		end
 	end
-	
 	return false
 end
-
-
-drawobjects = {}
--- return the target particle
-function GetParticle()
+function TRUStInMyTiming:GetParticle()
 	for i = 1, Game.ObjectCount() do
 		local object = Game.Object(i)		
-		if object and objecttable[object.name:lower()] and not table.contains(drawobjects, object) then
-			table.insert(drawobjects, {networkID = object.networkID, object = object, endtick = GetTickCount() + objecttable[object.name:lower()].lifetime})
+		if object and varobjecttable[object.name:lower()] and not self:alreadyintable(drawobjectstab, object) then
+			table.insert(drawobjectstab, {networkID = object.networkID, object = object, endtick = GetTickCount() + varobjecttable[object.name:lower()].lifetime})
 		end
 	end
 end
 
-local lasttick = 0
-
 function TRUStInMyTiming:Tick()
 	local ticklimiter = Menu.ticklimiter:Value()
 	if GetTickCount() > lasttick + ticklimiter then
-		GetParticle()
+		self:GetParticle()
 		lasttick = GetTickCount()
 	end
 end
 
+
 function TRUStInMyTiming:Draw()
 	local fontsize = Menu.fontsize:Value()
-	for i, v in ipairs(drawobjects) do
+	for i, v in ipairs(drawobjectstab) do
 		if not v then return end 
 		if GetTickCount() > v.endtick + 500 then
-			table.remove(drawobjects, i)
+			drawobjectstab[i] = nil
 		else
 			local bufftime = ((v.endtick - GetTickCount())/1000)
 			if bufftime>0 then
