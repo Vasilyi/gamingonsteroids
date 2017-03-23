@@ -640,6 +640,9 @@ function delayload()
 				arg.Process = false
 			end
 		end)
+	else
+		PrintChat("This script support IC Orbwalker only")
+		
 	end
 end
 function EnableMovement()
