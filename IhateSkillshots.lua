@@ -320,7 +320,7 @@ function IHateSkillshots:__init()
 	Callback.Add("Tick", function() self:Tick() end)
 	--Callback.Add("Draw", function() self:Draw() end)
 	--Callback.Add("WndMsg", function() self:OnWndMsg() end)
-	
+	DelayAction(delayload,5)
 end
 
 str = { [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R" }
@@ -349,7 +349,24 @@ function IHateSkillshots:LoadMenu()
 	
 	
 end
-
+blockattack = false
+blockmovement = false
+function delayload()
+	if _G.SDK then
+		_G.SDK.Orbwalker:OnPreMovement(function(arg) 
+			if blockmovement then
+				arg.Process = false
+			end
+		end)
+		
+		_G.SDK.Orbwalker:OnPreAttack(function(arg) 
+			if blockattack then
+				arg.Process = false
+			end
+		end)
+		
+	end
+end
 function GetDistanceSqr(p1, p2)
 	assert(p1, "GetDistance: invalid argument: cannot calculate distance to "..type(p1))
 	p2 = p2 or myHero.pos
@@ -399,7 +416,7 @@ return unit.pos:DistanceTo(from and from or myHero) < range
 end
 
 function IHateSkillshots:CheckMana(spellSlot)
-	return myHero:GetSpellData(spellSlot).mana < myHero.mana
+	return myHero:GetSpellData(spellSlot).mana <= myHero.mana
 end
 
 function IHateSkillshots:IsReady(spellSlot)
@@ -414,9 +431,16 @@ end
 local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
 
 
+function EnableMovement()
+	--unblock movement
+	blockattack = false
+	blockmovement = false
+end
+
 function ReturnCursor(pos)
 	Control.SetCursorPos(pos)
 	castSpell.state = 0
+	DelayAction(EnableMovement,0.1)
 end
 
 function LeftClick(pos)
@@ -437,9 +461,10 @@ function IHateSkillshots:CastSpell(spell,pos)
 			castSpell.state = 1
 			castSpell.mouse = mousePos
 			castSpell.tick = ticker
-		end
-		if castSpell.state == 1 then
 			if ticker - castSpell.tick < Game.Latency() then
+				--block movement
+				blockattack = true
+				blockmovement = true
 				Control.SetCursorPos(pos)
 				Control.KeyDown(spell)
 				Control.KeyUp(spell)
@@ -454,15 +479,16 @@ function IHateSkillshots:Tick()
 	
 	for i, spell in pairs(Champs[myHero.charName]) do
 		if self.Menu.Skillshots[str[i]]:Value() and self:CanCast(i) then
-			
 			local temptarget = self:GetTarget(spell.range)
 			if temptarget == nil then return end
+			
 			local collisionc = spell.ignorecol and 0 or spell.minionCollisionWidth
 			if collisionc > 0 then
 				if (temptarget:GetCollision(spell.minionCollisionWidth,spell.speed,spell.delay)) >0 then
 				return end
 			end
 			local temppred = temptarget:GetPrediction(spell.speed,spell.delay/1000)
+			
 			if temppred == nil or GetDistance(temppred)>spell.range then return end
 			
 			if spell.circular then 

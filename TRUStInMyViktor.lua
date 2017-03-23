@@ -11,6 +11,7 @@ function Viktor:__init()
 	Callback.Add("Draw", function() self:Draw() end)
 	Callback.Add("WndMsg", function() self:OnWndMsg() end)
 	self:ProcessSpellsLoad()
+	DelayAction(delayload,5)
 	
 end
 
@@ -622,22 +623,25 @@ function Viktor:OnWndMsg(msg,key)
 	
 end
 
-_G.SDK.Orbwalker:OnPreMovement(function(arg) 
-	if blockmovement then
-		arg.Process = false
+function delayload()
+	if _G.SDK then
+		_G.SDK.Orbwalker:OnPreMovement(function(arg) 
+			if blockmovement then
+				arg.Process = false
+			end
+		end)
+		
+		_G.SDK.Orbwalker:OnPreAttack(function(arg) 
+			if arg.Target.type == "AIHeroClient" and DontAAPassive and not Viktor:HasBuff(myHero,"viktorpowertransferreturn") then
+				arg.Process = false
+			end
+			
+			if blockattack then
+				arg.Process = false
+			end
+		end)
 	end
-end)
-
-_G.SDK.Orbwalker:OnPreAttack(function(arg) 
-	if arg.Target.type == "AIHeroClient" and DontAAPassive and not Viktor:HasBuff(myHero,"viktorpowertransferreturn") then
-		arg.Process = false
-	end
-	
-	if blockattack then
-		arg.Process = false
-	end
-end)
-
+end
 function EnableMovement()
 	--unblock movement
 	blockattack = false
