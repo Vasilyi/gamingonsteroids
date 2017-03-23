@@ -13,8 +13,28 @@ function TwistedFate:__init()
 	Callback.Add("Tick", function() self:Tick() end)
 	Callback.Add("Draw", function() self:Draw() end)
 	Callback.Add("WndMsg", function() self:OnWndMsg() end)
+	DelayAction(delayload,5)
 	
 end
+
+blockattack = false
+blockmovement = false
+function delayload()
+	if _G.SDK then
+		_G.SDK.Orbwalker:OnPreMovement(function(arg) 
+			if blockmovement then
+				arg.Process = false
+			end
+		end)
+		
+		_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
+			if blockattack then
+				arg.Process = false
+			end
+		end)
+	end
+end
+
 --[[Spells]]
 function TwistedFate:LoadSpells()
 	Q = {Range = 1450, width = nil, Delay = 0.25, Radius = 40, Speed = 1000, Collision = false, aoe = false, type = "linear"}
@@ -73,11 +93,11 @@ function TwistedFate:Tick()
 			self:CastQ()
 		end
 	end
-	WName = myHero:GetSpellData(_W).name
+	local WName = myHero:GetSpellData(_W).name
 	
-	if (ToSelect == "GOLD" and WName == "GoldCardLock")
-	or (ToSelect == "RED" and WName == "RedCardLock")
-	or (ToSelect == "BLUE" and WName == "BlueCardLock") then
+	if ((ToSelect == "GOLD" or self.Menu.CardPicker.GoldCard:Value()) and WName == "GoldCardLock")
+	or ((ToSelect == "RED" or self.Menu.CardPicker.RedCard:Value()) and WName == "RedCardLock") 
+	or ((ToSelect == "BLUE" or self.Menu.CardPicker.BlueCard:Value()) and WName == "BlueCardLock") then
 		Control.CastSpell(HK_W)
 		ToSelect = "NONE"
 	end
@@ -88,9 +108,17 @@ end
 local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
 
 
+
+function EnableMovement()
+	--unblock movement
+	blockattack = false
+	blockmovement = false
+end
+
 function ReturnCursor(pos)
 	Control.SetCursorPos(pos)
 	castSpell.state = 0
+	DelayAction(EnableMovement,0.1)
 end
 
 function LeftClick(pos)
@@ -111,9 +139,10 @@ function TwistedFate:CastSpell(spell,pos)
 			castSpell.state = 1
 			castSpell.mouse = mousePos
 			castSpell.tick = ticker
-		end
-		if castSpell.state == 1 then
 			if ticker - castSpell.tick < Game.Latency() then
+				--block movement
+				blockattack = true
+				blockmovement = true
 				Control.SetCursorPos(pos)
 				Control.KeyDown(spell)
 				Control.KeyUp(spell)
@@ -279,22 +308,19 @@ end
 local lastpick = 0
 
 function TwistedFate:OnWndMsg(key, param)
-	WName = myHero:GetSpellData(_W).name
-	if (self:CanCast(_W)) and WName == "PickACard" and GetTickCount() > lastpick + 200 then
-		
+	local WName = myHero:GetSpellData(_W).name
+	if (self:CanCast(_W)) and WName == "PickACard" and GetTickCount() > lastpick + 200 and ToSelect == "NONE" then
 		if self.Menu.CardPicker.GoldCard:Value() then
 			--PrintChat("gold")
 			ToSelect = "GOLD"
 			Control.CastSpell(HK_W)
 			lastpick = GetTickCount()
-		end
-		if self.Menu.CardPicker.RedCard:Value() then
+		elseif self.Menu.CardPicker.RedCard:Value() then
 			--PrintChat("red")
 			ToSelect = "RED"
 			Control.CastSpell(HK_W)
 			lastpick = GetTickCount()
-		end
-		if self.Menu.CardPicker.BlueCard:Value() then
+		elseif self.Menu.CardPicker.BlueCard:Value() then
 			--PrintChat("blue")
 			ToSelect = "BLUE"
 			Control.CastSpell(HK_W)
