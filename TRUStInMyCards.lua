@@ -15,7 +15,7 @@ function TwistedFate:__init()
 	Callback.Add("WndMsg", function() self:OnWndMsg() end)
 	DelayAction(delayload,5)
 end
-
+onetimereset = true
 blockattack = false
 blockmovement = false
 function delayload()
@@ -84,9 +84,9 @@ end
 
 function TwistedFate:Tick()
 	if myHero.dead then return end
-	
+	local WName = myHero:GetSpellData(_W).name
 	if self.Menu.AutoW:Value() and self:HasBuff(myHero, "Gate") then
-		local WName = myHero:GetSpellData(_W).name
+		
 		if (self:CanCast(_W)) and WName == "PickACard" and GetTickCount() > lastpick + 200 and ToSelect == "NONE" then
 			ToSelect = "GOLD"
 			Control.CastSpell(HK_W)
@@ -113,7 +113,7 @@ function TwistedFate:Tick()
 			self:CastQ()
 		end
 	end
-	local WName = myHero:GetSpellData(_W).name
+	
 	
 	if ((ToSelect == "GOLD" or self.Menu.CardPicker.GoldCard:Value()) and WName == "GoldCardLock")
 	or ((ToSelect == "RED" or self.Menu.CardPicker.RedCard:Value()) and WName == "RedCardLock") 
@@ -330,22 +330,22 @@ end
 
 function TwistedFate:OnWndMsg(key, param)
 	local WName = myHero:GetSpellData(_W).name
-	if (self:CanCast(_W)) and WName == "PickACard" and GetTickCount() > lastpick + 200 and ToSelect == "NONE" then
+	if (self:CanCast(_W)) and WName == "PickACard" and GetTickCount() > lastpick + 200 then
 		if self.Menu.CardPicker.GoldCard:Value() then
 			--PrintChat("gold")
 			ToSelect = "GOLD"
-			Control.CastSpell(HK_W)
 			lastpick = GetTickCount()
 		elseif self.Menu.CardPicker.RedCard:Value() then
 			--PrintChat("red")
 			ToSelect = "RED"
-			Control.CastSpell(HK_W)
 			lastpick = GetTickCount()
 		elseif self.Menu.CardPicker.BlueCard:Value() then
 			--PrintChat("blue")
 			ToSelect = "BLUE"
-			Control.CastSpell(HK_W)
 			lastpick = GetTickCount()
+		end
+		if ToSelect ~= "NONE" then
+			Control.CastSpell(HK_W)
 		end
 	end
 end
