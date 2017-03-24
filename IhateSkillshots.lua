@@ -153,7 +153,7 @@ Champs = {
 	},
 	
 	["Khazix"] = {
-		[_Q] = {delay = 250, range = 1025, minionCollisionWidth = 73, speed = 1700}
+		[_W] = {delay = 250, range = 1025, minionCollisionWidth = 73, speed = 1700}
 	},
 	["Kogmaw"] = {
 		[_Q] = {delay = 250, range = 1200, minionCollisionWidth = 70, speed = 1650},
