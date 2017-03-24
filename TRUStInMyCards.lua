@@ -134,11 +134,11 @@ function EnableMovement()
 	blockattack = false
 	blockmovement = false
 	onetimereset = true
+	castSpell.state = 0
 end
 
 function ReturnCursor(pos)
 	Control.SetCursorPos(pos)
-	castSpell.state = 0
 	DelayAction(EnableMovement,0.1)
 end
 
@@ -156,7 +156,7 @@ function TwistedFate:CastSpell(spell,pos)
 	else
 		local delay = self.Menu.delay:Value()
 		local ticker = GetTickCount()
-		if castSpell.state == 0 then
+		if castSpell.state == 0 and ticker > castSpell.casting then
 			castSpell.state = 1
 			castSpell.mouse = mousePos
 			castSpell.tick = ticker
@@ -168,7 +168,7 @@ function TwistedFate:CastSpell(spell,pos)
 				Control.KeyDown(spell)
 				Control.KeyUp(spell)
 				DelayAction(LeftClick,delay/1000,{castSpell.mouse})
-				castSpell.casting = ticker + delay
+				castSpell.casting = ticker + 500
 			end
 		end
 	end
