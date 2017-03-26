@@ -318,6 +318,7 @@ function IHateSkillshots:__init()
 	-- self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
+	Callback.Add("Draw", function() self:Draw() end)
 	--Callback.Add("Draw", function() self:Draw() end)
 	--Callback.Add("WndMsg", function() self:OnWndMsg() end)
 	DelayAction(delayload,5)
@@ -336,10 +337,14 @@ function IHateSkillshots:LoadMenu()
 	
 	--[[Skills list]]
 	self.Menu:MenuElement({id = "Skillshots", name = "KeyBinds", type = MENU})
+	self.Menu:MenuElement({id = "Draw", name = "Drawing", type = MENU})
 	for i, spell in pairs(Champs[myHero.charName]) do
-		
+		self.Menu.Draw:MenuElement({id = str[i], name = "Draw range"..str[i], value = true})
+		self.Menu.Draw:MenuElement({id = "color"..str[i], name = "Color for "..str[i], color = Draw.Color(0xBF3F3FFF)})
 		self.Menu.Skillshots:MenuElement({id = str[i], name = "Use"..str[i], key = keybindings[i]})
 	end
+	
+	
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	
@@ -502,6 +507,14 @@ function IHateSkillshots:Tick()
 	end
 end
 
+function IHateSkillshots:Draw()
+	if myHero.dead then return end
+	for i, spell in pairs(Champs[myHero.charName]) do
+		if self.Menu.Draw[str[i]]:Value() then
+			Draw.Circle(myHero.pos, spell.range, 3, self.Menu.Draw["color"..str[i]]:Value())
+		end
+	end
+end
 function OnLoad()
 	IHateSkillshots()
 end
