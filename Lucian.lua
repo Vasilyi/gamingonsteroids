@@ -23,7 +23,7 @@ function Lucian:__init()
 		
 		_G.SDK.Orbwalker:OnPostAttack(function() 
 			passive = false 
-			PrintChat("passive removed")
+			--PrintChat("passive removed")
 			local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 			if combomodeactive and _G.SDK.Orbwalker:CanMove() and Game.Timer() > lastbuff - 3.5 then 
 				if self:CanCast(_E) and self.Menu.UseE:Value() and _G.SDK.Orbwalker:GetTarget() then
@@ -95,10 +95,9 @@ function Lucian:Tick()
 	local buffcheck = self:HasBuff(myHero,"lucianpassivebuff")
 	if buffcheck and buffcheck ~= lastbuff then
 		lastbuff = buffcheck
-		PrintChat("Passive added : "..Game.Timer().." : "..lastbuff)
+		--PrintChat("Passive added : "..Game.Timer().." : "..lastbuff)
 		passive = true
 	end
-	
 	local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 	if combomodeactive and _G.SDK.Orbwalker:CanMove() and Game.Timer() > lastbuff - 3 then 
 		if self:CanCast(_E) and self.Menu.UseE:Value() and _G.SDK.Orbwalker:GetTarget() then
