@@ -4,7 +4,7 @@ if myHero.charName ~= "Lucian" then return end
 class "Lucian"
 
 local passive = true
-
+local lastbuff = 0
 function Lucian:__init()
 	PrintChat("TRUSt in my Lucian "..Version.." - Loaded....")
 	self:LoadSpells()
@@ -20,9 +20,17 @@ function Lucian:__init()
 			end
 		end)
 		
+		
 		_G.SDK.Orbwalker:OnPostAttack(function() 
-			passive = false
-			self:CastQ(_G.SDK.Orbwalker:GetTarget())
+			passive = false 
+			PrintChat("passive removed")
+			local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
+			if combomodeactive and _G.SDK.Orbwalker:CanMove() and Game.Timer() > lastbuff - 3.5 then 
+				if self:CanCast(_E) and self.Menu.UseE:Value() and _G.SDK.Orbwalker:GetTarget() then
+					self:CastSpell(HK_E,mousePos)
+					return
+				end
+			end
 		end)
 		
 		_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
@@ -40,16 +48,19 @@ blockattack = false
 blockmovement = false
 
 local lastpick = 0
-local lastbuff = 0
+
 --[[Spells]]
 function Lucian:LoadSpells()
 	Q = {Range = 1190, width = nil, Delay = 0.25, Radius = 60, Speed = 2000, Collision = false, aoe = false, type = "linear"}
 end
 
+
+
 function Lucian:LoadMenu()
 	self.Menu = MenuElement({type = MENU, id = "TRUStinymyLucian", name = Scriptname})
 	self.Menu:MenuElement({id = "UseQ", name = "UseQ", value = true})
 	self.Menu:MenuElement({id = "UseW", name = "UseW", value = true})
+	self.Menu:MenuElement({id = "UseE", name = "UseE", value = true})
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	
@@ -72,7 +83,7 @@ end
 function Lucian:HasBuff(unit, buffname)
 	for K, Buff in pairs(self:GetBuffs(unit)) do
 		if Buff.name:lower() == buffname:lower() then
-			return Buff.startTime
+			return Buff.expireTime
 		end
 	end
 	return false
@@ -80,14 +91,30 @@ end
 
 function Lucian:Tick()
 	if myHero.dead or not _G.SDK then return end
+	
+	local buffcheck = self:HasBuff(myHero,"lucianpassivebuff")
+	if buffcheck and buffcheck ~= lastbuff then
+		lastbuff = buffcheck
+		PrintChat("Passive added : "..Game.Timer().." : "..lastbuff)
+		passive = true
+	end
+	
 	local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
-	if combomodeactive and _G.SDK.Orbwalker:CanMove() then 
+	if combomodeactive and _G.SDK.Orbwalker:CanMove() and Game.Timer() > lastbuff - 3 then 
+		if self:CanCast(_E) and self.Menu.UseE:Value() and _G.SDK.Orbwalker:GetTarget() then
+			self:CastSpell(HK_E,mousePos)
+			return
+		end
 		if self:CanCast(_Q) and self.Menu.UseQ:Value() and _G.SDK.Orbwalker:GetTarget() then
 			self:CastQ(_G.SDK.Orbwalker:GetTarget())
+			return
 		end
 		if self:CanCast(_W) and self.Menu.UseW:Value() and _G.SDK.Orbwalker:GetTarget() then
 			self:CastW(_G.SDK.Orbwalker:GetTarget())
+			return
 		end
+		
+		
 	end
 	
 	if myHero.activeSpell and myHero.activeSpell.valid and 
@@ -95,12 +122,7 @@ function Lucian:Tick()
 		passive = true
 		--PrintChat("found passive1")
 	end
-	local buffcheck = self:HasBuff(myHero,"lucianpassivebuff")
-	if buffcheck and buffcheck ~= lastbuff then
-		lastbuff = buffcheck
-		--PrintChat("found passive2")
-		passive = true
-	end
+	
 	
 end
 
