@@ -102,7 +102,7 @@ function Lucian:Tick()
 	local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 	
 	local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
-	if harassactive and self.Menu.UseQHarass:Value() then self:Harass() end 
+	if harassactive and self.Menu.UseQHarass:Value() and self:CanCast(_Q)  then self:Harass() end 
 	
 	
 	if combomodeactive and _G.SDK.Orbwalker:CanMove() and Game.Timer() > lastbuff - 3 then 
