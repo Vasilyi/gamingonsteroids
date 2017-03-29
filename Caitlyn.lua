@@ -1,12 +1,12 @@
 --[v1.0]]
 local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.0","TRUS","7.6"
-
+	if myHero.charName ~= "Caitlyn" then return end
 class "Caitlyn"
 
 local qtarget
 
 function Caitlyn:__init()
-	if myHero.charName ~= "Caitlyn" then return end
+
 	PrintChat("TRUSt in my Caitlyn "..Version.." - Loaded....")
 	self:LoadSpells()
 	self:LoadMenu()
@@ -94,21 +94,9 @@ end
 function Caitlyn:AutoW()
 	if not self.Menu.autoW:Value() then return end
 	local ImmobileEnemy = self:GetImmobileTarget()
-	if ImmobileEnemy then
+	if ImmobileEnemy and myHero.pos:DistanceTo(ImmobileEnemy.pos)<800 then
 		self:CastSpell(HK_W,ImmobileEnemy.pos)
 	end
-end
-
-function Caitlyn:GetImmobileTarget()
-	local GetEnemyHeroes = _G.SDK.ObjectManager:GetEnemyHeroes(800)
-	local Target = nil
-	for i = 1, #GetEnemyHeroes do
-		local Enemy = GetEnemyHeroes[i]
-		if Enemy and self:Stunned(Enemy) then
-			return Enemy
-		end
-	end
-	return false
 end
 
 function Caitlyn:CastSpell(spell,pos)
@@ -136,6 +124,44 @@ function Caitlyn:CastSpell(spell,pos)
 end
 
 
+function Caitlyn:GetImmobileTarget()
+	local GetEnemyHeroes = _G.SDK.ObjectManager:GetEnemyHeroes(800)
+	local Target = nil
+	for i = 1, #GetEnemyHeroes do
+		local Enemy = GetEnemyHeroes[i]
+		if Enemy and self:Stunned(Enemy) then
+			return Enemy
+		end
+	end
+	return false
+end
+
+function QCombo(pos)
+Control.SetCursorPos(pos)
+Control.KeyDown(HK_Q)
+Control.KeyUp(HK_Q)
+end
+
+function Caitlyn:CastCombo(pos)
+		local delay = self.Menu.delay:Value()
+		local ticker = GetTickCount()
+		if castSpell.state == 0 and ticker > castSpell.casting then
+			castSpell.state = 1
+			castSpell.mouse = mousePos
+			castSpell.tick = ticker
+			if ticker - castSpell.tick < Game.Latency() then
+				--block movement
+				Control.SetCursorPos(pos)
+				Control.KeyDown(HK_E)
+				Control.KeyUp(HK_E)
+				DelayAction(QCombo,0.01,{pos})
+				DelayAction(LeftClick,delay/1000,{castSpell.mouse})
+				castSpell.casting = ticker
+			end
+		end
+end
+
+
 --[[CastEQ]]
 function Caitlyn:CastE(target)
 	if not _G.SDK then return end
@@ -143,7 +169,7 @@ function Caitlyn:CastE(target)
 	if target and target:GetCollision(E.Radius,E.Speed,E.Delay) == 0 then
 		local castPos = target:GetPrediction(E.Speed, E.Delay)
 		local newpos = myHero.pos:Extended(castPos,math.random(0,E.Range))
-		self:CastSpell(HK_E, newpos)
+		self:CastCombo(newpos)
 		qtarget = newpos
 	end
 end
