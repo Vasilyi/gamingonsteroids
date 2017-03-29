@@ -61,6 +61,7 @@ function Lucian:LoadMenu()
 	self.Menu:MenuElement({id = "UseQ", name = "UseQ", value = true})
 	self.Menu:MenuElement({id = "UseW", name = "UseW", value = true})
 	self.Menu:MenuElement({id = "UseE", name = "UseE", value = true})
+	self.Menu:MenuElement({id = "UseQHarass", name = "Harass with Q", value = true})
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	
@@ -99,6 +100,11 @@ function Lucian:Tick()
 		passive = true
 	end
 	local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
+	
+	local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
+	if harassactive and self.Menu.UseQHarass:Value() then self:Harass() end 
+	
+	
 	if combomodeactive and _G.SDK.Orbwalker:CanMove() and Game.Timer() > lastbuff - 3 then 
 		if self:CanCast(_E) and self.Menu.UseE:Value() and _G.SDK.Orbwalker:GetTarget() then
 			self:CastSpell(HK_E,mousePos)
@@ -203,6 +209,60 @@ end
 
 function Lucian:CanCast(spellSlot)
 	return self:IsReady(spellSlot) and self:CheckMana(spellSlot)
+end
+
+
+
+function Lucian:Harass()
+	local temptarget = self:FarQTarget()
+	if temptarget then
+		self:CastSpell(HK_Q,temptarget.pos)
+	end
+end
+
+
+
+
+function Lucian:FarQTarget()
+	local qtarget = _G.SDK.TargetSelector:GetTarget(900, _G.SDK.DAMAGE_TYPE_PHYSICAL)
+	if qtarget then
+		local qdelay = 0.4 - myHero.levelData.lvl*0.01
+		local pos = qtarget:GetPrediction(math.huge,qdelay)
+		minionlist = _G.SDK.ObjectManager:GetEnemyMinions(500)
+		
+		V = Vector(pos) - Vector(myHero.pos)
+		
+		Vn = V:Normalized()
+		Distance = myHero.pos:DistanceTo(pos)
+		tx, ty, tz = Vn:Unpack()
+		TopX = pos.x - (tx * Distance)
+		TopY = pos.y - (ty * Distance)
+		TopZ = pos.z - (tz * Distance)
+		
+		Vr = V:Perpendicular():Normalized()
+		Radius = qtarget.boundingRadius
+		tx, ty, tz = Vr:Unpack()
+		
+		LeftX = pos.x + (tx * Radius)
+		LeftY = pos.y + (ty * Radius)
+		LeftZ = pos.z + (tz * Radius)
+		RightX = pos.x - (tx * Radius)
+		RightY = pos.y - (ty * Radius)
+		RightZ = pos.z - (tz * Radius)
+		
+		Left = Point(LeftX, LeftY, LeftZ)
+		Right = Point(RightX, RightY, RightZ)
+		Top = Point(TopX, TopY, TopZ)
+		Poly = Polygon(Left, Right, Top)
+		
+		for i, minion in pairs(minionlist) do
+			toPoint = Point(minion.pos.x, minion.pos.y,minion.pos.z)
+			if Poly:__contains(toPoint) then
+				return minion
+			end
+		end
+	end
+	return false 
 end
 
 
