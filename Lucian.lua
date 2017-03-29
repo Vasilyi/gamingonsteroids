@@ -228,6 +228,7 @@ function Lucian:FarQTarget()
 	if qtarget then
 		local qdelay = 0.4 - myHero.levelData.lvl*0.01
 		local pos = qtarget:GetPrediction(math.huge,qdelay)
+		if not pos then return false end 
 		minionlist = _G.SDK.ObjectManager:GetEnemyMinions(500)
 		
 		V = Vector(pos) - Vector(myHero.pos)
