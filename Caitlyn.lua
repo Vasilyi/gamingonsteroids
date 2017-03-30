@@ -40,7 +40,7 @@ local lastpick = 0
 --[[Spells]]
 function Caitlyn:LoadSpells()
 	Q = {Range = 1190, width = nil, Delay = 0.25, Radius = 60, Speed = 2000}
-	E = {Range = 1190, width = nil, Delay = 0.25, Radius = 80, Speed = 1600}
+	E = {Range = 800, width = nil, Delay = 0.25, Radius = 80, Speed = 1600}
 end
 
 function Caitlyn:LoadMenu()
