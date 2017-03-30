@@ -72,6 +72,8 @@ local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 
 
 
 function ReturnCursor(pos)
+blockmovement = false
+blockattack = false 
 	Control.SetCursorPos(pos)
 	castSpell.state = 0
 	
@@ -151,6 +153,8 @@ function Caitlyn:CastCombo(pos)
 			castSpell.tick = ticker
 			if ticker - castSpell.tick < Game.Latency() then
 				--block movement
+				blockmovement = true
+				blockattack = true
 				Control.SetCursorPos(pos)
 				Control.KeyDown(HK_E)
 				Control.KeyUp(HK_E)
@@ -169,7 +173,7 @@ function Caitlyn:CastE(target)
 	if target and target:GetCollision(E.Radius,E.Speed,E.Delay) == 0 then
 		local castPos = target:GetPrediction(E.Speed, E.Delay)
 		local newpos = myHero.pos:Extended(castPos,math.random(0,E.Range))
-		self:CastCombo(newpos)
+		self:CastCombo(castPos)
 		qtarget = newpos
 	end
 end

@@ -1,12 +1,12 @@
 --[v1.0]]
 local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.0","TRUS","7.6"
-
+	if myHero.charName ~= "Ezreal" then return end
 class "Ezreal"
 
 
 
 function Ezreal:__init()
-	if myHero.charName ~= "Ezreal" then return end
+
 	PrintChat("TRUSt in my Ezreal "..Version.." - Loaded....")
 	self:LoadSpells()
 	self:LoadMenu()
@@ -122,7 +122,7 @@ function Ezreal:CastQ(target)
 if not _G.SDK then return end
 	local target = target or _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL);
 	if target and self:CanCast(_Q) and self.Menu.UseQ:Value() and target:GetCollision(Q.Radius,Q.Speed,Q.Delay) == 0 then
-		local castPos = target:GetPrediction(Q.Delay)
+		local castPos = target:GetPrediction(Q.Speed,Q.Delay)
 		local newpos = myHero.pos:Extended(castPos,math.random(0,Q.Range))
 		self:CastSpell(HK_Q, castPos)
 	end

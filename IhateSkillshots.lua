@@ -500,7 +500,7 @@ function IHateSkillshots:Tick()
 				self:CastSpell(castbuttons[i],temppred)
 			else
 				local newpos = myHero.pos:Extended(temppred,math.random(0,spell.range))
-				self:CastSpell(castbuttons[i],newpos)
+				self:CastSpell(castbuttons[i],temppred)
 			end
 			
 		end
