@@ -538,11 +538,10 @@ end
 
 
 if myHero.charName == "Caitlyn" then
-	--[v1.0]]
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.0","TRUS","7.6"
-	
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.1","TRUS","7.6"
+	if myHero.charName ~= "Caitlyn" then return end
 	class "Caitlyn"
-	
+	require "DamageLib"
 	local qtarget
 	
 	function Caitlyn:__init()
@@ -551,8 +550,7 @@ if myHero.charName == "Caitlyn" then
 		self:LoadSpells()
 		self:LoadMenu()
 		Callback.Add("Tick", function() self:Tick() end)
-		
-		
+		Callback.Add("Draw", function() self:Draw() end)
 		
 		if _G.SDK then
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
@@ -585,9 +583,12 @@ if myHero.charName == "Caitlyn" then
 	
 	function Caitlyn:LoadMenu()
 		self.Menu = MenuElement({type = MENU, id = "TRUStinymyCaitlyn", name = Scriptname})
+		self.Menu:MenuElement({id = "UseUlti", name = "Use R", tooltip = "On killable target which is on screen", key = string.byte("R")})
 		self.Menu:MenuElement({id = "UseEQ", name = "UseEQ", key = string.byte("X")})
 		self.Menu:MenuElement({id = "autoW", name = "Use W on cc", value = true})
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", value = true})
+		self.Menu:MenuElement({id = "DrawR", name = "Draw Killable with R", value = true})
+		self.Menu:MenuElement({id = "DrawColor", name = "Color for Killable circle", color = Draw.Color(0xBF3F3FFF)})
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 		
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
@@ -598,6 +599,11 @@ if myHero.charName == "Caitlyn" then
 	function Caitlyn:Tick()
 		if myHero.dead or not _G.SDK then return end
 		local useEQ = self.Menu.UseEQ:Value()
+		
+		if self.Menu.UseUlti:Value() and self:CanCast(_R) then
+			self:UseR()
+		end
+		
 		if self:CanCast(_Q) and self:CanCast(_E) and useEQ then
 			self:CastE(_G.SDK.Orbwalker:GetTarget())
 		end
@@ -621,6 +627,36 @@ if myHero.charName == "Caitlyn" then
 	
 	function LeftClick(pos)
 		DelayAction(ReturnCursor,0.01,{pos})
+	end
+	
+	function Caitlyn:GetRTarget()
+		self.KillableHeroes = {}
+		local heroeslist = _G.SDK.ObjectManager:GetEnemyHeroes()
+		for i, hero in pairs(heroeslist) do
+			local RDamage = getdmg("R",hero,myHero,1)
+			if hero.health and RDamage and RDamage > hero.health and hero.pos2D.onScreen then
+				table.insert(self.KillableHeroes, hero)
+			end
+		end
+		return self.KillableHeroes
+	end
+	
+	function Caitlyn:UseR()
+		local RTarget = self:GetRTarget()
+		if #RTarget > 0 then
+			Control.SetCursorPos(RTarget[1].pos)
+			Control.KeyDown(HK_R)
+			Control.KeyUp(HK_R)
+		end
+	end
+	
+	function Caitlyn:Draw()
+		if self.Menu.DrawR:Value() then
+			local RTarget = self:GetRTarget()
+			for i, hero in pairs(RTarget) do
+				Draw.Circle(hero.pos, 60, 3, self.Menu.DrawColor:Value())
+			end
+		end
 	end
 	
 	function Caitlyn:Stunned(enemy)
