@@ -123,8 +123,8 @@ if not _G.SDK then return end
 	local target = target or _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL);
 	if target and self:CanCast(_Q) and self.Menu.UseQ:Value() and target:GetCollision(Q.Radius,Q.Speed,Q.Delay) == 0 then
 		local castPos = target:GetPrediction(Q.Speed,Q.Delay)
-		local newpos = myHero.pos:Extended(castPos,math.random(0,Q.Range))
-		self:CastSpell(HK_Q, castPos)
+		local newpos = myHero.pos:Extended(castPos,math.random(100,300))
+		self:CastSpell(HK_Q, newpos)
 	end
 end
 

@@ -172,8 +172,8 @@ function Caitlyn:CastE(target)
 	local target = target or _G.SDK.TargetSelector:GetTarget(E.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL);
 	if target and target:GetCollision(E.Radius,E.Speed,E.Delay) == 0 then
 		local castPos = target:GetPrediction(E.Speed, E.Delay)
-		local newpos = myHero.pos:Extended(castPos,math.random(0,E.Range))
-		self:CastCombo(castPos)
+		local newpos = myHero.pos:Extended(castPos,math.random(100,300))
+		self:CastCombo(newpos)
 		qtarget = newpos
 	end
 end
@@ -190,7 +190,6 @@ end
 function Caitlyn:CanCast(spellSlot)
 	return self:IsReady(spellSlot) and self:CheckMana(spellSlot)
 end
-
 
 function OnLoad()
 	Caitlyn()

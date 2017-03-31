@@ -182,7 +182,7 @@ function TwistedFate:CastQ(target)
 		local qTarget = self:GetTarget(Q.Range)
 		if qTarget then
 			local castPos = target:GetPrediction(Q.Delay)
-			local newpos = myHero.pos:Extended(castPos,math.random(0,Q.Range))
+			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
 			self:CastSpell(HK_Q, castPos)
 		end
 	end
