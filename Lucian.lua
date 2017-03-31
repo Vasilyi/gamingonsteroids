@@ -1,6 +1,7 @@
 --[v1.0]]
 local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.0","TRUS","7.6"
 if myHero.charName ~= "Lucian" then return end
+require "2DGeometry"
 class "Lucian"
 
 local passive = true

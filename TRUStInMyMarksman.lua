@@ -1,3 +1,4 @@
+require "2DGeometry"
 if myHero.charName == "Ashe" then
 	--[v1.0]]
 	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.0","TRUS","7.6"
