@@ -635,7 +635,8 @@ if myHero.charName == "Caitlyn" then
 	function Caitlyn:AutoW()
 		if not self.Menu.autoW:Value() then return end
 		local ImmobileEnemy = self:GetImmobileTarget()
-		if ImmobileEnemy and myHero.pos:DistanceTo(ImmobileEnemy.pos)<800 then
+		if ImmobileEnemy and myHero.pos:DistanceTo(ImmobileEnemy.pos)<800 and (not LastW or LastW:DistanceTo(ImmobileEnemy.pos)>60) then
+			LastW = ImmobileEnemy.pos
 			self:CastSpell(HK_W,ImmobileEnemy.pos)
 		end
 	end

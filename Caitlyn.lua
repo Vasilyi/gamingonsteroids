@@ -1,12 +1,12 @@
 --[v1.0]]
 local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.0","TRUS","7.6"
-	if myHero.charName ~= "Caitlyn" then return end
+if myHero.charName ~= "Caitlyn" then return end
 class "Caitlyn"
 
 local qtarget
 
 function Caitlyn:__init()
-
+	
 	PrintChat("TRUSt in my Caitlyn "..Version.." - Loaded....")
 	self:LoadSpells()
 	self:LoadMenu()
@@ -72,8 +72,8 @@ local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 
 
 
 function ReturnCursor(pos)
-blockmovement = false
-blockattack = false 
+	blockmovement = false
+	blockattack = false 
 	Control.SetCursorPos(pos)
 	castSpell.state = 0
 	
@@ -96,7 +96,8 @@ end
 function Caitlyn:AutoW()
 	if not self.Menu.autoW:Value() then return end
 	local ImmobileEnemy = self:GetImmobileTarget()
-	if ImmobileEnemy and myHero.pos:DistanceTo(ImmobileEnemy.pos)<800 then
+	if ImmobileEnemy and myHero.pos:DistanceTo(ImmobileEnemy.pos)<800 and (not LastW or LastW:DistanceTo(ImmobileEnemy.pos)>60) then
+		LastW = ImmobileEnemy.pos
 		self:CastSpell(HK_W,ImmobileEnemy.pos)
 	end
 end
@@ -139,30 +140,30 @@ function Caitlyn:GetImmobileTarget()
 end
 
 function QCombo(pos)
-Control.SetCursorPos(pos)
-Control.KeyDown(HK_Q)
-Control.KeyUp(HK_Q)
+	Control.SetCursorPos(pos)
+	Control.KeyDown(HK_Q)
+	Control.KeyUp(HK_Q)
 end
 
 function Caitlyn:CastCombo(pos)
-		local delay = self.Menu.delay:Value()
-		local ticker = GetTickCount()
-		if castSpell.state == 0 and ticker > castSpell.casting then
-			castSpell.state = 1
-			castSpell.mouse = mousePos
-			castSpell.tick = ticker
-			if ticker - castSpell.tick < Game.Latency() then
-				--block movement
-				blockmovement = true
-				blockattack = true
-				Control.SetCursorPos(pos)
-				Control.KeyDown(HK_E)
-				Control.KeyUp(HK_E)
-				DelayAction(QCombo,0.01,{pos})
-				DelayAction(LeftClick,delay/1000,{castSpell.mouse})
-				castSpell.casting = ticker
-			end
+	local delay = self.Menu.delay:Value()
+	local ticker = GetTickCount()
+	if castSpell.state == 0 and ticker > castSpell.casting then
+		castSpell.state = 1
+		castSpell.mouse = mousePos
+		castSpell.tick = ticker
+		if ticker - castSpell.tick < Game.Latency() then
+			--block movement
+			blockmovement = true
+			blockattack = true
+			Control.SetCursorPos(pos)
+			Control.KeyDown(HK_E)
+			Control.KeyUp(HK_E)
+			DelayAction(QCombo,0.01,{pos})
+			DelayAction(LeftClick,delay/1000,{castSpell.mouse})
+			castSpell.casting = ticker
 		end
+	end
 end
 
 
