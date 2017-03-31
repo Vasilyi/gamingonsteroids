@@ -503,7 +503,7 @@ if myHero.charName == "Lucian" then
 			TopZ = pos.z - (tz * Distance)
 			
 			Vr = V:Perpendicular():Normalized()
-			Radius = qtarget.boundingRadius
+			Radius = qtarget.boundingRadius or 65
 			tx, ty, tz = Vr:Unpack()
 			
 			LeftX = pos.x + (tx * Radius)
@@ -512,7 +512,7 @@ if myHero.charName == "Lucian" then
 			RightX = pos.x - (tx * Radius)
 			RightY = pos.y - (ty * Radius)
 			RightZ = pos.z - (tz * Radius)
-			
+
 			Left = Point(LeftX, LeftY, LeftZ)
 			Right = Point(RightX, RightY, RightZ)
 			Top = Point(TopX, TopY, TopZ)

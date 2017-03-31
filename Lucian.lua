@@ -241,7 +241,7 @@ function Lucian:FarQTarget()
 		TopZ = pos.z - (tz * Distance)
 		
 		Vr = V:Perpendicular():Normalized()
-		Radius = qtarget.boundingRadius
+		Radius = qtarget.boundingRadius or 65
 		tx, ty, tz = Vr:Unpack()
 		
 		LeftX = pos.x + (tx * Radius)
