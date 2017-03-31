@@ -1,12 +1,12 @@
 --[v1.0]]
 local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.0","TRUS","7.6"
-	if myHero.charName ~= "Ezreal" then return end
+if myHero.charName ~= "Ezreal" then return end
 class "Ezreal"
 
 
 
 function Ezreal:__init()
-
+	
 	PrintChat("TRUSt in my Ezreal "..Version.." - Loaded....")
 	self:LoadSpells()
 	self:LoadMenu()
@@ -22,7 +22,11 @@ function Ezreal:__init()
 		end)
 		
 		_G.SDK.Orbwalker:OnPostAttack(function() 
+			local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
+			local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
+			if (combomodeactive or harassactive) then
 				self:CastQ(_G.SDK.Orbwalker:GetTarget())
+			end
 		end)
 		
 		_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
@@ -47,7 +51,7 @@ end
 
 function Ezreal:LoadMenu()
 	self.Menu = MenuElement({type = MENU, id = "TRUStinymyEzreal", name = Scriptname})
-	self.Menu:MenuElement({id = "UseQ", name = "UseQ", key = string.byte("V")})
+	self.Menu:MenuElement({id = "UseQ", name = "UseQ", value = true})
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	
@@ -58,8 +62,9 @@ end
 
 function Ezreal:Tick()
 	if myHero.dead or not _G.SDK then return end
-	
-	if self:CanCast(_Q) and self.Menu.UseQ:Value() and (_G.SDK.Orbwalker:CanMove() or not _G.SDK.Orbwalker:GetTarget()) then
+	local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
+	local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
+	if (combomodeactive or harassactive) and self:CanCast(_Q) and self.Menu.UseQ:Value() and (_G.SDK.Orbwalker:CanMove() or not _G.SDK.Orbwalker:GetTarget()) then
 		self:CastQ()
 	end
 	
@@ -119,7 +124,7 @@ end
 
 --[[CastQ]]
 function Ezreal:CastQ(target)
-if not _G.SDK then return end
+	if not _G.SDK then return end
 	local target = target or _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL);
 	if target and target.type == "AIHeroClient" and self:CanCast(_Q) and self.Menu.UseQ:Value() and target:GetCollision(Q.Radius,Q.Speed,Q.Delay) == 0 then
 		local castPos = target:GetPrediction(Q.Speed,Q.Delay)

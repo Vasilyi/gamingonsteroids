@@ -513,7 +513,7 @@ if myHero.charName == "Lucian" then
 			RightX = pos.x - (tx * Radius)
 			RightY = pos.y - (ty * Radius)
 			RightZ = pos.z - (tz * Radius)
-
+			
 			Left = Point(LeftX, LeftY, LeftZ)
 			Right = Point(RightX, RightY, RightZ)
 			Top = Point(TopX, TopY, TopZ)
@@ -763,7 +763,11 @@ if myHero.charName == "Ezreal" then
 			end)
 			
 			_G.SDK.Orbwalker:OnPostAttack(function() 
-				self:CastQ(_G.SDK.Orbwalker:GetTarget())
+				local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
+				local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
+				if (combomodeactive or harassactive) then
+					self:CastQ(_G.SDK.Orbwalker:GetTarget())
+				end
 			end)
 			
 			_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
@@ -788,7 +792,7 @@ if myHero.charName == "Ezreal" then
 	
 	function Ezreal:LoadMenu()
 		self.Menu = MenuElement({type = MENU, id = "TRUStinymyEzreal", name = Scriptname})
-		self.Menu:MenuElement({id = "UseQ", name = "UseQ", key = string.byte("V")})
+		self.Menu:MenuElement({id = "UseQ", name = "UseQ", value = true})
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 		
@@ -799,8 +803,9 @@ if myHero.charName == "Ezreal" then
 	
 	function Ezreal:Tick()
 		if myHero.dead or not _G.SDK then return end
-		
-		if self:CanCast(_Q) and self.Menu.UseQ:Value() and (_G.SDK.Orbwalker:CanMove() or not _G.SDK.Orbwalker:GetTarget()) then
+		local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
+		local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
+		if (combomodeactive or harassactive) and self:CanCast(_Q) and self.Menu.UseQ:Value() and (_G.SDK.Orbwalker:CanMove() or not _G.SDK.Orbwalker:GetTarget()) then
 			self:CastQ()
 		end
 		
