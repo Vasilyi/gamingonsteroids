@@ -1,20 +1,16 @@
-local CAMenu = MenuElement({type = MENU, id = "CAMenu", name = "CD Tracker", leftIcon = "http://puu.sh/rGodn/41bac3be46.png"})
+function LoadMenu()
+CAMenu = MenuElement({type = MENU, id = "CAMenu", name = "CD Tracker"})
 CAMenu:MenuElement({id = "Enabled", name = "Enabled", value = true})
-CAMenu:MenuElement({type = MENU, id = "SpellTracker", name = "Spell Tracker", leftIcon = "http://puu.sh/rGqMW/ae5ae40702.png"})
+CAMenu:MenuElement({type = MENU, id = "SpellTracker", name = "Spell Tracker"})
 CAMenu.SpellTracker:MenuElement({id = "fontsize", name = "Font size", value = 20, min = 4, max = 40, step = 1, identifier = ""})
 CAMenu.SpellTracker:MenuElement({id = "Xpos", name = "XPos", value = 90, min = -500, max = 500, step = 1, identifier = ""})
 CAMenu.SpellTracker:MenuElement({id = "Ypos", name = "YPos", value = 0, min = -500, max = 500, step = 1, identifier = ""})
 CAMenu.SpellTracker:MenuElement({id = "ShowCD", name = "Show cd numbers", key = string.byte("E")})
 CAMenu.SpellTracker:MenuElement({id = "Enabled", name = "Enabled", value = true})
-CAMenu.SpellTracker:MenuElement({id = "TEnemies", name = "Track Enemies", value = true, leftIcon = "http://puu.sh/rGoYt/5c99e94d8a.png"})
-CAMenu.SpellTracker:MenuElement({id = "TAllies", name = "Track Allies", value = true, leftIcon = "http://puu.sh/rGoYo/0e0e445743.png"})
-CAMenu.SpellTracker:MenuElement({id = "TrackTrinket", name = "Track Trinket", value = true, leftIcon = "http://ddragon.leagueoflegends.com/cdn/6.12.1/img/item/3340.png"})
-
-
-
-local mapID = Game.mapID;
-ExpGain = {0,280,660,1140,1720,2400,3180,4060,5040,6120,7300,8580,9960,11440,13020,14700,16480,18360}; --summonersift, feel free for treeline or abyss
-
+CAMenu.SpellTracker:MenuElement({id = "TEnemies", name = "Track Enemies", value = true})
+CAMenu.SpellTracker:MenuElement({id = "TAllies", name = "Track Allies", value = true})
+CAMenu.SpellTracker:MenuElement({id = "TrackTrinket", name = "Track Trinket", value = true})
+end
 
 local summonerSprites = {};
 local XposX = 90;
@@ -234,8 +230,7 @@ local function DrawSpellTracking(type, hero)
 end
 
 
-function OnDraw()
-	ProcessSpellCallback()
+function TOnDraw()
 	if CAMenu.Enabled:Value() then
 		for i = 1, Game.HeroCount() do
 			local hero = Game.Hero(i)
@@ -277,7 +272,7 @@ end
 function ProcessSpellCallback()
 	for i = 1, Game.HeroCount() do
 		local Hero = Game.Hero(i)
-		if Hero.valid then
+		if Hero.valid and Hero.isEnemy then
 			for i, spell in pairs(spellslist) do
 				local tempname = Hero.charName
 				local spelldata = Hero:GetSpellData(spell)
@@ -293,5 +288,8 @@ function ProcessSpellCallback()
 end
 
 function OnLoad()
+	LoadMenu()
 	ProcessSpellsLoad()
+	Callback.Add("Tick", function() ProcessSpellCallback() end)
+	Callback.Add("Draw", function() TOnDraw() end)
 end
