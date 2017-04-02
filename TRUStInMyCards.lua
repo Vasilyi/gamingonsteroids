@@ -94,14 +94,6 @@ function TwistedFate:Tick()
 		end
 	end
 	
-	if myHero.activeSpell and myHero.activeSpell.valid then
-		if string.find(myHero.activeSpell.name,"CardPreAttack") and onetimereset then
-			blockattack = true
-			local nextattack = 1000 / 0.651*myHero.attackSpeed
-			DelayAction(EnableMovement,nextattack/1000)
-			onetimereset = false
-		end
-	end
 	if self:CanCast(_Q) then 
 		if self.Menu.AutoQ:Value() then
 			local immobiletarget = self:GetImmobileTarget()
