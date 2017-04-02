@@ -180,7 +180,7 @@ function Ashe:Tick()
 	if combomodeactive and self.Menu.UseWCombo:Value() and canmove and not canattack then
 		self:CastW()
 	end
-	if combomodeactive and self.Menu.UseQCombo:Value() and canmove and not canattack then
+	if combomodeactive and self.Menu.UseQCombo:Value() and currenttarget and canmove and not canattack then
 		self:CastQ()
 	end
 	if harassmodeactive and self.Menu.UseWHarass:Value() and canmove and not canattack then
