@@ -14,7 +14,7 @@ if myHero.charName == "Ashe" or myHero.charName == "Ezreal" or myHero.charName =
 	end
 	
 	function UseBotrk()
-		local target = _G.SDK.Orbwalker:GetTarget() or _G.SDK.TargetSelector:GetTarget(300, _G.SDK.DAMAGE_TYPE_PHYSICAL);
+		local target = (_G.SDK and _G.SDK.TargetSelector:GetTarget(300, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(300,"AD"))
 		if target then 
 			local botrkitem = GetInventorySlotItem(3153) or GetInventorySlotItem(3144)
 			if botrkitem then
@@ -25,19 +25,17 @@ if myHero.charName == "Ashe" or myHero.charName == "Ezreal" or myHero.charName =
 end
 
 if myHero.charName == "Ashe" then
-	--[v1.0]]
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.0","TRUS","7.6"
+	
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.1","TRUS","7.6"
 	class "Ashe"
 	function Ashe:__init()
-		
-		PrintChat("TRUSt in my Ashe "..Version.." - Loaded....")
 		self:LoadSpells()
 		self:LoadMenu()
 		Callback.Add("Tick", function() self:Tick() end)
 		
-		
-		
+		local orbwalkername = ""
 		if _G.SDK then
+			orbwalkername = "IC'S orbwalker"
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 				if blockmovement then
 					arg.Process = false
@@ -53,10 +51,14 @@ if myHero.charName == "Ashe" then
 					arg.Process = false
 				end
 			end)
+		elseif _G.GOS then
+			orbwalkername = "Noddy orbwalker"
+			
 		else
-			PrintChat("This script support IC Orbwalker only")
+			orbwalkername = "Orbwalker not found"
 			
 		end
+		PrintChat("TRUSt in my Ashe "..Version.." - Loaded...."..orbwalkername)
 	end
 	onetimereset = true
 	blockattack = false
@@ -103,9 +105,9 @@ if myHero.charName == "Ashe" then
 			local v2 = position:Rotated(0, angle / 2, 0)
 			return CountVectorsBetween(v1, v2, points)
 		end
-		
-		for i, target in ipairs(_G.SDK.ObjectManager:GetEnemyHeroes(range)) do
-			if target.networkID ~= unit.networkID then
+		local enemyheroestable = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(range)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+		for i, target in ipairs(enemyheroestable) do
+			if target.networkID ~= unit.networkID and myHero.pos:DistanceTo(target.pos) < range then
 				CastPosition = target:GetPrediction(speed,delay)
 				if from:DistanceTo(CastPosition) < range then
 					table.insert(points, Vector(CastPosition) - Vector(from))
@@ -176,17 +178,18 @@ if myHero.charName == "Ashe" then
 	
 	function Ashe:Tick()
 		if myHero.dead or not _G.SDK then return end
-		local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
-		local harassmodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
-		
-		if combomodeactive and self.Menu.UseBOTRK:Value() then
-			UseBotrk()
-		end
-		
-		if combomodeactive and self.Menu.UseWCombo:Value() and _G.SDK.Orbwalker:CanMove() then
+		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
+		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
+		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (_G.GOS and _G.GOS:CanMove())
+		local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (_G.GOS and _G.GOS:CanAttack())
+		local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
+		if combomodeactive and self.Menu.UseWCombo:Value() and canmove and not canattack then
 			self:CastW()
 		end
-		if harassmodeactive and self.Menu.UseWHarass:Value() and _G.SDK.Orbwalker:CanMove() then
+		if combomodeactive and self.Menu.UseQCombo:Value() and canmove and not canattack then
+			self:CastQ()
+		end
+		if harassmodeactive and self.Menu.UseWHarass:Value() and canmove and not canattack then
 			self:CastW()
 		end
 	end
@@ -243,15 +246,15 @@ if myHero.charName == "Ashe" then
 	
 	
 	function Ashe:CastQ()
-		if self:CanCast(_Q) and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO] and self.Menu.UseQCombo:Value() then
+		if self:CanCast(_Q) then
 			Control.CastSpell(HK_Q)
 		end
 	end
 	
 	
 	function Ashe:CastW(target)
-		if not _G.SDK then return end
-		local target = _G.SDK.Orbwalker:GetTarget() or _G.SDK.TargetSelector:GetTarget(W.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL);
+		local target = (_G.SDK and _G.SDK.TargetSelector:GetTarget(W.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(W.Range,"AD"))
+		
 		if target and self:CanCast(_W) and target:GetCollision(W.Radius,W.Speed,W.Delay) == 0 then
 			local getposition = self:GetWPos(target)
 			if getposition then

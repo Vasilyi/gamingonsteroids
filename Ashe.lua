@@ -1,20 +1,36 @@
---[v1.0]]
-local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.0","TRUS","7.6"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.1","TRUS","7.6"
 if myHero.charName ~= "Ashe" then return end
+
+keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
+
+
+function GetInventorySlotItem(itemID)
+	assert(type(itemID) == "number", "GetInventorySlotItem: wrong argument types (<number> expected)")
+	for _, j in pairs({ ITEM_1, ITEM_2, ITEM_3, ITEM_4, ITEM_5, ITEM_6}) do
+		if myHero:GetItemData(j).itemID == itemID and myHero:GetSpellData(j).currentCd == 0 then return j end
+	end
+	return nil
+end
+
+function UseBotrk()
+	local target = (_G.SDK and _G.SDK.TargetSelector:GetTarget(300, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(300,"AD"))
+	if target then 
+		local botrkitem = GetInventorySlotItem(3153) or GetInventorySlotItem(3144)
+		if botrkitem then
+			Control.CastSpell(keybindings[botrkitem],target.pos)
+		end
+	end
+end
+
 class "Ashe"
-
-
-
 function Ashe:__init()
-	
-	PrintChat("TRUSt in my Ashe "..Version.." - Loaded....")
 	self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
 	
-	
-	
+	local orbwalkername = ""
 	if _G.SDK then
+		orbwalkername = "IC'S orbwalker"
 		_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 			if blockmovement then
 				arg.Process = false
@@ -30,10 +46,14 @@ function Ashe:__init()
 				arg.Process = false
 			end
 		end)
+	elseif _G.GOS then
+		orbwalkername = "Noddy orbwalker"
+		
 	else
-		PrintChat("This script support IC Orbwalker only")
+		orbwalkername = "Orbwalker not found"
 		
 	end
+	PrintChat("TRUSt in my Ashe "..Version.." - Loaded...."..orbwalkername)
 end
 onetimereset = true
 blockattack = false
@@ -44,7 +64,6 @@ local lastpick = 0
 function Ashe:LoadSpells()
 	W = {Range = 1200, width = nil, Delay = 0.25, Radius = 30, Speed = 900}
 end
-
 
 
 function GetConeAOECastPosition(unit, delay, angle, range, speed, from)
@@ -81,9 +100,9 @@ function GetConeAOECastPosition(unit, delay, angle, range, speed, from)
 		local v2 = position:Rotated(0, angle / 2, 0)
 		return CountVectorsBetween(v1, v2, points)
 	end
-	
-	for i, target in ipairs(_G.SDK.ObjectManager:GetEnemyHeroes(range)) do
-		if target.networkID ~= unit.networkID then
+	local enemyheroestable = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(range)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+	for i, target in ipairs(enemyheroestable) do
+		if target.networkID ~= unit.networkID and myHero.pos:DistanceTo(target.pos) < range then
 			CastPosition = target:GetPrediction(speed,delay)
 			if from:DistanceTo(CastPosition) < range then
 				table.insert(points, Vector(CastPosition) - Vector(from))
@@ -143,6 +162,7 @@ function Ashe:LoadMenu()
 	self.Menu:MenuElement({id = "UseWCombo", name = "UseW in combo", value = true})
 	self.Menu:MenuElement({id = "UseQCombo", name = "UseQ in combo", value = true})
 	self.Menu:MenuElement({id = "UseWHarass", name = "UseW in Harass", value = true})
+	self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	
@@ -153,12 +173,18 @@ end
 
 function Ashe:Tick()
 	if myHero.dead or not _G.SDK then return end
-	local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
-	local harassmodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
-	if combomodeactive and self.Menu.UseWCombo:Value() and _G.SDK.Orbwalker:CanMove() then
+	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
+	local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
+	local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (_G.GOS and _G.GOS:CanMove())
+	local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (_G.GOS and _G.GOS:CanAttack())
+	local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
+	if combomodeactive and self.Menu.UseWCombo:Value() and canmove and not canattack then
 		self:CastW()
 	end
-	if harassmodeactive and self.Menu.UseWHarass:Value() and _G.SDK.Orbwalker:CanMove() then
+	if combomodeactive and self.Menu.UseQCombo:Value() and canmove and not canattack then
+		self:CastQ()
+	end
+	if harassmodeactive and self.Menu.UseWHarass:Value() and canmove and not canattack then
 		self:CastW()
 	end
 end
@@ -215,15 +241,15 @@ end
 
 
 function Ashe:CastQ()
-	if self:CanCast(_Q) and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO] and self.Menu.UseQCombo:Value() then
+	if self:CanCast(_Q) then
 		Control.CastSpell(HK_Q)
 	end
 end
 
 
 function Ashe:CastW(target)
-	if not _G.SDK then return end
-	local target = _G.SDK.Orbwalker:GetTarget() or _G.SDK.TargetSelector:GetTarget(W.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL);
+	local target = (_G.SDK and _G.SDK.TargetSelector:GetTarget(W.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(W.Range,"AD"))
+	
 	if target and self:CanCast(_W) and target:GetCollision(W.Radius,W.Speed,W.Delay) == 0 then
 		local getposition = self:GetWPos(target)
 		if getposition then
@@ -237,7 +263,8 @@ function Ashe:GetWPos(unit)
 	if unit then
 		local temppos = GetConeAOECastPosition(unit, W.Delay, 45, W.Range, W.Speed)
 		if temppos then 
-			return temppos
+			local newpos = myHero.pos:Extended(temppos,math.random(100,300))
+			return newpos
 		end
 	end
 	
