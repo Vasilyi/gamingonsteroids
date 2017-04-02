@@ -269,6 +269,12 @@ end
 function Lucian:FarQTarget()
 	local qtarget = (_G.SDK and _G.SDK.TargetSelector:GetTarget(900, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(900,"AD"))
 	if qtarget then
+		
+		if myHero:DistanceTo(qtarget)<500 then
+			return qtarget
+		end
+		
+		
 		local qdelay = 0.4 - myHero.levelData.lvl*0.01
 		local pos = qtarget:GetPrediction(math.huge,qdelay)
 		if not pos then return false end 
