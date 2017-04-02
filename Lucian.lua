@@ -66,7 +66,7 @@ function Lucian:__init()
 		orbwalkername = "Orbwalker not found"
 		
 	end
-	PrintChat("TRUSt in my Lucian "..Version.." - Loaded...."..orbwalkername)
+	PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 end
 onetimereset = true
 blockattack = false
@@ -119,8 +119,6 @@ end
 function Lucian:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
 	if _G.GOS then
-		_G.GOS.BlockAttack = blockattack
-		_G.GOS.BlockMovement = blockmovement
 		if GetTickCount() - _G.GOS.lastAttack < 50 then
 			passive = false
 		end
@@ -178,6 +176,10 @@ function EnableMovement()
 	--unblock movement
 	blockattack = false
 	blockmovement = false
+	if _G.GOS then
+		_G.GOS.BlockAttack = blockattack
+		_G.GOS.BlockMovement = blockmovement
+	end
 	onetimereset = true
 	castSpell.state = 0
 end
@@ -209,6 +211,10 @@ function Lucian:CastSpell(spell,pos)
 				--block movement
 				blockattack = true
 				blockmovement = true
+				if _G.GOS then
+					_G.GOS.BlockAttack = blockattack
+					_G.GOS.BlockMovement = blockmovement
+				end
 				Control.SetCursorPos(pos)
 				Control.KeyDown(spell)
 				Control.KeyUp(spell)

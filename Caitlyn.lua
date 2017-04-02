@@ -1,18 +1,39 @@
 local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.1","TRUS","7.6"
 if myHero.charName ~= "Caitlyn" then return end
+
+keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
+
+
+function GetInventorySlotItem(itemID)
+	assert(type(itemID) == "number", "GetInventorySlotItem: wrong argument types (<number> expected)")
+	for _, j in pairs({ ITEM_1, ITEM_2, ITEM_3, ITEM_4, ITEM_5, ITEM_6}) do
+		if myHero:GetItemData(j).itemID == itemID and myHero:GetSpellData(j).currentCd == 0 then return j end
+	end
+	return nil
+end
+
+function UseBotrk()
+	local target = (_G.SDK and _G.SDK.TargetSelector:GetTarget(300, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(300,"AD"))
+	if target then 
+		local botrkitem = GetInventorySlotItem(3153) or GetInventorySlotItem(3144)
+		if botrkitem then
+			Control.CastSpell(keybindings[botrkitem],target.pos)
+		end
+	end
+end
+
 class "Caitlyn"
 require "DamageLib"
 local qtarget
 
 function Caitlyn:__init()
-	
-	PrintChat("TRUSt in my Caitlyn "..Version.." - Loaded....")
 	self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
 	Callback.Add("Draw", function() self:Draw() end)
-	
+	local orbwalkername = ""
 	if _G.SDK then
+		orbwalkername = "IC'S orbwalker"
 		_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 			if blockmovement then
 				arg.Process = false
@@ -25,10 +46,14 @@ function Caitlyn:__init()
 				arg.Process = false
 			end
 		end)
+	elseif _G.GOS then
+		orbwalkername = "Noddy orbwalker"
+		
 	else
-		PrintChat("This script support IC Orbwalker only")
+		orbwalkername = "Orbwalker not found"
 		
 	end
+	PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 end
 onetimereset = true
 blockattack = false
@@ -46,6 +71,7 @@ function Caitlyn:LoadMenu()
 	self.Menu:MenuElement({id = "UseUlti", name = "Use R", tooltip = "On killable target which is on screen", key = string.byte("R")})
 	self.Menu:MenuElement({id = "UseEQ", name = "UseEQ", key = string.byte("X")})
 	self.Menu:MenuElement({id = "autoW", name = "Use W on cc", value = true})
+	self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", value = true})
 	self.Menu:MenuElement({id = "DrawR", name = "Draw Killable with R", value = true})
 	self.Menu:MenuElement({id = "DrawColor", name = "Color for Killable circle", color = Draw.Color(0xBF3F3FFF)})
@@ -57,7 +83,12 @@ function Caitlyn:LoadMenu()
 end
 
 function Caitlyn:Tick()
-	if myHero.dead or not _G.SDK then return end
+	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
+	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
+	if combomodeactive and self.Menu.UseBOTRK:Value() then
+		UseBotrk()
+	end
+	
 	local useEQ = self.Menu.UseEQ:Value()
 	
 	if self.Menu.UseUlti:Value() and self:CanCast(_R) then
@@ -80,6 +111,10 @@ local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 
 function ReturnCursor(pos)
 	blockmovement = false
 	blockattack = false 
+	if _G.GOS then
+		_G.GOS.BlockAttack = blockattack
+		_G.GOS.BlockMovement = blockmovement
+	end
 	Control.SetCursorPos(pos)
 	castSpell.state = 0
 	
@@ -192,6 +227,10 @@ function Caitlyn:CastCombo(pos)
 			--block movement
 			blockmovement = true
 			blockattack = true
+			if _G.GOS then
+				_G.GOS.BlockAttack = blockattack
+				_G.GOS.BlockMovement = blockmovement
+			end
 			Control.SetCursorPos(pos)
 			Control.KeyDown(HK_E)
 			Control.KeyUp(HK_E)

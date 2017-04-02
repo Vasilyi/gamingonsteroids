@@ -53,9 +53,8 @@ function Ashe:__init()
 		orbwalkername = "Orbwalker not found"
 		
 	end
-	PrintChat("TRUSt in my Ashe "..Version.." - Loaded...."..orbwalkername)
+	PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 end
-onetimereset = true
 blockattack = false
 blockmovement = false
 
@@ -172,7 +171,7 @@ function Ashe:LoadMenu()
 end
 
 function Ashe:Tick()
-	if myHero.dead or not _G.SDK then return end
+	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
 	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
 	local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
 	local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (_G.GOS and _G.GOS:CanMove())
@@ -198,7 +197,10 @@ function EnableMovement()
 	--unblock movement
 	blockattack = false
 	blockmovement = false
-	onetimereset = true
+	if _G.GOS then
+		_G.GOS.BlockAttack = false
+		_G.GOS.BlockMovement = false
+	end
 	castSpell.state = 0
 end
 
@@ -229,6 +231,10 @@ function Ashe:CastSpell(spell,pos)
 				--block movement
 				blockattack = true
 				blockmovement = true
+				if _G.GOS then
+					_G.GOS.BlockAttack = blockattack
+					_G.GOS.BlockMovement = blockmovement
+				end
 				Control.SetCursorPos(pos)
 				Control.KeyDown(spell)
 				Control.KeyUp(spell)
@@ -249,7 +255,6 @@ end
 
 function Ashe:CastW(target)
 	local target = (_G.SDK and _G.SDK.TargetSelector:GetTarget(W.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(W.Range,"AD"))
-	
 	if target and self:CanCast(_W) and target:GetCollision(W.Radius,W.Speed,W.Delay) == 0 then
 		local getposition = self:GetWPos(target)
 		if getposition then

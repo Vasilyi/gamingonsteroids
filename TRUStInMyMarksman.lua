@@ -60,7 +60,6 @@ if myHero.charName == "Ashe" then
 		end
 		PrintChat("TRUSt in my Ashe "..Version.." - Loaded...."..orbwalkername)
 	end
-	onetimereset = true
 	blockattack = false
 	blockmovement = false
 	
@@ -177,7 +176,7 @@ if myHero.charName == "Ashe" then
 	end
 	
 	function Ashe:Tick()
-		if myHero.dead or not _G.SDK then return end
+		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
 		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
 		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
 		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (_G.GOS and _G.GOS:CanMove())
@@ -203,7 +202,10 @@ if myHero.charName == "Ashe" then
 		--unblock movement
 		blockattack = false
 		blockmovement = false
-		onetimereset = true
+		if _G.GOS then
+			_G.GOS.BlockAttack = false
+			_G.GOS.BlockMovement = false
+		end
 		castSpell.state = 0
 	end
 	
@@ -234,6 +236,10 @@ if myHero.charName == "Ashe" then
 					--block movement
 					blockattack = true
 					blockmovement = true
+					if _G.GOS then
+						_G.GOS.BlockAttack = blockattack
+						_G.GOS.BlockMovement = blockmovement
+					end
 					Control.SetCursorPos(pos)
 					Control.KeyDown(spell)
 					Control.KeyUp(spell)
@@ -254,7 +260,6 @@ if myHero.charName == "Ashe" then
 	
 	function Ashe:CastW(target)
 		local target = (_G.SDK and _G.SDK.TargetSelector:GetTarget(W.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(W.Range,"AD"))
-		
 		if target and self:CanCast(_W) and target:GetCollision(W.Radius,W.Speed,W.Delay) == 0 then
 			local getposition = self:GetWPos(target)
 			if getposition then
@@ -393,8 +398,6 @@ if myHero.charName == "Lucian" then
 	function Lucian:Tick()
 		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
 		if _G.GOS then
-			_G.GOS.BlockAttack = blockattack
-			_G.GOS.BlockMovement = blockmovement
 			if GetTickCount() - _G.GOS.lastAttack < 50 then
 				passive = false
 			end
@@ -409,7 +412,6 @@ if myHero.charName == "Lucian" then
 			passive = true
 		end
 		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
-		
 		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
 		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (_G.GOS and _G.GOS:CanMove())
 		local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (_G.GOS and _G.GOS:CanAttack())
@@ -453,6 +455,10 @@ if myHero.charName == "Lucian" then
 		--unblock movement
 		blockattack = false
 		blockmovement = false
+		if _G.GOS then
+			_G.GOS.BlockAttack = blockattack
+			_G.GOS.BlockMovement = blockmovement
+		end
 		onetimereset = true
 		castSpell.state = 0
 	end
@@ -484,6 +490,10 @@ if myHero.charName == "Lucian" then
 					--block movement
 					blockattack = true
 					blockmovement = true
+					if _G.GOS then
+						_G.GOS.BlockAttack = blockattack
+						_G.GOS.BlockMovement = blockmovement
+					end
 					Control.SetCursorPos(pos)
 					Control.KeyDown(spell)
 					Control.KeyUp(spell)
@@ -498,7 +508,6 @@ if myHero.charName == "Lucian" then
 	--[[CastQ]]
 	function Lucian:CastQ(target)
 		if target and self:CanCast(_Q) and passive == false then
-			PrintChat("Q FOUND")
 			self:CastSpell(HK_Q, target.pos)
 		end
 	end
@@ -603,14 +612,13 @@ if myHero.charName == "Caitlyn" then
 	local qtarget
 	
 	function Caitlyn:__init()
-		
-		PrintChat("TRUSt in my Caitlyn "..Version.." - Loaded....")
 		self:LoadSpells()
 		self:LoadMenu()
 		Callback.Add("Tick", function() self:Tick() end)
 		Callback.Add("Draw", function() self:Draw() end)
-		
+		local orbwalkername = ""
 		if _G.SDK then
+			orbwalkername = "IC'S orbwalker"
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 				if blockmovement then
 					arg.Process = false
@@ -623,10 +631,14 @@ if myHero.charName == "Caitlyn" then
 					arg.Process = false
 				end
 			end)
+		elseif _G.GOS then
+			orbwalkername = "Noddy orbwalker"
+			
 		else
-			PrintChat("This script support IC Orbwalker only")
+			orbwalkername = "Orbwalker not found"
 			
 		end
+		PrintChat("TRUSt in my Caitlyn "..Version.." - Loaded...."..orbwalkername)
 	end
 	onetimereset = true
 	blockattack = false
@@ -643,8 +655,8 @@ if myHero.charName == "Caitlyn" then
 		self.Menu = MenuElement({type = MENU, id = "TRUStinymyCaitlyn", name = Scriptname})
 		self.Menu:MenuElement({id = "UseUlti", name = "Use R", tooltip = "On killable target which is on screen", key = string.byte("R")})
 		self.Menu:MenuElement({id = "UseEQ", name = "UseEQ", key = string.byte("X")})
-		self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 		self.Menu:MenuElement({id = "autoW", name = "Use W on cc", value = true})
+		self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", value = true})
 		self.Menu:MenuElement({id = "DrawR", name = "Draw Killable with R", value = true})
 		self.Menu:MenuElement({id = "DrawColor", name = "Color for Killable circle", color = Draw.Color(0xBF3F3FFF)})
@@ -656,12 +668,14 @@ if myHero.charName == "Caitlyn" then
 	end
 	
 	function Caitlyn:Tick()
-		if myHero.dead or not _G.SDK then return end
-		local useEQ = self.Menu.UseEQ:Value()
-		local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
+		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
+		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
 		if combomodeactive and self.Menu.UseBOTRK:Value() then
 			UseBotrk()
 		end
+		
+		local useEQ = self.Menu.UseEQ:Value()
+		
 		if self.Menu.UseUlti:Value() and self:CanCast(_R) then
 			self:UseR()
 		end
@@ -682,6 +696,10 @@ if myHero.charName == "Caitlyn" then
 	function ReturnCursor(pos)
 		blockmovement = false
 		blockattack = false 
+		if _G.GOS then
+			_G.GOS.BlockAttack = blockattack
+			_G.GOS.BlockMovement = blockmovement
+		end
 		Control.SetCursorPos(pos)
 		castSpell.state = 0
 		
@@ -794,6 +812,10 @@ if myHero.charName == "Caitlyn" then
 				--block movement
 				blockmovement = true
 				blockattack = true
+				if _G.GOS then
+					_G.GOS.BlockAttack = blockattack
+					_G.GOS.BlockMovement = blockmovement
+				end
 				Control.SetCursorPos(pos)
 				Control.KeyDown(HK_E)
 				Control.KeyUp(HK_E)
@@ -838,22 +860,18 @@ end
 
 if myHero.charName == "Ezreal" then
 	--[v1.0]]
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.0","TRUS","7.6"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.1","TRUS","7.6"
 	
 	class "Ezreal"
 	
-	
-	
 	function Ezreal:__init()
-		
-		PrintChat("TRUSt in my Ezreal "..Version.." - Loaded....")
 		self:LoadSpells()
 		self:LoadMenu()
 		Callback.Add("Tick", function() self:Tick() end)
 		
-		
-		
+		local orbwalkername = ""
 		if _G.SDK then
+			orbwalkername = "IC'S orbwalker"
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 				if blockmovement then
 					arg.Process = false
@@ -873,10 +891,14 @@ if myHero.charName == "Ezreal" then
 					arg.Process = false
 				end
 			end)
+		elseif _G.GOS then
+			orbwalkername = "Noddy orbwalker"
+			
 		else
-			PrintChat("This script support IC Orbwalker only")
+			orbwalkername = "Orbwalker not found"
 			
 		end
+		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 	end
 	onetimereset = true
 	blockattack = false
@@ -901,13 +923,16 @@ if myHero.charName == "Ezreal" then
 	end
 	
 	function Ezreal:Tick()
-		if myHero.dead or not _G.SDK then return end
-		local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
-		local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
+		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
+		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
+		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
+		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (_G.GOS and _G.GOS:CanMove())
+		local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (_G.GOS and _G.GOS:CanAttack())
+		local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
 		if combomodeactive and self.Menu.UseBOTRK:Value() then
 			UseBotrk()
 		end
-		if (combomodeactive or harassactive) and self:CanCast(_Q) and self.Menu.UseQ:Value() and (_G.SDK.Orbwalker:CanMove() or not _G.SDK.Orbwalker:GetTarget()) then
+		if (combomodeactive or harassactive) and self:CanCast(_Q) and self.Menu.UseQ:Value() and (not canattack or not currenttarget) then
 			self:CastQ()
 		end
 		
@@ -923,6 +948,10 @@ if myHero.charName == "Ezreal" then
 		--unblock movement
 		blockattack = false
 		blockmovement = false
+		if _G.GOS then
+			_G.GOS.BlockAttack = blockattack
+			_G.GOS.BlockMovement = blockmovement
+		end
 		onetimereset = true
 		castSpell.state = 0
 	end
@@ -954,6 +983,10 @@ if myHero.charName == "Ezreal" then
 					--block movement
 					blockattack = true
 					blockmovement = true
+					if _G.GOS then
+						_G.GOS.BlockAttack = blockattack
+						_G.GOS.BlockMovement = blockmovement
+					end
 					Control.SetCursorPos(pos)
 					Control.KeyDown(spell)
 					Control.KeyUp(spell)
@@ -967,8 +1000,8 @@ if myHero.charName == "Ezreal" then
 	
 	--[[CastQ]]
 	function Ezreal:CastQ(target)
-		if not _G.SDK then return end
-		local target = target or _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL);
+		if (not _G.SDK and not _G.GOS) then return end
+		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
 		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and self.Menu.UseQ:Value() and target:GetCollision(Q.Radius,Q.Speed,Q.Delay) == 0 then
 			local castPos = target:GetPrediction(Q.Speed,Q.Delay)
 			local newpos = myHero.pos:Extended(castPos,math.random(100,300))

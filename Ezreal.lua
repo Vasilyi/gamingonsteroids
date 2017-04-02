@@ -1,20 +1,36 @@
---[v1.0]]
-local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.0","TRUS","7.6"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.1","TRUS","7.6"
 if myHero.charName ~= "Ezreal" then return end
+keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
+
+
+function GetInventorySlotItem(itemID)
+	assert(type(itemID) == "number", "GetInventorySlotItem: wrong argument types (<number> expected)")
+	for _, j in pairs({ ITEM_1, ITEM_2, ITEM_3, ITEM_4, ITEM_5, ITEM_6}) do
+		if myHero:GetItemData(j).itemID == itemID and myHero:GetSpellData(j).currentCd == 0 then return j end
+	end
+	return nil
+end
+
+function UseBotrk()
+	local target = (_G.SDK and _G.SDK.TargetSelector:GetTarget(300, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(300,"AD"))
+	if target then 
+		local botrkitem = GetInventorySlotItem(3153) or GetInventorySlotItem(3144)
+		if botrkitem then
+			Control.CastSpell(keybindings[botrkitem],target.pos)
+		end
+	end
+end
+
 class "Ezreal"
 
-
-
 function Ezreal:__init()
-	
-	PrintChat("TRUSt in my Ezreal "..Version.." - Loaded....")
 	self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
 	
-	
-	
+	local orbwalkername = ""
 	if _G.SDK then
+		orbwalkername = "IC'S orbwalker"
 		_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 			if blockmovement then
 				arg.Process = false
@@ -34,10 +50,14 @@ function Ezreal:__init()
 				arg.Process = false
 			end
 		end)
+	elseif _G.GOS then
+		orbwalkername = "Noddy orbwalker"
+		
 	else
-		PrintChat("This script support IC Orbwalker only")
+		orbwalkername = "Orbwalker not found"
 		
 	end
+	PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 end
 onetimereset = true
 blockattack = false
@@ -52,6 +72,7 @@ end
 function Ezreal:LoadMenu()
 	self.Menu = MenuElement({type = MENU, id = "TRUStinymyEzreal", name = Scriptname})
 	self.Menu:MenuElement({id = "UseQ", name = "UseQ", value = true})
+	self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	
@@ -61,10 +82,16 @@ function Ezreal:LoadMenu()
 end
 
 function Ezreal:Tick()
-	if myHero.dead or not _G.SDK then return end
-	local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
-	local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
-	if (combomodeactive or harassactive) and self:CanCast(_Q) and self.Menu.UseQ:Value() and (_G.SDK.Orbwalker:CanMove() or not _G.SDK.Orbwalker:GetTarget()) then
+	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
+	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
+	local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
+	local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (_G.GOS and _G.GOS:CanMove())
+	local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (_G.GOS and _G.GOS:CanAttack())
+	local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
+	if combomodeactive and self.Menu.UseBOTRK:Value() then
+		UseBotrk()
+	end
+	if (combomodeactive or harassactive) and self:CanCast(_Q) and self.Menu.UseQ:Value() and (not canattack or not currenttarget) then
 		self:CastQ()
 	end
 	
@@ -80,6 +107,10 @@ function EnableMovement()
 	--unblock movement
 	blockattack = false
 	blockmovement = false
+	if _G.GOS then
+		_G.GOS.BlockAttack = blockattack
+		_G.GOS.BlockMovement = blockmovement
+	end
 	onetimereset = true
 	castSpell.state = 0
 end
@@ -111,6 +142,10 @@ function Ezreal:CastSpell(spell,pos)
 				--block movement
 				blockattack = true
 				blockmovement = true
+				if _G.GOS then
+					_G.GOS.BlockAttack = blockattack
+					_G.GOS.BlockMovement = blockmovement
+				end
 				Control.SetCursorPos(pos)
 				Control.KeyDown(spell)
 				Control.KeyUp(spell)
@@ -124,8 +159,8 @@ end
 
 --[[CastQ]]
 function Ezreal:CastQ(target)
-	if not _G.SDK then return end
-	local target = target or _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL);
+	if (not _G.SDK and not _G.GOS) then return end
+	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
 	if target and target.type == "AIHeroClient" and self:CanCast(_Q) and self.Menu.UseQ:Value() and target:GetCollision(Q.Radius,Q.Speed,Q.Delay) == 0 then
 		local castPos = target:GetPrediction(Q.Speed,Q.Delay)
 		local newpos = myHero.pos:Extended(castPos,math.random(100,300))
