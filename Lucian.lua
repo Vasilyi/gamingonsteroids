@@ -1,20 +1,40 @@
 --[v1.0]]
-local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.0","TRUS","7.6"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.1","TRUS","7.6"
 if myHero.charName ~= "Lucian" then return end
 require "2DGeometry"
+keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
+
+
+function GetInventorySlotItem(itemID)
+	assert(type(itemID) == "number", "GetInventorySlotItem: wrong argument types (<number> expected)")
+	for _, j in pairs({ ITEM_1, ITEM_2, ITEM_3, ITEM_4, ITEM_5, ITEM_6}) do
+		if myHero:GetItemData(j).itemID == itemID and myHero:GetSpellData(j).currentCd == 0 then return j end
+	end
+	return nil
+end
+
+function UseBotrk()
+	local target = _G.SDK.Orbwalker:GetTarget() or _G.SDK.TargetSelector:GetTarget(300, _G.SDK.DAMAGE_TYPE_PHYSICAL);
+	if target then 
+		local botrkitem = GetInventorySlotItem(3153) or GetInventorySlotItem(3144)
+		if botrkitem then
+			Control.CastSpell(keybindings[botrkitem],target.pos)
+		end
+	end
+end
 class "Lucian"
 
 local passive = true
 local lastbuff = 0
 function Lucian:__init()
-	PrintChat("TRUSt in my Lucian "..Version.." - Loaded....")
+	
 	self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
 	
-	
-	
+	local orbwalkername = ""
 	if _G.SDK then
+		orbwalkername = "IC'S orbwalker"
 		_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 			if blockmovement then
 				arg.Process = false
@@ -39,10 +59,14 @@ function Lucian:__init()
 				arg.Process = false
 			end
 		end)
+	elseif _G.GOS then
+		orbwalkername = "Noddy orbwalker"
+		
 	else
-		PrintChat("This script support IC Orbwalker only")
+		orbwalkername = "Orbwalker not found"
 		
 	end
+	PrintChat("TRUSt in my Lucian "..Version.." - Loaded...."..orbwalkername)
 end
 onetimereset = true
 blockattack = false
@@ -62,6 +86,7 @@ function Lucian:LoadMenu()
 	self.Menu:MenuElement({id = "UseQ", name = "UseQ", value = true})
 	self.Menu:MenuElement({id = "UseW", name = "UseW", value = true})
 	self.Menu:MenuElement({id = "UseE", name = "UseE", value = true})
+	self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 	self.Menu:MenuElement({id = "UseQHarass", name = "Harass with Q", value = true})
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
@@ -92,7 +117,16 @@ function Lucian:HasBuff(unit, buffname)
 end
 
 function Lucian:Tick()
-	if myHero.dead or not _G.SDK then return end
+	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
+	if _G.GOS then
+		_G.GOS.BlockAttack = blockattack
+		_G.GOS.BlockMovement = blockmovement
+		if GetTickCount() - _G.GOS.lastAttack < 50 then
+			passive = false
+		end
+		
+	end
+	
 	
 	local buffcheck = self:HasBuff(myHero,"lucianpassivebuff")
 	if buffcheck and buffcheck ~= lastbuff then
@@ -100,23 +134,27 @@ function Lucian:Tick()
 		--PrintChat("Passive added : "..Game.Timer().." : "..lastbuff)
 		passive = true
 	end
-	local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
+	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
 	
-	local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
-	if harassactive and self.Menu.UseQHarass:Value() and self:CanCast(_Q)  then self:Harass() end 
-	
-	
-	if combomodeactive and _G.SDK.Orbwalker:CanMove() and Game.Timer() > lastbuff - 3 then 
-		if self:CanCast(_E) and self.Menu.UseE:Value() and _G.SDK.Orbwalker:GetTarget() then
+	local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
+	local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (_G.GOS and _G.GOS:CanMove())
+	local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (_G.GOS and _G.GOS:CanAttack())
+	local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
+	if combomodeactive and self.Menu.UseBOTRK:Value() then
+		UseBotrk()
+	end
+	if harassactive and self.Menu.UseQHarass:Value() and self:CanCast(_Q) then self:Harass() end 
+	if combomodeactive and canmove and not canattack and Game.Timer() > lastbuff - 3 then 
+		if self:CanCast(_E) and self.Menu.UseE:Value() and currenttarget then
 			self:CastSpell(HK_E,mousePos)
 			return
 		end
-		if self:CanCast(_Q) and self.Menu.UseQ:Value() and _G.SDK.Orbwalker:GetTarget() then
-			self:CastQ(_G.SDK.Orbwalker:GetTarget())
+		if self:CanCast(_Q) and self.Menu.UseQ:Value() and currenttarget then
+			self:CastQ(currenttarget)
 			return
 		end
-		if self:CanCast(_W) and self.Menu.UseW:Value() and _G.SDK.Orbwalker:GetTarget() then
-			self:CastW(_G.SDK.Orbwalker:GetTarget())
+		if self:CanCast(_W) and self.Menu.UseW:Value() and currenttarget then
+			self:CastW(currenttarget)
 			return
 		end
 		
@@ -185,15 +223,14 @@ end
 
 --[[CastQ]]
 function Lucian:CastQ(target)
-	if not _G.SDK then return end
 	if target and self:CanCast(_Q) and passive == false then
+		PrintChat("Q FOUND")
 		self:CastSpell(HK_Q, target.pos)
 	end
 end
 
 --[[CastQ]]
 function Lucian:CastW(target)
-	if not _G.SDK then return end
 	if target and self:CanCast(_W) and passive == false then
 		self:CastSpell(HK_W, target.pos)
 	end
@@ -225,13 +262,22 @@ end
 
 
 function Lucian:FarQTarget()
-	local qtarget = _G.SDK.TargetSelector:GetTarget(900, _G.SDK.DAMAGE_TYPE_PHYSICAL)
+	local qtarget = (_G.SDK and _G.SDK.TargetSelector:GetTarget(900, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(900,"AD"))
 	if qtarget then
 		local qdelay = 0.4 - myHero.levelData.lvl*0.01
 		local pos = qtarget:GetPrediction(math.huge,qdelay)
 		if not pos then return false end 
-		minionlist = _G.SDK.ObjectManager:GetEnemyMinions(500)
-		
+		local minionlist = {}
+		if _G.SDK then
+			minionlist = _G.SDK.ObjectManager:GetEnemyMinions(500)
+		elseif _G.GOS then
+			for i = 1, Game.MinionCount() do
+				local minion = Game.Minion(i)
+				if minion.valid and minion.isEnemy and minion.pos:DistanceTo(myHero.pos) < 500 then
+					table.insert(minionlist, minion)
+				end
+			end
+		end
 		V = Vector(pos) - Vector(myHero.pos)
 		
 		Vn = V:Normalized()
