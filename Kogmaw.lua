@@ -184,6 +184,10 @@ function KogMaw:CastSpell(spell,pos)
 	end
 end
 
+function KogMaw:GetRRange()
+	return (myHero:GetSpellData(_R).level > 0 and ({1200,1500,1800})[myHero:GetSpellData(_R).level]) or 0
+end
+
 function KogMaw:GetBuffs()
 	self.T = {}
 	for i = 0, myHero.buffCount do
@@ -220,7 +224,7 @@ end
 --[[CastE]]
 function KogMaw:CastE(target,combo)
 	if (not _G.SDK and not _G.GOS) then return end
-	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AP"))
+	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(E.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(E.Range,"AP"))
 	if target and target.type == "AIHeroClient" and self:CanCast(_E) and ((combo and self.Menu.Combo.comboUseE:Value()) or (combo == false and self.Menu.Harass.harassUseE:Value())) then
 		local castPos = target:GetPrediction(E.Speed,E.Delay)
 		local newpos = myHero.pos:Extended(castPos,math.random(100,300))
@@ -231,7 +235,8 @@ end
 --[[CastR]]
 function KogMaw:CastR(target,combo)
 	if (not _G.SDK and not _G.GOS) then return end
-	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AP"))
+	local RRange = self:GetRRange()
+	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(RRange, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(RRange,"AP"))
 	local currentultstacks = self:UltStacks()
 	if target and target.type == "AIHeroClient" and self:CanCast(_R) 
 	and ((combo and self.Menu.Combo.comboUseR:Value()) or (combo == false and self.Menu.Harass.harassUseR:Value())) 
