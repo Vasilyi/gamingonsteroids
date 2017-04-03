@@ -107,27 +107,6 @@ function Twitch:Tick()
 	end
 end
 
-
-
-local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
-
-
-function ReturnCursor(pos)
-	blockmovement = false
-	blockattack = false 
-	if _G.GOS then
-		_G.GOS.BlockAttack = blockattack
-		_G.GOS.BlockMovement = blockmovement
-	end
-	Control.SetCursorPos(pos)
-	castSpell.state = 0
-	
-end
-
-function LeftClick(pos)
-	DelayAction(ReturnCursor,0.01,{pos})
-end
-
 function Twitch:UseERange()
 	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
 	local useE = false
@@ -204,30 +183,6 @@ function Twitch:Draw()
 		local ETarget = self:GetETarget()
 		for i, hero in pairs(ETarget) do
 			Draw.Circle(hero.pos, 60, 3, self.Menu.DrawColor:Value())
-		end
-	end
-end
-
-function Twitch:CastSpell(spell,pos)
-	local customcast = self.Menu.CustomSpellCast:Value()
-	if not customcast then
-		Control.CastSpell(spell, pos)
-		return
-	else
-		local delay = self.Menu.delay:Value()
-		local ticker = GetTickCount()
-		if castSpell.state == 0 and ticker > castSpell.casting then
-			castSpell.state = 1
-			castSpell.mouse = mousePos
-			castSpell.tick = ticker
-			if ticker - castSpell.tick < Game.Latency() then
-				--block movement
-				Control.SetCursorPos(pos)
-				Control.KeyDown(spell)
-				Control.KeyUp(spell)
-				DelayAction(LeftClick,delay/1000,{castSpell.mouse})
-				castSpell.casting = ticker
-			end
 		end
 	end
 end
