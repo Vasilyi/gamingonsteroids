@@ -1,4 +1,4 @@
-if myHero.charName == "Ashe" or myHero.charName == "Ezreal" or myHero.charName == "Lucian" or myHero.charName == "Caitlyn" then
+if myHero.charName == "Ashe" or myHero.charName == "Ezreal" or myHero.charName == "Lucian" or myHero.charName == "Caitlyn" or myHero.charName == "Twitch" or myHero.charName == "KogMaw" then
 	require "2DGeometry"
 	
 	
@@ -548,9 +548,9 @@ if myHero.charName == "Lucian" then
 		local qtarget = (_G.SDK and _G.SDK.TargetSelector:GetTarget(900, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(900,"AD"))
 		if qtarget then
 			
-		if myHero.pos:DistanceTo(qtarget.pos)<500 then
-			return qtarget
-		end
+			if myHero.pos:DistanceTo(qtarget.pos)<500 then
+				return qtarget
+			end
 			
 			local qdelay = 0.4 - myHero.levelData.lvl*0.01
 			local pos = qtarget:GetPrediction(math.huge,qdelay)
@@ -1031,4 +1031,432 @@ if myHero.charName == "Ezreal" then
 	function OnLoad()
 		Ezreal()
 	end
+end
+
+if myHero.charName == "Twitch" then
+	
+	class "Twitch"
+	require "DamageLib"
+	local qtarget
+	
+	function Twitch:__init()
+		self:LoadMenu()
+		Callback.Add("Tick", function() self:Tick() end)
+		Callback.Add("Draw", function() self:Draw() end)
+		local orbwalkername = ""
+		if _G.SDK then
+			orbwalkername = "IC'S orbwalker"
+			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
+				if blockmovement then
+					arg.Process = false
+				end
+			end)
+			
+			_G.SDK.Orbwalker:OnPostAttack(function(arg) 		
+				DelayAction(recheckparticle,0.2)
+			end)
+			
+			_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
+				if blockattack then
+					arg.Process = false
+				end
+			end)
+		elseif _G.GOS then
+			orbwalkername = "Noddy orbwalker"
+			
+		else
+			orbwalkername = "Orbwalker not found"
+			
+		end
+		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
+	end
+	blockattack = false
+	blockmovement = false
+	
+	
+	function Twitch:LoadMenu()
+		self.Menu = MenuElement({type = MENU, id = "TRUStinymyTwitch", name = Scriptname})
+		self.Menu:MenuElement({id = "UseEKS", name = "Use E on killable", value = true})
+		self.Menu:MenuElement({id = "UseERange", name = "Use E on running enemy", value = true})
+		self.Menu:MenuElement({id = "MinStacks", name = "Minimal E stacks", value = 2, min = 0, max = 6, step = 5, identifier = ""})
+		self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
+		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", value = true})
+		self.Menu:MenuElement({id = "DrawE", name = "Draw Killable with E", value = true})
+		self.Menu:MenuElement({id = "DrawColor", name = "Color for Killable circle", color = Draw.Color(0xBF3F3FFF)})
+		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
+		
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
+	end
+	gosstackcheck = false
+	function Twitch:Tick()
+		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
+		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
+		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
+		
+		if (_G.GOS) then
+			if GOS:CanMove() and not GOS:CanAttack() and gosstackcheck == false then
+				gosstackcheck = true
+				DelayAction(recheckparticle,0.2)
+			end
+			if GOS:CanAttack() and gosstackcheck == true then
+				gosstackcheck = false
+			end
+		end
+		if combomodeactive then 
+			if self.Menu.UseBOTRK:Value() then
+				UseBotrk()
+			end
+			
+			if self:CanCast(_E) and self.Menu.UseEKS:Value() then
+				self:UseEKS()
+			end
+			
+		end
+		
+		if (harassactive or combomodeactive) and self.Menu.UseERange:Value() and self:CanCast(_E) then
+			self:UseERange()
+		end
+	end
+	
+	function Twitch:UseERange()
+		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+		local useE = false
+		for i, hero in pairs(heroeslist) do
+			if stacks[hero.charName] and stacks[hero.charName] >= self.Menu.MinStacks:Value() then
+				if myHero.pos:DistanceTo(hero.pos)<1100 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25).pos) < 600 then
+					return
+				end
+				if myHero.pos:DistanceTo(hero.pos)<1100 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25).pos) < 1200 then
+					useE = true
+				end
+			end
+		end
+		if useE then
+			Control.CastSpell(_E)
+		end
+	end
+	
+	function Twitch:GetStacks(str)
+		if str:lower():find("twitch_poison_counter_01.troy") then return 1
+		elseif str:lower():find("twitch_poison_counter_02.troy") then return 2
+		elseif str:lower():find("twitch_poison_counter_03.troy") then return 3
+		elseif str:lower():find("twitch_poison_counter_04.troy") then return 4
+		elseif str:lower():find("twitch_poison_counter_05.troy") then return 5
+		elseif str:lower():find("twitch_poison_counter_06.troy") then return 6
+		end
+		return 0
+	end
+	stacks = {}
+	function recheckparticle()
+		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+		for i = 1, Game.ObjectCount() do
+			local object = Game.Object(i)		
+			if object then
+				for i, hero in pairs(heroeslist) do
+					if object.pos:DistanceTo(hero.pos)<170 and object ~= hero then 
+						local stacksamount = Twitch:GetStacks(object.name)
+						if stacksamount > 0 then
+							stacks[hero.charName] = stacksamount
+						end
+					end
+				end
+			end
+		end
+		return false
+	end
+	
+	function Twitch:GetETarget()
+		self.KillableHeroes = {}
+		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1200)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+		local level = myHero:GetSpellData(_E).level
+		for i, hero in pairs(heroeslist) do
+			if stacks[hero.charName] then 
+				local EDamage = (stacks[hero.charName] * (({15, 20, 25, 30, 35})[level] + 0.2 * myHero.ap + 0.25 * myHero.bonusDamage)) + ({20, 35, 50, 65, 80})[level]
+				local tmpdmg = CalcPhysicalDamage(myHero, hero, EDamage)
+				if hero.health and tmpdmg and tmpdmg > hero.health and myHero.pos:DistanceTo(hero.pos)<1200 then
+					table.insert(self.KillableHeroes, hero)
+				end
+			end
+		end
+		return self.KillableHeroes
+	end
+	
+	function Twitch:UseEKS()
+		local ETarget = self:GetETarget()
+		if #ETarget > 0 then
+			Control.KeyDown(HK_E)
+			Control.KeyUp(HK_E)
+		end
+	end
+	
+	function Twitch:Draw()
+		if self.Menu.DrawE:Value() then
+			local ETarget = self:GetETarget()
+			for i, hero in pairs(ETarget) do
+				Draw.Circle(hero.pos, 60, 3, self.Menu.DrawColor:Value())
+			end
+		end
+	end
+	
+	
+	function Twitch:IsReady(spellSlot)
+		return myHero:GetSpellData(spellSlot).currentCd == 0 and myHero:GetSpellData(spellSlot).level > 0
+	end
+	
+	function Twitch:CheckMana(spellSlot)
+		return myHero:GetSpellData(spellSlot).mana < myHero.mana
+	end
+	
+	function Twitch:CanCast(spellSlot)
+		return self:IsReady(spellSlot) and self:CheckMana(spellSlot)
+	end
+	
+	function OnLoad()
+		Twitch()
+	end
+	
+end
+
+if myHero.charName == "KogMaw" then
+local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.0","TRUS","7.6"
+	class "KogMaw"
+	
+	function KogMaw:__init()
+		self:LoadSpells()
+		self:LoadMenu()
+		Callback.Add("Tick", function() self:Tick() end)
+		
+		local orbwalkername = ""
+		if _G.SDK then
+			orbwalkername = "IC'S orbwalker"
+			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
+				if blockmovement then
+					arg.Process = false
+				end
+			end)
+			
+			_G.SDK.Orbwalker:OnPostAttack(function() 
+				local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
+				local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
+				if (combomodeactive or harassactive) then
+					self:CastQ(_G.SDK.Orbwalker:GetTarget())
+				end
+			end)
+			
+			_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
+				if blockattack then
+					arg.Process = false
+				end
+			end)
+		elseif _G.GOS then
+			orbwalkername = "Noddy orbwalker"
+			
+		else
+			orbwalkername = "Orbwalker not found"
+			
+		end
+		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
+	end
+	blockattack = false
+	blockmovement = false
+	
+	local lastpick = 0
+	--[[Spells]]
+	function KogMaw:LoadSpells()
+		Q = {Range = 1175, width = 70, Delay = 0.25, Speed = 1650}
+		E = {Range = 1280, width = 120, Delay = 0.5, Speed = 1350}
+		R = {Range = 1200, Delay = 1.2, Radius = 120, Speed = math.huge}
+	end
+	
+	function KogMaw:LoadMenu()
+		self.Menu = MenuElement({type = MENU, id = "TRUStinymyKogMaw", name = Scriptname})
+		
+		--[[Combo]]
+		self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
+		self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
+		self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
+		self.Menu.Combo:MenuElement({id = "comboUseW", name = "Use W", value = true})
+		self.Menu.Combo:MenuElement({id = "comboUseE", name = "Use E", value = true})
+		self.Menu.Combo:MenuElement({id = "comboUseR", name = "Use R", value = true})
+		self.Menu.Combo:MenuElement({id = "MaxStacks", name = "Max R stacks: ", value = 3, min = 0, max = 10})
+		
+		--[[Harass]]
+		self.Menu:MenuElement({type = MENU, id = "Harass", name = "Harass Settings"})
+		self.Menu.Harass:MenuElement({id = "harassUseQ", name = "Use Q", value = true})
+		self.Menu.Harass:MenuElement({id = "harassUseE", name = "Use E", value = true})
+		self.Menu.Harass:MenuElement({id = "harassMana", name = "Minimal mana percent:", value = 30, min = 0, max = 101, identifier = "%"})
+		self.Menu.Harass:MenuElement({id = "harassUseR", name = "Use R", value = true})
+		self.Menu.Harass:MenuElement({id = "HarassMaxStacks", name = "Max R stacks: ", value = 3, min = 0, max = 10})
+		
+		
+		
+		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
+		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
+		
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
+	end
+	
+	function KogMaw:Tick()
+		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
+		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
+		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
+		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (_G.GOS and _G.GOS:CanMove())
+		local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (_G.GOS and _G.GOS:CanAttack())
+		local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
+		local HarassMinMana = self.Menu.Harass.harassMana:Value()
+		
+		
+		if combomodeactive and self.Menu.UseBOTRK:Value() then
+			UseBotrk()
+		end
+		
+		if ((combomodeactive) or (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana)) and (canmove or not currenttarget) then
+			self:CastQ(currenttarget,combomodeactive or false)
+			self:CastE(currenttarget,combomodeactive or false)
+			self:CastR(currenttarget,combomodeactive or false)
+		end
+		
+		
+		if myHero.activeSpell and myHero.activeSpell.valid and (myHero.activeSpell.name == "KogMawQ" or myHero.activeSpell.name == "KogMawVoidOozeMissile" or myHero.activeSpell.name == "KogMawLivingArtillery") then
+			DelayAction(EnableMovement,0.1)
+		end
+	end
+	
+	
+	local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
+	
+	
+	
+	function EnableMovement()
+		--unblock movement
+		blockattack = false
+		blockmovement = false
+		if _G.GOS then
+			_G.GOS.BlockAttack = blockattack
+			_G.GOS.BlockMovement = blockmovement
+		end
+		onetimereset = true
+		castSpell.state = 0
+	end
+	
+	function ReturnCursor(pos)
+		Control.SetCursorPos(pos)
+		DelayAction(EnableMovement,0.1)
+	end
+	
+	function LeftClick(pos)
+		Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
+		Control.mouse_event(MOUSEEVENTF_LEFTUP)
+		DelayAction(ReturnCursor,0.05,{pos})
+	end
+	
+	function KogMaw:CastSpell(spell,pos)
+		local customcast = self.Menu.CustomSpellCast:Value()
+		if not customcast then
+			Control.CastSpell(spell, pos)
+			return
+		else
+			local delay = self.Menu.delay:Value()
+			local ticker = GetTickCount()
+			if castSpell.state == 0 and ticker > castSpell.casting then
+				castSpell.state = 1
+				castSpell.mouse = mousePos
+				castSpell.tick = ticker
+				if ticker - castSpell.tick < Game.Latency() then
+					--block movement
+					blockattack = true
+					blockmovement = true
+					if _G.GOS then
+						_G.GOS.BlockAttack = blockattack
+						_G.GOS.BlockMovement = blockmovement
+					end
+					Control.SetCursorPos(pos)
+					Control.KeyDown(spell)
+					Control.KeyUp(spell)
+					DelayAction(LeftClick,delay/1000,{castSpell.mouse})
+					castSpell.casting = ticker + 500
+				end
+			end
+		end
+	end
+	
+	function KogMaw:GetBuffs()
+		self.T = {}
+		for i = 0, myHero.buffCount do
+			local Buff = myHero:GetBuff(i)
+			if Buff.count > 0 then
+				table.insert(self.T, Buff)
+			end
+		end
+		return self.T
+	end
+	
+	function KogMaw:UltStacks()
+		for K, Buff in pairs(self:GetBuffs()) do
+			if Buff.name:lower() == "kogmawlivingartillerycost" then
+				return Buff.count
+			end
+		end
+		return 0
+	end
+	
+	
+	--[[CastQ]]
+	function KogMaw:CastQ(target, combo)
+		if (not _G.SDK and not _G.GOS) then return end
+		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AP"))
+		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and ((combo and self.Menu.Combo.comboUseQ:Value()) or (combo == false and self.Menu.Harass.harassUseQ:Value())) and target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0 then
+			local castPos = target:GetPrediction(Q.Speed,Q.Delay)
+			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
+			self:CastSpell(HK_Q, newpos)
+		end
+	end
+	
+	
+	--[[CastE]]
+	function KogMaw:CastE(target,combo)
+		if (not _G.SDK and not _G.GOS) then return end
+		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AP"))
+		if target and target.type == "AIHeroClient" and self:CanCast(_E) and ((combo and self.Menu.Combo.comboUseE:Value()) or (combo == false and self.Menu.Harass.harassUseE:Value())) then
+			local castPos = target:GetPrediction(E.Speed,E.Delay)
+			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
+			self:CastSpell(HK_E, newpos)
+		end
+	end
+	
+	--[[CastR]]
+	function KogMaw:CastR(target,combo)
+		if (not _G.SDK and not _G.GOS) then return end
+		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AP"))
+		local currentultstacks = self:UltStacks()
+		if target and target.type == "AIHeroClient" and self:CanCast(_R) 
+		and ((combo and self.Menu.Combo.comboUseR:Value()) or (combo == false and self.Menu.Harass.harassUseR:Value())) 
+		and ((combo == false and currentultstacks < self.Menu.Harass.HarassMaxStacks:Value()) or (currentultstacks < self.Menu.Combo.MaxStacks:Value()))
+		then
+			local castPos = target:GetPrediction(R.Speed,R.Delay)
+			self:CastSpell(HK_R, castPos)
+		end
+	end
+	
+	function KogMaw:IsReady(spellSlot)
+		return myHero:GetSpellData(spellSlot).currentCd == 0 and myHero:GetSpellData(spellSlot).level > 0
+	end
+	
+	function KogMaw:CheckMana(spellSlot)
+		return myHero:GetSpellData(spellSlot).mana < myHero.mana
+	end
+	
+	function KogMaw:CanCast(spellSlot)
+		return self:IsReady(spellSlot) and self:CheckMana(spellSlot)
+	end
+	
+	
+	function OnLoad()
+		KogMaw()
+	end
+	
 end
