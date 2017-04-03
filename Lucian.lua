@@ -270,7 +270,7 @@ function Lucian:FarQTarget()
 	local qtarget = (_G.SDK and _G.SDK.TargetSelector:GetTarget(900, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(900,"AD"))
 	if qtarget then
 		
-		if myHero:DistanceTo(qtarget)<500 then
+		if myHero.pos:DistanceTo(qtarget.pos)<500 then
 			return qtarget
 		end
 		
