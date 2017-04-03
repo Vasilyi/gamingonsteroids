@@ -43,7 +43,11 @@ if myHero.charName == "Ashe" then
 			end)
 			
 			_G.SDK.Orbwalker:OnPostAttack(function() 
-				self:CastQ()
+				local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
+				local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
+				if (combomodeactive or harassactive) and self.Menu.UseQCombo:Value() then
+					self:CastQ()
+				end
 			end)
 			
 			_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
@@ -58,7 +62,7 @@ if myHero.charName == "Ashe" then
 			orbwalkername = "Orbwalker not found"
 			
 		end
-		PrintChat("TRUSt in my Ashe "..Version.." - Loaded...."..orbwalkername)
+		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 	end
 	blockattack = false
 	blockmovement = false
