@@ -327,16 +327,16 @@ function IHateSkillshots:__init()
 	if _G.Collision then 
 		for i, spell in pairs(Champs[myHero.charName]) do
 			if i == _Q then
-				QSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth, true)
+				QSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth + 50, spell.ignorecol and false or true)
 				CollSpell[_Q] = QSpell
 			elseif i == _W then
-				WSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth, true)
+				WSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth + 50, spell.ignorecol and false or true)
 				CollSpell[_W] = WSpell
 			elseif i == _E then
-				ESpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth, true)
+				ESpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth + 50, spell.ignorecol and false or true)
 				CollSpell[_E] = ESpell
 			elseif i == _R then
-				RSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth, true)
+				RSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth + 50, spell.ignorecol and false or true)
 				CollSpell[_R] = RSpell
 			end
 		end
