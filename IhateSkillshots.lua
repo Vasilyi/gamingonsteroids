@@ -1,6 +1,9 @@
 class "IHateSkillshots"
 local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.1","TRUS","7.6"
-
+if FileExist(COMMON_PATH .. "Collision.lua") then
+require 'Collision'
+PrintChat("Collision library loaded")
+end
 Champs = {
 	
 	["Aatrox"] = {
@@ -306,7 +309,7 @@ Champs = {
 	
 }
 
-
+local CollSpell = {}
 function IHateSkillshots:__init()
 	if Champs[myHero.charName] == nil then
 		PrintChat "Hero didnt have skillshots, IHateSkillshots unloaded"
@@ -321,9 +324,25 @@ function IHateSkillshots:__init()
 	Callback.Add("Draw", function() self:Draw() end)
 	--Callback.Add("Draw", function() self:Draw() end)
 	--Callback.Add("WndMsg", function() self:OnWndMsg() end)
+	if _G.Collision then 
+		for i, spell in pairs(Champs[myHero.charName]) do
+			if i == _Q then
+				QSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, spell.minionCollisionWidth or 0, spell.ignorecol or false)
+				CollSpell[_Q] = QSpell
+			elseif i == _W then
+				WSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, spell.minionCollisionWidth or 0, spell.ignorecol or false)
+				CollSpell[_W] = WSpell
+			elseif i == _E then
+				ESpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, spell.minionCollisionWidth or 0, spell.ignorecol or false)
+				CollSpell[_E] = ESpell
+			elseif i == _R then
+				RSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, spell.minionCollisionWidth or 0, spell.ignorecol or false)
+				CollSpell[_R] = RSpell
+			end
+		end
+	end
 	DelayAction(delayload,5)
 end
-
 str = { [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R" }
 keybindings = { [_Q] = 0x5A, [_W] = 0x58, [_E] = 0x43, [_R] = 0x56 }
 castbuttons = { [_Q] = HK_Q, [_W] = HK_W, [_E] = HK_E, [_R] = HK_R }
@@ -417,7 +436,7 @@ function IHateSkillshots:IsValidTarget(unit, range, checkTeam, from)
 	if unit == nil or not unit.valid or not unit.visible or unit.dead or not unit.isTargetable --[[or self:IsImmune(unit)]] or (checkTeam and unit.isAlly) then
 	return false
 end
-return unit.pos:DistanceTo(from and from or myHero) < range
+return unit.pos:DistanceTo(from and from or myHero.pos) < range
 end
 
 function IHateSkillshots:CheckMana(spellSlot)
@@ -488,19 +507,27 @@ function IHateSkillshots:Tick()
 			if temptarget == nil then return end
 			
 			local collisionc = spell.ignorecol and 0 or spell.minionCollisionWidth
-			if collisionc > 0 then
-				if (temptarget:GetCollision(spell.minionCollisionWidth,spell.speed,spell.delay)) >0 then
-				return end
-			end
 			local temppred = temptarget:GetPrediction(spell.speed,spell.delay/1000)
+			
+			if collisionc > 0 then
+				if _G.Collision then
+				local block, list = CollSpell[i]:__GetCollision(myHero, temppred, 5)
+						if block then 
+							return 
+						end							
+				elseif (temptarget:GetCollision(spell.minionCollisionWidth,spell.speed,spell.delay)) >0 then
+					return 
+				end
+			end
+			
 			
 			if temppred == nil or GetDistance(temppred)>spell.range then return end
 			
 			if spell.circular then 
 				self:CastSpell(castbuttons[i],temppred)
 			else
-				local newpos = myHero.pos:Extended(temppred,math.random(0,spell.range))
-				self:CastSpell(castbuttons[i],temppred)
+				local newpos = myHero.pos:Extended(temppred,math.random(100,300))
+				self:CastSpell(castbuttons[i],newpos)
 			end
 			
 		end
