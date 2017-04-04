@@ -197,7 +197,7 @@ if myHero.charName == "Ashe" then
 		if combomodeactive and self.Menu.UseQCombo:Value() and currenttarget and canmove and not canattack then
 			self:CastQ()
 		end
-		if harassmodeactive and self.Menu.UseWHarass:Value() and canmove and not canattack then
+		if harassmodeactive and self.Menu.UseWHarass:Value() and ((canmove and not canattack) or not currenttarget) then
 			self:CastW()
 		end
 	end
@@ -1290,6 +1290,7 @@ if myHero.charName == "KogMaw" then
 		self.Menu.Combo:MenuElement({id = "comboUseE", name = "Use E", value = true})
 		self.Menu.Combo:MenuElement({id = "comboUseR", name = "Use R", value = true})
 		self.Menu.Combo:MenuElement({id = "MaxStacks", name = "Max R stacks: ", value = 3, min = 0, max = 10})
+		self.Menu.Combo:MenuElement({id = "ManaW", name = "Save mana for W", value = true})
 		
 		--[[Harass]]
 		self.Menu:MenuElement({type = MENU, id = "Harass", name = "Harass Settings"})
@@ -1331,7 +1332,7 @@ if myHero.charName == "KogMaw" then
 		
 		
 		if myHero.activeSpell and myHero.activeSpell.valid and (myHero.activeSpell.name == "KogMawQ" or myHero.activeSpell.name == "KogMawVoidOozeMissile" or myHero.activeSpell.name == "KogMawLivingArtillery") then
-			DelayAction(EnableMovement,0.1)
+			EnableMovement()
 		end
 	end
 	
@@ -1345,8 +1346,8 @@ if myHero.charName == "KogMaw" then
 		blockattack = false
 		blockmovement = false
 		if _G.GOS then
-			_G.GOS.BlockAttack = blockattack
-			_G.GOS.BlockMovement = blockmovement
+			_G.GOS.BlockAttack = false
+			_G.GOS.BlockMovement = false
 		end
 		onetimereset = true
 		castSpell.state = 0
@@ -1461,7 +1462,8 @@ if myHero.charName == "KogMaw" then
 	end
 	
 	function KogMaw:CheckMana(spellSlot)
-		return myHero:GetSpellData(spellSlot).mana < myHero.mana
+		local savemana = self.Menu.Combo.ManaW:Value()
+		return myHero:GetSpellData(spellSlot).mana < (myHero.mana - ((savemana and 40) or 0))
 	end
 	
 	function KogMaw:CanCast(spellSlot)

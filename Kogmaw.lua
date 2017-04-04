@@ -81,7 +81,8 @@ function KogMaw:LoadMenu()
 	self.Menu.Combo:MenuElement({id = "comboUseE", name = "Use E", value = true})
 	self.Menu.Combo:MenuElement({id = "comboUseR", name = "Use R", value = true})
 	self.Menu.Combo:MenuElement({id = "MaxStacks", name = "Max R stacks: ", value = 3, min = 0, max = 10})
-	
+	self.Menu.Combo:MenuElement({id = "ManaW", name = "Save mana for W", value = true})
+
 	--[[Harass]]
 	self.Menu:MenuElement({type = MENU, id = "Harass", name = "Harass Settings"})
 	self.Menu.Harass:MenuElement({id = "harassUseQ", name = "Use Q", value = true})
@@ -122,7 +123,7 @@ function KogMaw:Tick()
 	
 	
 	if myHero.activeSpell and myHero.activeSpell.valid and (myHero.activeSpell.name == "KogMawQ" or myHero.activeSpell.name == "KogMawVoidOozeMissile" or myHero.activeSpell.name == "KogMawLivingArtillery") then
-		DelayAction(EnableMovement,0.1)
+		EnableMovement()
 	end
 end
 
@@ -136,8 +137,8 @@ function EnableMovement()
 	blockattack = false
 	blockmovement = false
 	if _G.GOS then
-		_G.GOS.BlockAttack = blockattack
-		_G.GOS.BlockMovement = blockmovement
+		_G.GOS.BlockAttack = false
+		_G.GOS.BlockMovement = false
 	end
 	onetimereset = true
 	castSpell.state = 0
@@ -252,7 +253,8 @@ function KogMaw:IsReady(spellSlot)
 end
 
 function KogMaw:CheckMana(spellSlot)
-	return myHero:GetSpellData(spellSlot).mana < myHero.mana
+	local savemana = self.Menu.Combo.ManaW:Value()
+	return myHero:GetSpellData(spellSlot).mana < (myHero.mana - ((savemana and 40) or 0))
 end
 
 function KogMaw:CanCast(spellSlot)
