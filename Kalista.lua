@@ -1,4 +1,3 @@
-local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.0","TRUS","7.6"
 if myHero.charName ~= "Kalista" then return end
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
 
@@ -21,8 +20,10 @@ function UseBotrk()
 	end
 end
 
+
 class "Kalista"
 require "DamageLib"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.0","TRUS","7.6"
 function Kalista:__init()
 	self:LoadSpells()
 	self:LoadMenu()
@@ -111,14 +112,14 @@ function Kalista:Tick()
 		UseBotrk()
 	end
 	
-	if ((combomodeactive) or (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana)) and (canmove or not currenttarget) then
+	if ((combomodeactive) or (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana)) and (not canattack or not currenttarget) then
 		self:CastQ(currenttarget,combomodeactive or false)
 		self:CastE(currenttarget,combomodeactive or false)
 	end
 	if self.Menu.Harass.harassUseELasthit:Value() then
 		self:UseEOnLasthit()
 	end
-	if (harassactive or combomodeactive) and self:CanCast(_E) then
+	if (harassactive or combomodeactive) and self:CanCast(_E) and not canattack then
 		if self.Menu.Harass.harassUseERange:Value() then 
 			self:UseERange()
 		end
@@ -284,7 +285,7 @@ end
 
 --[[CastE]]
 function Kalista:CastE(target,combo)
-	if #self:GetETarget() > 0 then
+	if self:CanCast(_E) and #self:GetETarget() > 0 then
 		Control.CastSpell(HK_E)
 	end
 end
@@ -307,7 +308,8 @@ function Kalista:Draw()
 	if self.Menu.DrawE:Value() then
 		local ETarget = self:GetETarget()
 		for i, hero in pairs(ETarget) do
-			Draw.Circle(hero.pos, 60, 3, self.Menu.DrawColor:Value())
+			Draw.Circle(hero.pos, 80, 6, self.Menu.DrawColor:Value())
+			Draw.Text("killable", 30, hero.pos2D.x, hero.pos2D.y,self.Menu.DrawColor:Value())
 		end
 	end
 end
