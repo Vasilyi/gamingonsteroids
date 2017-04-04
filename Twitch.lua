@@ -115,7 +115,7 @@ function Twitch:UseERange()
 			if myHero.pos:DistanceTo(hero.pos)<1100 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25).pos) < 600 then
 				return
 			end
-			if myHero.pos:DistanceTo(hero.pos)<1100 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25).pos) < 1200 then
+			if myHero.pos:DistanceTo(hero.pos)<1100 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25).pos) > 1100 then
 				useE = true
 			end
 		end

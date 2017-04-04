@@ -75,17 +75,19 @@ function Kalista:LoadMenu()
 	--[[Combo]]
 	self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 	self.Menu:MenuElement({id = "DrawE", name = "Draw Killable with E", value = true})
+	self.Menu:MenuElement({id = "DrawColor", name = "Color for Killable circle", color = Draw.Color(0xBF3F3FFF)})
 	self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
 	self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
 	self.Menu.Combo:MenuElement({id = "comboUseE", name = "Use E", value = true})
-	self.Menu.Combo:MenuElement({id = "MinEStacks", name = "Min E stacks: ", value = 3, min = 0, max = 10})
-
+	
 	--[[Harass]]
 	self.Menu:MenuElement({type = MENU, id = "Harass", name = "Harass Settings"})
 	self.Menu.Harass:MenuElement({id = "harassUseQ", name = "Use Q", value = true})
-	self.Menu.Harass:MenuElement({id = "harassUseE", name = "Use E", value = true})
-	self.Menu.Harass:MenuElement({id = "harassMana", name = "Minimal mana percent:", value = 30, min = 0, max = 101, identifier = "%"})
+	self.Menu.Harass:MenuElement({id = "harassUseELasthit", name = "Use E Harass when lasthit", value = true})
+	self.Menu.Harass:MenuElement({id = "harassUseERange", name = "Use E when out of range", value = true})
 	self.Menu.Harass:MenuElement({id = "HarassMinEStacks", name = "Min E stacks: ", value = 3, min = 0, max = 10})
+	self.Menu.Harass:MenuElement({id = "harassMana", name = "Minimal mana percent:", value = 30, min = 0, max = 101, identifier = "%"})
+	
 	
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
@@ -112,6 +114,15 @@ function Kalista:Tick()
 	if ((combomodeactive) or (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana)) and (canmove or not currenttarget) then
 		self:CastQ(currenttarget,combomodeactive or false)
 		self:CastE(currenttarget,combomodeactive or false)
+	end
+	
+	if (harassactive or combomodeactive) and self:CanCast(_E) then
+		if self.Menu.Harass.harassUseERange:Value() then 
+			self:UseERange()
+		end
+		if self.Menu.Harass.harassUseELasthit:Value() then
+			
+		end
 	end
 	
 end
@@ -195,6 +206,24 @@ function Kalista:GetSpears(unit, buffname)
 	return 0
 end
 
+function Kalista:UseERange()
+	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+	local useE = false
+	for i, hero in pairs(heroeslist) do
+		if self:GetSpears(hero) >= self.Menu.Harass.HarassMinEStacks:Value() then
+			if myHero.pos:DistanceTo(hero.pos)<1100 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25).pos) < 600 then
+				return
+			end
+			if myHero.pos:DistanceTo(hero.pos)<1100 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25).pos) > 1100 then
+				useE = true
+			end
+		end
+	end
+	if useE then
+		Control.CastSpell(_E)
+	end
+end
+
 function Kalista:GetETarget()
 	self.KillableHeroes = {}
 	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1200)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
@@ -224,7 +253,9 @@ end
 
 --[[CastE]]
 function Kalista:CastE(target,combo)
-
+	if #self:GetETarget() > 0 then
+		Control.CastSpell(HK_E)
+	end
 end
 
 
@@ -234,7 +265,6 @@ function Kalista:IsReady(spellSlot)
 end
 
 function Kalista:CheckMana(spellSlot)
-	local savemana = self.Menu.Combo.ManaW:Value()
 	return myHero:GetSpellData(spellSlot).mana < myHero.mana
 end
 
