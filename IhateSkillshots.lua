@@ -327,16 +327,16 @@ function IHateSkillshots:__init()
 	if _G.Collision then 
 		for i, spell in pairs(Champs[myHero.charName]) do
 			if i == _Q then
-				QSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth + 50, spell.ignorecol and false or true)
+				QSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth + (not self.Menu.addcollision and 0 or self.Menu.addcollision:Value()), spell.ignorecol and false or true)
 				CollSpell[_Q] = QSpell
 			elseif i == _W then
-				WSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth + 50, spell.ignorecol and false or true)
+				WSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth + (not self.Menu.addcollision and 0 or self.Menu.addcollision:Value()), spell.ignorecol and false or true)
 				CollSpell[_W] = WSpell
 			elseif i == _E then
-				ESpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth + 50, spell.ignorecol and false or true)
+				ESpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth + (not self.Menu.addcollision and 0 or self.Menu.addcollision:Value()), spell.ignorecol and false or true)
 				CollSpell[_E] = ESpell
 			elseif i == _R then
-				RSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth + 50, spell.ignorecol and false or true)
+				RSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth + (not self.Menu.addcollision and 0 or self.Menu.addcollision:Value()), spell.ignorecol and false or true)
 				CollSpell[_R] = RSpell
 			end
 		end
@@ -362,7 +362,9 @@ function IHateSkillshots:LoadMenu()
 		self.Menu.Draw:MenuElement({id = "color"..str[i], name = "Color for "..str[i], color = Draw.Color(0xBF3F3FFF)})
 		self.Menu.Skillshots:MenuElement({id = str[i], name = "Use"..str[i], key = keybindings[i]})
 	end
-	
+	if _G.Collision then
+	self.Menu:MenuElement({id = "addcollision", name = "Additional collision size", value = 50, min = 0, max = 200, step = 5, identifier = ""})
+	end
 	
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
