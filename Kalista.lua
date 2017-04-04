@@ -23,7 +23,7 @@ end
 
 class "Kalista"
 require "DamageLib"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.0","TRUS","7.6"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.1","TRUS","7.6"
 function Kalista:__init()
 	self:LoadSpells()
 	self:LoadMenu()
@@ -88,6 +88,19 @@ function Kalista:LoadMenu()
 	self.Menu.Harass:MenuElement({id = "harassUseERange", name = "Use E when out of range", value = true})
 	self.Menu.Harass:MenuElement({id = "HarassMinEStacks", name = "Min E stacks: ", value = 3, min = 0, max = 10})
 	self.Menu.Harass:MenuElement({id = "harassMana", name = "Minimal mana percent:", value = 30, min = 0, max = 101, identifier = "%"})
+	
+	self.Menu:MenuElement({type = MENU, id = "SmiteMarker", name = "AutoE Jungle"})
+	self.Menu.SmiteMarker:MenuElement({id = "Enabled", name = "Enabled", key = string.byte("K"), toggle = true})
+	self.Menu.SmiteMarker:MenuElement({id = "MarkBaron", name = "Baron", value = true, leftIcon = "http://puu.sh/rPuVv/933a78e350.png"})
+	self.Menu.SmiteMarker:MenuElement({id = "MarkHerald", name = "Herald", value = true, leftIcon = "http://puu.sh/rQs4A/47c27fa9ea.png"})
+	self.Menu.SmiteMarker:MenuElement({id = "MarkDragon", name = "Dragon", value = true, leftIcon = "http://puu.sh/rPvdF/a00d754b30.png"})
+	self.Menu.SmiteMarker:MenuElement({id = "MarkBlue", name = "Blue Buff", value = true, leftIcon = "http://puu.sh/rPvNd/f5c6cfb97c.png"})
+	self.Menu.SmiteMarker:MenuElement({id = "MarkRed", name = "Red Buff", value = true, leftIcon = "http://puu.sh/rPvQs/fbfc120d17.png"})
+	self.Menu.SmiteMarker:MenuElement({id = "MarkGromp", name = "Gromp", value = true, leftIcon = "http://puu.sh/rPvSY/2cf9ff7a8e.png"})
+	self.Menu.SmiteMarker:MenuElement({id = "MarkWolves", name = "Wolves", value = true, leftIcon = "http://puu.sh/rPvWu/d9ae64a105.png"})
+	self.Menu.SmiteMarker:MenuElement({id = "MarkRazorbeaks", name = "Razorbeaks", value = true, leftIcon = "http://puu.sh/rPvZ5/acf0e03cc7.png"})
+	self.Menu.SmiteMarker:MenuElement({id = "MarkKrugs", name = "Krugs", value = true, leftIcon = "http://puu.sh/rPw6a/3096646ec4.png"})
+	self.Menu.SmiteMarker:MenuElement({id = "MarkCrab", name = "Crab", value = true, leftIcon = "http://puu.sh/rPwaw/10f0766f4d.png"})
 	
 	
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
@@ -185,7 +198,60 @@ function Kalista:CastSpell(spell,pos)
 	end
 end
 
+local SmiteTable = {
+	SRU_Baron = "MarkBaron",
+	SRU_RiftHerald = "MarkHerald",
+	SRU_Dragon_Water = "MarkDragon",
+	SRU_Dragon_Fire = "MarkDragon",
+	SRU_Dragon_Earth = "MarkDragon",
+	SRU_Dragon_Air = "MarkDragon",
+	SRU_Dragon_Elder = "MarkDragon",
+	SRU_Blue = "MarkBlue",
+	SRU_Red = "MarkRed",
+	SRU_Gromp = "MarkGromp",
+	SRU_Murkwolf = "MarkWolves",
+	SRU_Razorbeak = "MarkRazorbeaks",
+	SRU_Krug = "MarkKrugs",
+	Sru_Crab = "MarkCrab",
+}
 
+
+function Kalista:DrawSmiteableMinion(type,minion)
+	if not type or not self.Menu.SmiteMarker[type] then
+		return
+	end
+	if self.Menu.SmiteMarker[type]:Value() then
+		if minion.pos2D.onScreen then
+			Draw.Circle(minion.pos,minion.boundingRadius,6,Draw.Color(0xFF00FF00));
+		end
+		if self:CanCast(_E) then
+			Control.CastSpell(HK_E)
+		end
+	end
+end
+
+function Kalista:CheckKillableMinion()
+	if _G.SDK then
+		minionlist = _G.SDK.ObjectManager:GetMonsters(E.Range)
+	elseif _G.GOS then
+		for i = 1, Game.MinionCount() do
+			local minion = Game.Minion(i)
+			if minion.valid and minion.isEnemy and minion.pos:DistanceTo(myHero.pos) < E.Range then
+				table.insert(minionlist, minion)
+			end
+		end
+	end
+	for i, minion in pairs(minionlist) do
+		if self:GetSpears(minion) > 0 then 
+			local EDamage = getdmg("E",minion,myHero)
+			if EDamage > minion.health then
+				
+				local minionName = minion.charName
+				self:DrawSmiteableMinion(SmiteTable[minionName], minion)
+			end
+		end
+	end
+end
 function Kalista:GetBuffs(unit)
 	self.T = {}
 	for i = 0, unit.buffCount do
@@ -305,6 +371,10 @@ function Kalista:CanCast(spellSlot)
 end
 
 function Kalista:Draw()
+	if self.Menu.SmiteMarker.Enabled:Value() then
+		self:CheckKillableMinion()
+	end
+	
 	if self.Menu.DrawE:Value() then
 		local ETarget = self:GetETarget()
 		for i, hero in pairs(ETarget) do
