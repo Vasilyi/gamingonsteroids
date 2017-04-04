@@ -115,13 +115,12 @@ function Kalista:Tick()
 		self:CastQ(currenttarget,combomodeactive or false)
 		self:CastE(currenttarget,combomodeactive or false)
 	end
-	
+	if self.Menu.Harass.harassUseELasthit:Value() then
+		self:UseEOnLasthit()
+	end
 	if (harassactive or combomodeactive) and self:CanCast(_E) then
 		if self.Menu.Harass.harassUseERange:Value() then 
 			self:UseERange()
-		end
-		if self.Menu.Harass.harassUseELasthit:Value() then
-			
 		end
 	end
 	
@@ -224,6 +223,39 @@ function Kalista:UseERange()
 	end
 end
 
+function Kalista:UseEOnLasthit()
+	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+	local useE = false
+	local minionlist = {}
+	
+	for i, hero in pairs(heroeslist) do
+		if self:GetSpears(hero) >= self.Menu.Harass.HarassMinEStacks:Value() then
+			if _G.SDK then
+				minionlist = _G.SDK.ObjectManager:GetEnemyMinions(E.Range)
+			elseif _G.GOS then
+				for i = 1, Game.MinionCount() do
+					local minion = Game.Minion(i)
+					if minion.valid and minion.isEnemy and minion.pos:DistanceTo(myHero.pos) < E.Range then
+						table.insert(minionlist, minion)
+					end
+				end
+			end
+			
+			for i, minion in pairs(minionlist) do
+				if self:GetSpears(minion) > 0 then 
+					local EDamage = getdmg("E",minion,myHero)
+					if EDamage > minion.health then
+						useE = true 
+					end
+				end
+			end
+		end
+	end
+	if useE then
+		Control.CastSpell(HK_E)
+	end
+end
+
 function Kalista:GetETarget()
 	self.KillableHeroes = {}
 	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1200)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
@@ -245,8 +277,7 @@ function Kalista:CastQ(target, combo)
 	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
 	if target and target.type == "AIHeroClient" and self:CanCast(_Q) and ((combo and self.Menu.Combo.comboUseQ:Value()) or (combo == false and self.Menu.Harass.harassUseQ:Value())) and target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0 then
 		local castPos = target:GetPrediction(Q.Speed,Q.Delay)
-		local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-		self:CastSpell(HK_Q, newpos)
+		self:CastSpell(HK_Q, castPos)
 	end
 end
 
