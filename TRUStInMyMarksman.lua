@@ -170,6 +170,7 @@ if myHero.charName == "Ashe" then
 		self.Menu:MenuElement({id = "UseWCombo", name = "UseW in combo", value = true})
 		self.Menu:MenuElement({id = "UseQCombo", name = "UseQ in combo", value = true})
 		self.Menu:MenuElement({id = "UseWHarass", name = "UseW in Harass", value = true})
+		self.Menu:MenuElement({id = "UseQAfterAA", name = "UseQ only afterattack", value = true})
 		self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
