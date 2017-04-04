@@ -22,12 +22,12 @@ function UseBotrk()
 end
 
 class "Kalista"
-
+require "DamageLib"
 function Kalista:__init()
 	self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
-	
+	Callback.Add("Draw", function() self:Draw() end)
 	local orbwalkername = ""
 	if _G.SDK then
 		orbwalkername = "IC'S orbwalker"
@@ -66,7 +66,7 @@ local lastpick = 0
 --[[Spells]]
 function Kalista:LoadSpells()
 	Q = {Range = 1150, width = 40, Delay = 0.25, Speed = 2100}
-	Q = {Range = 1000}
+	E = {Range = 1000}
 end
 
 function Kalista:LoadMenu()
@@ -74,6 +74,7 @@ function Kalista:LoadMenu()
 	
 	--[[Combo]]
 	self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
+	self.Menu:MenuElement({id = "DrawE", name = "Draw Killable with E", value = true})
 	self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
 	self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
 	self.Menu.Combo:MenuElement({id = "comboUseE", name = "Use E", value = true})
@@ -173,10 +174,11 @@ function Kalista:CastSpell(spell,pos)
 	end
 end
 
-function Kalista:GetBuffs()
+
+function Kalista:GetBuffs(unit)
 	self.T = {}
-	for i = 0, myHero.buffCount do
-		local Buff = myHero:GetBuff(i)
+	for i = 0, unit.buffCount do
+		local Buff = unit:GetBuff(i)
 		if Buff.count > 0 then
 			table.insert(self.T, Buff)
 		end
@@ -184,9 +186,39 @@ function Kalista:GetBuffs()
 	return self.T
 end
 
+function Kalista:GetSpears(unit, buffname)
+	for K, Buff in pairs(self:GetBuffs(unit)) do
+		if Buff.name:lower() == "kalistaexpungemarker" then
+			return Buff.count
+		end
+	end
+	return 0
+end
+
+function Kalista:GetETarget()
+	self.KillableHeroes = {}
+	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1200)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+	local level = myHero:GetSpellData(_E).level
+	for i, hero in pairs(heroeslist) do
+		if self:GetSpears(hero) > 0 then 
+			local EDamage = getdmg("E",hero,myHero)
+			if hero.health and EDamage and EDamage > hero.health and myHero.pos:DistanceTo(hero.pos)<E.Range then
+				table.insert(self.KillableHeroes, hero)
+			end
+		end
+	end
+	return self.KillableHeroes
+end
+
 --[[CastQ]]
 function Kalista:CastQ(target, combo)
-
+	if (not _G.SDK and not _G.GOS) then return end
+	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
+	if target and target.type == "AIHeroClient" and self:CanCast(_Q) and ((combo and self.Menu.Combo.comboUseQ:Value()) or (combo == false and self.Menu.Harass.harassUseQ:Value())) and target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0 then
+		local castPos = target:GetPrediction(Q.Speed,Q.Delay)
+		local newpos = myHero.pos:Extended(castPos,math.random(100,300))
+		self:CastSpell(HK_Q, newpos)
+	end
 end
 
 
@@ -210,6 +242,14 @@ function Kalista:CanCast(spellSlot)
 	return self:IsReady(spellSlot) and self:CheckMana(spellSlot)
 end
 
+function Kalista:Draw()
+	if self.Menu.DrawE:Value() then
+		local ETarget = self:GetETarget()
+		for i, hero in pairs(ETarget) do
+			Draw.Circle(hero.pos, 60, 3, self.Menu.DrawColor:Value())
+		end
+	end
+end
 
 function OnLoad()
 	Kalista()
