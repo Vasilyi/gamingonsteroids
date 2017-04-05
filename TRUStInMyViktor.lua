@@ -213,6 +213,10 @@ function Viktor:IsValidTarget(unit, range, checkTeam, from)
 end
 
 function Viktor:GetSpellTarget(range)
+	if (_G.SDK) then
+		return _G.SDK.TargetSelector:GetTarget(range, _G.SDK.DAMAGE_TYPE_MAGICAL)
+	end
+	
 	local selected
 	
 	for i, _gameHero in ipairs(self:GetEnemyHeroes()) do
@@ -649,11 +653,11 @@ function EnableMovement()
 	--unblock movement
 	blockattack = false
 	blockmovement = false
+	castSpell.state = 0
 end
 
 function ReturnCursor(pos)
 	Control.SetCursorPos(pos)
-	castSpell.state = 0
 	DelayAction(EnableMovement,0.1)
 end
 
