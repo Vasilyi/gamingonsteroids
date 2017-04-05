@@ -35,6 +35,7 @@ if myHero.charName == "Ashe" then
 		
 		local orbwalkername = ""
 		if _G.SDK then
+			_G.GOS = nil
 			orbwalkername = "IC'S orbwalker"
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 				if blockmovement then
@@ -323,6 +324,7 @@ if myHero.charName == "Lucian" then
 		
 		local orbwalkername = ""
 		if _G.SDK then
+			_G.GOS = nil
 			orbwalkername = "IC'S orbwalker"
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 				if blockmovement then
@@ -333,6 +335,7 @@ if myHero.charName == "Lucian" then
 			
 			_G.SDK.Orbwalker:OnPostAttack(function() 
 				passive = false 
+				
 				--PrintChat("passive removed")
 				local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 				if combomodeactive and _G.SDK.Orbwalker:CanMove() and Game.Timer() > lastbuff - 3.5 then 
@@ -413,12 +416,9 @@ if myHero.charName == "Lucian" then
 			end
 			
 		end
-		
-		
 		local buffcheck = self:HasBuff(myHero,"lucianpassivebuff")
 		if buffcheck and buffcheck ~= lastbuff then
 			lastbuff = buffcheck
-			--PrintChat("Passive added : "..Game.Timer().." : "..lastbuff)
 			passive = true
 		end
 		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
@@ -431,6 +431,7 @@ if myHero.charName == "Lucian" then
 		end
 		if harassactive and self.Menu.UseQHarass:Value() and self:CanCast(_Q) then self:Harass() end 
 		if combomodeactive and canmove and not canattack and Game.Timer() > lastbuff - 3 then 
+			
 			if self:CanCast(_E) and self.Menu.UseE:Value() and currenttarget then
 				self:CastSpell(HK_E,mousePos)
 				return
@@ -450,7 +451,6 @@ if myHero.charName == "Lucian" then
 		if myHero.activeSpell and myHero.activeSpell.valid and 
 		(myHero.activeSpell.name == "LucianQ" or myHero.activeSpell.name == "LucianW") then
 			passive = true
-			--PrintChat("found passive1")
 		end
 		
 		
@@ -633,6 +633,7 @@ if myHero.charName == "Caitlyn" then
 		Callback.Add("Draw", function() self:Draw() end)
 		local orbwalkername = ""
 		if _G.SDK then
+			_G.GOS = nil
 			orbwalkername = "IC'S orbwalker"
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 				if blockmovement then
@@ -886,6 +887,7 @@ if myHero.charName == "Ezreal" then
 		
 		local orbwalkername = ""
 		if _G.SDK then
+			_G.GOS = nil
 			orbwalkername = "IC'S orbwalker"
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 				if blockmovement then
@@ -1055,6 +1057,7 @@ if myHero.charName == "Twitch" then
 		Callback.Add("Draw", function() self:Draw() end)
 		local orbwalkername = ""
 		if _G.SDK then
+			_G.GOS = nil
 			orbwalkername = "IC'S orbwalker"
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 				if blockmovement then
@@ -1240,6 +1243,7 @@ if myHero.charName == "KogMaw" then
 		
 		local orbwalkername = ""
 		if _G.SDK then
+			_G.GOS = nil
 			orbwalkername = "IC'S orbwalker"
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 				if blockmovement then
@@ -1489,6 +1493,7 @@ if myHero.charName == "Kalista" then
 		Callback.Add("Draw", function() self:Draw() end)
 		local orbwalkername = ""
 		if _G.SDK then
+			_G.GOS = nil
 			orbwalkername = "IC'S orbwalker"
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 				if blockmovement then
