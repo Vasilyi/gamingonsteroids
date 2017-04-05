@@ -53,7 +53,13 @@ function Kalista:__init()
 		end)
 	elseif _G.GOS then
 		orbwalkername = "Noddy orbwalker"
-		
+		_G.GOS:OnAttackComplete(function() 
+			local combomodeactive = _G.GOS:GetMode() == "Combo"
+			local harassactive = _G.GOS:GetMode() == "Harass"
+			if (combomodeactive or harassactive) then
+				self:CastQ(_G.GOS:GetTarget())
+			end
+		end)
 	else
 		orbwalkername = "Orbwalker not found"
 		

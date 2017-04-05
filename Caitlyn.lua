@@ -85,6 +85,8 @@ end
 function Caitlyn:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
 	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
+	
+	local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
 	if combomodeactive and self.Menu.UseBOTRK:Value() then
 		UseBotrk()
 	end
@@ -96,7 +98,7 @@ function Caitlyn:Tick()
 	end
 	
 	if self:CanCast(_Q) and self:CanCast(_E) and useEQ then
-		self:CastE(_G.SDK.Orbwalker:GetTarget())
+		self:CastE(currenttarget)
 	end
 	if myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name == "CaitlynEntrapment" and self:CanCast(_Q) and useEQ then
 		Control.CastSpell(HK_Q,qtarget)
@@ -126,10 +128,11 @@ end
 
 function Caitlyn:GetRTarget()
 	self.KillableHeroes = {}
-	local heroeslist = _G.SDK.ObjectManager:GetEnemyHeroes()
+	local RRange = ({2000, 2500, 3000})[myHero:GetSpellData(_R).level]
+	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(RRange)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
 	for i, hero in pairs(heroeslist) do
 		local RDamage = getdmg("R",hero,myHero,1)
-		if hero.health and RDamage and RDamage > hero.health and hero.pos2D.onScreen then
+		if hero.health and RDamage and RDamage > hero.health and hero.pos2D.onScreen and myHero.pos:DistanceTo(hero.pos) < RRange then
 			table.insert(self.KillableHeroes, hero)
 		end
 	end
@@ -199,11 +202,10 @@ end
 
 
 function Caitlyn:GetImmobileTarget()
-	local GetEnemyHeroes = _G.SDK.ObjectManager:GetEnemyHeroes(800)
-	local Target = nil
+local GetEnemyHeroes = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(800)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
 	for i = 1, #GetEnemyHeroes do
 		local Enemy = GetEnemyHeroes[i]
-		if Enemy and self:Stunned(Enemy) then
+		if Enemy and self:Stunned(Enemy) and myHero.pos:DistanceTo(Enemy.pos) < 800 then
 			return Enemy
 		end
 	end
@@ -244,15 +246,14 @@ end
 
 --[[CastEQ]]
 function Caitlyn:CastE(target)
-	if not _G.SDK then return end
-	local target = target or _G.SDK.TargetSelector:GetTarget(E.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL);
-	if target and target:GetCollision(E.Radius,E.Speed,E.Delay) == 0 then
-		local castPos = target:GetPrediction(E.Speed, E.Delay)
-		local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-		self:CastCombo(newpos)
-		qtarget = newpos
+		if not _G.SDK and not _G.GOS then return end
+		if target and target:GetCollision(E.Radius,E.Speed,E.Delay) == 0 then
+			local castPos = target:GetPrediction(E.Speed, E.Delay)
+			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
+			self:CastCombo(newpos)
+			qtarget = newpos
+		end
 	end
-end
 
 
 function Caitlyn:IsReady(spellSlot)

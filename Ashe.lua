@@ -23,6 +23,27 @@ function UseBotrk()
 end
 
 class "Ashe"
+
+function Ashe:GetBuffs(unit)
+	self.T = {}
+	for i = 0, unit.buffCount do
+		local Buff = unit:GetBuff(i)
+		if Buff.count > 0 then
+			table.insert(self.T, Buff)
+		end
+	end
+	return self.T
+end
+
+function Ashe:QBuff(buffname)
+	for K, Buff in pairs(self:GetBuffs(myHero)) do
+		if Buff.name:lower() == "asheqcastready" then
+			return true
+		end
+	end
+	return false
+end
+
 function Ashe:__init()
 	self:LoadSpells()
 	self:LoadMenu()
@@ -52,6 +73,14 @@ function Ashe:__init()
 		end)
 	elseif _G.GOS then
 		orbwalkername = "Noddy orbwalker"
+		
+		_G.GOS:OnAttackComplete(function() 
+			local combomodeactive = _G.GOS:GetMode() == "Combo"
+			local harassactive = _G.GOS:GetMode() == "Harass"
+			if (combomodeactive or harassactive) and self.Menu.UseQCombo:Value() and self:QBuff() then
+				self:CastQ()
+			end
+		end)
 		
 	else
 		orbwalkername = "Orbwalker not found"
@@ -164,6 +193,7 @@ function Ashe:LoadMenu()
 	self.Menu = MenuElement({type = MENU, id = "TRUStinymyAshe", name = Scriptname})
 	self.Menu:MenuElement({id = "UseWCombo", name = "UseW in combo", value = true})
 	self.Menu:MenuElement({id = "UseQCombo", name = "UseQ in combo", value = true})
+	self.Menu:MenuElement({id = "UseQAfterAA", name = "UseQ only afterattack", value = true})
 	self.Menu:MenuElement({id = "UseWHarass", name = "UseW in Harass", value = true})
 	self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
@@ -188,10 +218,10 @@ function Ashe:Tick()
 	if combomodeactive and self.Menu.UseWCombo:Value() and canmove and not canattack then
 		self:CastW()
 	end
-	if combomodeactive and self.Menu.UseQCombo:Value() and currenttarget and canmove and not canattack then
+	if combomodeactive and self:QBuff() and self.Menu.UseQCombo:Value() and (not self.Menu.UseQAfterAA:Value()) and currenttarget and canmove and not canattack then
 		self:CastQ()
 	end
-	if harassmodeactive and self.Menu.UseWHarass:Value() and canmove and not canattack then
+	if harassmodeactive and self.Menu.UseWHarass:Value() and ((canmove and not canattack) or not currenttarget) then
 		self:CastW()
 	end
 end

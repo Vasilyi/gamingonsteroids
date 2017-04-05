@@ -52,7 +52,13 @@ function Ezreal:__init()
 		end)
 	elseif _G.GOS then
 		orbwalkername = "Noddy orbwalker"
-		
+		_G.GOS:OnAttackComplete(function() 
+			local combomodeactive = _G.GOS:GetMode() == "Combo"
+			local harassactive = _G.GOS:GetMode() == "Harass"
+			if (combomodeactive or harassactive) then
+				self:CastQ(_G.GOS:GetTarget())
+			end
+		end)
 	else
 		orbwalkername = "Orbwalker not found"
 		
@@ -91,7 +97,7 @@ function Ezreal:Tick()
 	if combomodeactive and self.Menu.UseBOTRK:Value() then
 		UseBotrk()
 	end
-	if (combomodeactive or harassactive) and self:CanCast(_Q) and self.Menu.UseQ:Value() and (not canattack or not currenttarget) then
+	if (combomodeactive or harassactive) and self:CanCast(_Q) and self.Menu.UseQ:Value() and canmove and (not canattack or not currenttarget) then
 		self:CastQ()
 	end
 	
@@ -108,8 +114,8 @@ function EnableMovement()
 	blockattack = false
 	blockmovement = false
 	if _G.GOS then
-		_G.GOS.BlockAttack = blockattack
-		_G.GOS.BlockMovement = blockmovement
+		_G.GOS.BlockAttack = false
+		_G.GOS.BlockMovement = false
 	end
 	onetimereset = true
 	castSpell.state = 0
@@ -143,8 +149,8 @@ function Ezreal:CastSpell(spell,pos)
 				blockattack = true
 				blockmovement = true
 				if _G.GOS then
-					_G.GOS.BlockAttack = blockattack
-					_G.GOS.BlockMovement = blockmovement
+					_G.GOS.BlockAttack = true
+					_G.GOS.BlockMovement = true
 				end
 				Control.SetCursorPos(pos)
 				Control.KeyDown(spell)

@@ -26,8 +26,29 @@ end
 
 if myHero.charName == "Ashe" then
 	
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.1","TRUS","7.6"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.2","TRUS","7.7"
 	class "Ashe"
+	
+	function Ashe:GetBuffs(unit)
+		self.T = {}
+		for i = 0, unit.buffCount do
+			local Buff = unit:GetBuff(i)
+			if Buff.count > 0 then
+				table.insert(self.T, Buff)
+			end
+		end
+		return self.T
+	end
+	
+	function Ashe:QBuff(buffname)
+		for K, Buff in pairs(self:GetBuffs(myHero)) do
+			if Buff.name:lower() == "asheqcastready" then
+				return true
+			end
+		end
+		return false
+	end
+	
 	function Ashe:__init()
 		self:LoadSpells()
 		self:LoadMenu()
@@ -35,7 +56,6 @@ if myHero.charName == "Ashe" then
 		
 		local orbwalkername = ""
 		if _G.SDK then
-			_G.GOS = nil
 			orbwalkername = "IC'S orbwalker"
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 				if blockmovement then
@@ -58,6 +78,14 @@ if myHero.charName == "Ashe" then
 			end)
 		elseif _G.GOS then
 			orbwalkername = "Noddy orbwalker"
+			
+			_G.GOS:OnAttackComplete(function() 
+				local combomodeactive = _G.GOS:GetMode() == "Combo"
+				local harassactive = _G.GOS:GetMode() == "Harass"
+				if (combomodeactive or harassactive) and self.Menu.UseQCombo:Value() and self:QBuff() then
+					self:CastQ()
+				end
+			end)
 			
 		else
 			orbwalkername = "Orbwalker not found"
@@ -170,8 +198,8 @@ if myHero.charName == "Ashe" then
 		self.Menu = MenuElement({type = MENU, id = "TRUStinymyAshe", name = Scriptname})
 		self.Menu:MenuElement({id = "UseWCombo", name = "UseW in combo", value = true})
 		self.Menu:MenuElement({id = "UseQCombo", name = "UseQ in combo", value = true})
-		self.Menu:MenuElement({id = "UseWHarass", name = "UseW in Harass", value = true})
 		self.Menu:MenuElement({id = "UseQAfterAA", name = "UseQ only afterattack", value = true})
+		self.Menu:MenuElement({id = "UseWHarass", name = "UseW in Harass", value = true})
 		self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
@@ -188,15 +216,14 @@ if myHero.charName == "Ashe" then
 		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (_G.GOS and _G.GOS:CanMove())
 		local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (_G.GOS and _G.GOS:CanAttack())
 		local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
-		if combomodeactive then 
-			if self.Menu.UseBOTRK:Value() then
-				UseBotrk()
-			end
+		if combomodeactive and self.Menu.UseBOTRK:Value() then
+			UseBotrk()
 		end
+		
 		if combomodeactive and self.Menu.UseWCombo:Value() and canmove and not canattack then
 			self:CastW()
 		end
-		if combomodeactive and self.Menu.UseQCombo:Value() and (not self.Menu.UseQAfterAA:Value()) and currenttarget and canmove and not canattack then
+		if combomodeactive and self:QBuff() and self.Menu.UseQCombo:Value() and (not self.Menu.UseQAfterAA:Value()) and currenttarget and canmove and not canattack then
 			self:CastQ()
 		end
 		if harassmodeactive and self.Menu.UseWHarass:Value() and ((canmove and not canattack) or not currenttarget) then
@@ -310,7 +337,7 @@ if myHero.charName == "Ashe" then
 end
 
 if myHero.charName == "Lucian" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.1","TRUS","7.6"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.2","TRUS","7.7"
 	
 	class "Lucian"
 	
@@ -324,7 +351,6 @@ if myHero.charName == "Lucian" then
 		
 		local orbwalkername = ""
 		if _G.SDK then
-			_G.GOS = nil
 			orbwalkername = "IC'S orbwalker"
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 				if blockmovement then
@@ -335,7 +361,6 @@ if myHero.charName == "Lucian" then
 			
 			_G.SDK.Orbwalker:OnPostAttack(function() 
 				passive = false 
-				
 				--PrintChat("passive removed")
 				local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 				if combomodeactive and _G.SDK.Orbwalker:CanMove() and Game.Timer() > lastbuff - 3.5 then 
@@ -353,12 +378,24 @@ if myHero.charName == "Lucian" then
 			end)
 		elseif _G.GOS then
 			orbwalkername = "Noddy orbwalker"
+			_G.GOS:OnAttackComplete(function() 
+				passive = false 
+				local combomodeactive = _G.GOS:GetMode() == "Combo"
+				local canmove = _G.GOS:CanMove()
+				if combomodeactive and canmove and Game.Timer() > lastbuff - 3.5 then 
+					if self:CanCast(_E) and self.Menu.UseE:Value() and _G.GOS:GetTarget() then
+						self:CastSpell(HK_E,mousePos)
+						return
+					end
+				end
+			end)
+			
 			
 		else
 			orbwalkername = "Orbwalker not found"
 			
 		end
-		PrintChat("TRUSt in my Lucian "..Version.." - Loaded...."..orbwalkername)
+		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 	end
 	onetimereset = true
 	blockattack = false
@@ -416,9 +453,12 @@ if myHero.charName == "Lucian" then
 			end
 			
 		end
+		
+		
 		local buffcheck = self:HasBuff(myHero,"lucianpassivebuff")
 		if buffcheck and buffcheck ~= lastbuff then
 			lastbuff = buffcheck
+			--PrintChat("Passive added : "..Game.Timer().." : "..lastbuff)
 			passive = true
 		end
 		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
@@ -431,7 +471,6 @@ if myHero.charName == "Lucian" then
 		end
 		if harassactive and self.Menu.UseQHarass:Value() and self:CanCast(_Q) then self:Harass() end 
 		if combomodeactive and canmove and not canattack and Game.Timer() > lastbuff - 3 then 
-			
 			if self:CanCast(_E) and self.Menu.UseE:Value() and currenttarget then
 				self:CastSpell(HK_E,mousePos)
 				return
@@ -451,6 +490,7 @@ if myHero.charName == "Lucian" then
 		if myHero.activeSpell and myHero.activeSpell.valid and 
 		(myHero.activeSpell.name == "LucianQ" or myHero.activeSpell.name == "LucianW") then
 			passive = true
+			--PrintChat("found passive1")
 		end
 		
 		
@@ -562,6 +602,7 @@ if myHero.charName == "Lucian" then
 				return qtarget
 			end
 			
+			
 			local qdelay = 0.4 - myHero.levelData.lvl*0.01
 			local pos = qtarget:GetPrediction(math.huge,qdelay)
 			if not pos then return false end 
@@ -620,7 +661,7 @@ end
 
 
 if myHero.charName == "Caitlyn" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.1","TRUS","7.6"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.1","TRUS","7.7"
 	if myHero.charName ~= "Caitlyn" then return end
 	class "Caitlyn"
 	require "DamageLib"
@@ -633,7 +674,6 @@ if myHero.charName == "Caitlyn" then
 		Callback.Add("Draw", function() self:Draw() end)
 		local orbwalkername = ""
 		if _G.SDK then
-			_G.GOS = nil
 			orbwalkername = "IC'S orbwalker"
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 				if blockmovement then
@@ -654,7 +694,7 @@ if myHero.charName == "Caitlyn" then
 			orbwalkername = "Orbwalker not found"
 			
 		end
-		PrintChat("TRUSt in my Caitlyn "..Version.." - Loaded...."..orbwalkername)
+		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 	end
 	onetimereset = true
 	blockattack = false
@@ -686,6 +726,7 @@ if myHero.charName == "Caitlyn" then
 	function Caitlyn:Tick()
 		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
 		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
+		local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
 		if combomodeactive and self.Menu.UseBOTRK:Value() then
 			UseBotrk()
 		end
@@ -697,7 +738,7 @@ if myHero.charName == "Caitlyn" then
 		end
 		
 		if self:CanCast(_Q) and self:CanCast(_E) and useEQ then
-			self:CastE(_G.SDK.Orbwalker:GetTarget())
+			self:CastE(currenttarget)
 		end
 		if myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name == "CaitlynEntrapment" and self:CanCast(_Q) and useEQ then
 			Control.CastSpell(HK_Q,qtarget)
@@ -727,10 +768,11 @@ if myHero.charName == "Caitlyn" then
 	
 	function Caitlyn:GetRTarget()
 		self.KillableHeroes = {}
-		local heroeslist = _G.SDK.ObjectManager:GetEnemyHeroes()
+		local RRange = ({2000, 2500, 3000})[myHero:GetSpellData(_R).level]
+		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(RRange)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
 		for i, hero in pairs(heroeslist) do
 			local RDamage = getdmg("R",hero,myHero,1)
-			if hero.health and RDamage and RDamage > hero.health and hero.pos2D.onScreen then
+			if hero.health and RDamage and RDamage > hero.health and hero.pos2D.onScreen and myHero.pos:DistanceTo(hero.pos) < RRange then
 				table.insert(self.KillableHeroes, hero)
 			end
 		end
@@ -800,11 +842,10 @@ if myHero.charName == "Caitlyn" then
 	
 	
 	function Caitlyn:GetImmobileTarget()
-		local GetEnemyHeroes = _G.SDK.ObjectManager:GetEnemyHeroes(800)
-		local Target = nil
+		local GetEnemyHeroes = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(800)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
 		for i = 1, #GetEnemyHeroes do
 			local Enemy = GetEnemyHeroes[i]
-			if Enemy and self:Stunned(Enemy) then
+			if Enemy and self:Stunned(Enemy) and myHero.pos:DistanceTo(Enemy.pos) < 800 then
 				return Enemy
 			end
 		end
@@ -845,8 +886,7 @@ if myHero.charName == "Caitlyn" then
 	
 	--[[CastEQ]]
 	function Caitlyn:CastE(target)
-		if not _G.SDK then return end
-		local target = target or _G.SDK.TargetSelector:GetTarget(E.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL);
+		if not _G.SDK and not _G.GOS then return end
 		if target and target:GetCollision(E.Radius,E.Speed,E.Delay) == 0 then
 			local castPos = target:GetPrediction(E.Speed, E.Delay)
 			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
@@ -875,8 +915,7 @@ if myHero.charName == "Caitlyn" then
 end
 
 if myHero.charName == "Ezreal" then
-	--[v1.0]]
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.1","TRUS","7.6"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.2","TRUS","7.7"
 	
 	class "Ezreal"
 	
@@ -887,7 +926,6 @@ if myHero.charName == "Ezreal" then
 		
 		local orbwalkername = ""
 		if _G.SDK then
-			_G.GOS = nil
 			orbwalkername = "IC'S orbwalker"
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 				if blockmovement then
@@ -898,7 +936,7 @@ if myHero.charName == "Ezreal" then
 			_G.SDK.Orbwalker:OnPostAttack(function() 
 				local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 				local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
-				if (combomodeactive or harassactive) then
+				if (combomodeactive or harassactive) and self:CanCast(_Q) then
 					self:CastQ(_G.SDK.Orbwalker:GetTarget())
 				end
 			end)
@@ -910,7 +948,13 @@ if myHero.charName == "Ezreal" then
 			end)
 		elseif _G.GOS then
 			orbwalkername = "Noddy orbwalker"
-			
+			_G.GOS:OnAttackComplete(function() 
+				local combomodeactive = _G.GOS:GetMode() == "Combo"
+				local harassactive = _G.GOS:GetMode() == "Harass"
+				if (combomodeactive or harassactive) then
+					self:CastQ(_G.GOS:GetTarget())
+				end
+			end)
 		else
 			orbwalkername = "Orbwalker not found"
 			
@@ -949,7 +993,7 @@ if myHero.charName == "Ezreal" then
 		if combomodeactive and self.Menu.UseBOTRK:Value() then
 			UseBotrk()
 		end
-		if (combomodeactive or harassactive) and self:CanCast(_Q) and self.Menu.UseQ:Value() and (not canattack or not currenttarget) then
+		if (combomodeactive or harassactive) and self:CanCast(_Q) and self.Menu.UseQ:Value() and canmove and (not canattack or not currenttarget) then
 			self:CastQ()
 		end
 		
@@ -966,8 +1010,8 @@ if myHero.charName == "Ezreal" then
 		blockattack = false
 		blockmovement = false
 		if _G.GOS then
-			_G.GOS.BlockAttack = blockattack
-			_G.GOS.BlockMovement = blockmovement
+			_G.GOS.BlockAttack = false
+			_G.GOS.BlockMovement = false
 		end
 		onetimereset = true
 		castSpell.state = 0
@@ -1001,8 +1045,8 @@ if myHero.charName == "Ezreal" then
 					blockattack = true
 					blockmovement = true
 					if _G.GOS then
-						_G.GOS.BlockAttack = blockattack
-						_G.GOS.BlockMovement = blockmovement
+						_G.GOS.BlockAttack = true
+						_G.GOS.BlockMovement = true
 					end
 					Control.SetCursorPos(pos)
 					Control.KeyDown(spell)
@@ -1046,7 +1090,7 @@ if myHero.charName == "Ezreal" then
 end
 
 if myHero.charName == "Twitch" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.0","TRUS","7.6"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.1","TRUS","7.7"
 	class "Twitch"
 	require "DamageLib"
 	local qtarget
@@ -1057,7 +1101,6 @@ if myHero.charName == "Twitch" then
 		Callback.Add("Draw", function() self:Draw() end)
 		local orbwalkername = ""
 		if _G.SDK then
-			_G.GOS = nil
 			orbwalkername = "IC'S orbwalker"
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 				if blockmovement then
@@ -1076,7 +1119,9 @@ if myHero.charName == "Twitch" then
 			end)
 		elseif _G.GOS then
 			orbwalkername = "Noddy orbwalker"
-			
+			_G.GOS:OnAttackComplete(function() 
+				DelayAction(recheckparticle,0.2)
+			end)
 		else
 			orbwalkername = "Orbwalker not found"
 			
@@ -1102,21 +1147,11 @@ if myHero.charName == "Twitch" then
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 	end
-	gosstackcheck = false
 	function Twitch:Tick()
 		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
 		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
 		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
 		
-		if (_G.GOS) then
-			if GOS:CanMove() and not GOS:CanAttack() and gosstackcheck == false then
-				gosstackcheck = true
-				DelayAction(recheckparticle,0.2)
-			end
-			if GOS:CanAttack() and gosstackcheck == true then
-				gosstackcheck = false
-			end
-		end
 		if combomodeactive then 
 			if self.Menu.UseBOTRK:Value() then
 				UseBotrk()
@@ -1141,7 +1176,7 @@ if myHero.charName == "Twitch" then
 				if myHero.pos:DistanceTo(hero.pos)<1100 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25).pos) < 600 then
 					return
 				end
-				if myHero.pos:DistanceTo(hero.pos)<1100 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25).pos) < 1200 then
+				if myHero.pos:DistanceTo(hero.pos)<1100 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25).pos) > 1100 then
 					useE = true
 				end
 			end
@@ -1233,7 +1268,7 @@ if myHero.charName == "Twitch" then
 end
 
 if myHero.charName == "KogMaw" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.0","TRUS","7.6"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.0","TRUS","7.7"
 	class "KogMaw"
 	
 	function KogMaw:__init()
@@ -1243,7 +1278,6 @@ if myHero.charName == "KogMaw" then
 		
 		local orbwalkername = ""
 		if _G.SDK then
-			_G.GOS = nil
 			orbwalkername = "IC'S orbwalker"
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 				if blockmovement then
@@ -1266,7 +1300,13 @@ if myHero.charName == "KogMaw" then
 			end)
 		elseif _G.GOS then
 			orbwalkername = "Noddy orbwalker"
-			
+			_G.GOS:OnAttackComplete(function() 
+				local combomodeactive = _G.GOS:GetMode() == "Combo"
+				local harassactive = _G.GOS:GetMode() == "Harass"
+				if (combomodeactive or harassactive) then
+					self:CastQ(_G.GOS:GetTarget())
+				end
+			end)
 		else
 			orbwalkername = "Orbwalker not found"
 			
@@ -1483,9 +1523,9 @@ if myHero.charName == "KogMaw" then
 end
 
 if myHero.charName == "Kalista" then 
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.1","TRUS","7.7"
 	class "Kalista"
 	require "DamageLib"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.1","TRUS","7.6"
 	function Kalista:__init()
 		self:LoadSpells()
 		self:LoadMenu()
@@ -1493,7 +1533,6 @@ if myHero.charName == "Kalista" then
 		Callback.Add("Draw", function() self:Draw() end)
 		local orbwalkername = ""
 		if _G.SDK then
-			_G.GOS = nil
 			orbwalkername = "IC'S orbwalker"
 			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 				if blockmovement then
@@ -1504,7 +1543,7 @@ if myHero.charName == "Kalista" then
 			_G.SDK.Orbwalker:OnPostAttack(function() 
 				local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 				local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
-				if (combomodeactive or harassactive) then
+				if (combomodeactive or harassactive) and self:CanCast(_Q) then
 					self:CastQ(_G.SDK.Orbwalker:GetTarget())
 				end
 			end)
@@ -1516,7 +1555,13 @@ if myHero.charName == "Kalista" then
 			end)
 		elseif _G.GOS then
 			orbwalkername = "Noddy orbwalker"
-			
+			_G.GOS:OnAttackComplete(function() 
+				local combomodeactive = _G.GOS:GetMode() == "Combo"
+				local harassactive = _G.GOS:GetMode() == "Harass"
+				if (combomodeactive or harassactive) then
+					self:CastQ(_G.GOS:GetTarget())
+				end
+			end)
 		else
 			orbwalkername = "Orbwalker not found"
 			

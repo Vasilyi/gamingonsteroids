@@ -50,7 +50,9 @@ function Twitch:__init()
 		end)
 	elseif _G.GOS then
 		orbwalkername = "Noddy orbwalker"
-		
+		_G.GOS:OnAttackComplete(function() 
+			DelayAction(recheckparticle,0.2)
+		end)
 	else
 		orbwalkername = "Orbwalker not found"
 		
@@ -76,21 +78,11 @@ function Twitch:LoadMenu()
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 end
-gosstackcheck = false
 function Twitch:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
 	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
 	local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
 	
-	if (_G.GOS) then
-		if GOS:CanMove() and not GOS:CanAttack() and gosstackcheck == false then
-			gosstackcheck = true
-			DelayAction(recheckparticle,0.2)
-		end
-		if GOS:CanAttack() and gosstackcheck == true then
-			gosstackcheck = false
-		end
-	end
 	if combomodeactive then 
 		if self.Menu.UseBOTRK:Value() then
 			UseBotrk()

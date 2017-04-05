@@ -60,7 +60,19 @@ function Lucian:__init()
 			end
 		end)
 	elseif _G.GOS then
-		orbwalkername = "Noddy orbwalker"
+			orbwalkername = "Noddy orbwalker"
+			_G.GOS:OnAttackComplete(function() 
+				passive = false 
+				local combomodeactive = _G.GOS:GetMode() == "Combo"
+				local canmove = _G.GOS:CanMove()
+				if combomodeactive and canmove and Game.Timer() > lastbuff - 3.5 then 
+					if self:CanCast(_E) and self.Menu.UseE:Value() and _G.GOS:GetTarget() then
+						self:CastSpell(HK_E,mousePos)
+						return
+					end
+				end
+			end)
+
 		
 	else
 		orbwalkername = "Orbwalker not found"
@@ -229,7 +241,6 @@ end
 --[[CastQ]]
 function Lucian:CastQ(target)
 	if target and self:CanCast(_Q) and passive == false then
-		PrintChat("Q FOUND")
 		self:CastSpell(HK_Q, target.pos)
 	end
 end
