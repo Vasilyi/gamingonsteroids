@@ -486,8 +486,13 @@ function Viktor:Combo()
 	local UseE = self.Menu.Combo.comboUseE:Value()
 	local UseR = self.Menu.Combo.comboUseR:Value()
 	DontAAPassive = self.Menu.Combo.qAuto:Value()
-	
-	
+	if _G.GOS then
+		if DontAAPassive and not Viktor:HasBuff(myHero,"viktorpowertransferreturn") then
+			_G.GOS.BlockAttack = true
+		else
+			_G.GOS.BlockAttack = false
+		end
+	end
 	if UseQ and self:CanCast(_Q) then
 		local qTarget = self:GetSpellTarget(Q.Range)
 		if qTarget and qTarget.valid then
@@ -653,6 +658,10 @@ function EnableMovement()
 	--unblock movement
 	blockattack = false
 	blockmovement = false
+	if _G.GOS then
+		_G.GOS.BlockAttack = false
+		_G.GOS.BlockMovement = false
+	end
 	castSpell.state = 0
 end
 
@@ -687,6 +696,10 @@ function Viktor:CastESpell(pos1, pos2)
 			--block movement
 			blockattack = true
 			blockmovement = true
+			if _G.GOS then
+				_G.GOS.BlockAttack = true
+				_G.GOS.BlockMovement = true
+			end
 			Control.SetCursorPos(pos1)
 			Control.KeyDown(HK_E)
 			if not self.Menu.smartcast:Value() then
@@ -711,6 +724,10 @@ function Viktor:CastSpell(spell,pos)
 			--block movement
 			blockattack = true
 			blockmovement = true
+			if _G.GOS then
+				_G.GOS.BlockAttack = true
+				_G.GOS.BlockMovement = true
+			end
 			Control.SetCursorPos(pos)
 			Control.KeyDown(spell)
 			Control.KeyUp(spell)
