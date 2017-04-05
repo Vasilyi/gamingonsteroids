@@ -237,6 +237,7 @@ function Kalista:DrawSmiteableMinion(type,minion)
 end
 
 function Kalista:CheckKillableMinion()
+	local minionlist = {}
 	if _G.SDK then
 		minionlist = _G.SDK.ObjectManager:GetMonsters(E.Range)
 	elseif _G.GOS then

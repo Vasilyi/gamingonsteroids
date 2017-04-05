@@ -86,12 +86,11 @@ function Twitch:Tick()
 	if combomodeactive then 
 		if self.Menu.UseBOTRK:Value() then
 			UseBotrk()
-		end
-		
-		if self:CanCast(_E) and self.Menu.UseEKS:Value() then
-			self:UseEKS()
-		end
-		
+		end	
+	end
+	
+	if self:CanCast(_E) and self.Menu.UseEKS:Value() then
+		self:UseEKS()
 	end
 	
 	if (harassactive or combomodeactive) and self.Menu.UseERange:Value() and self:CanCast(_E) then
@@ -134,7 +133,7 @@ function recheckparticle()
 		local object = Game.Object(i)		
 		if object then
 			for i, hero in pairs(heroeslist) do
-				if object.pos:DistanceTo(hero.pos)<170 and object ~= hero then 
+				if object.pos:DistanceTo(hero.pos)<200 and object ~= hero then 
 					local stacksamount = Twitch:GetStacks(object.name)
 					if stacksamount > 0 then
 						stacks[hero.charName] = object
