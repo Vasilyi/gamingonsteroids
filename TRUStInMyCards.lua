@@ -7,7 +7,6 @@ class "TwistedFate"
 
 function TwistedFate:__init()
 	if myHero.charName ~= "TwistedFate" then return end
-	PrintChat("TRUSt in my Cards "..Version.." - Loaded....")
 	self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
@@ -20,6 +19,7 @@ blockattack = false
 blockmovement = false
 function delayload()
 	if _G.SDK then
+		orbwalkername = "IC'S orbwalker"
 		_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 			if blockmovement then
 				arg.Process = false
@@ -31,10 +31,13 @@ function delayload()
 				arg.Process = false
 			end
 		end)
+	elseif _G.GOS then
+		orbwalkername = "Noddy orbwalker"
 	else
-		PrintChat("This script support IC Orbwalker only")
+		orbwalkername = "Orbwalker not found"
 		
 	end
+	PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 end
 local lastpick = 0
 --[[Spells]]
@@ -125,6 +128,10 @@ function EnableMovement()
 	--unblock movement
 	blockattack = false
 	blockmovement = false
+	if _G.GOS then
+		_G.GOS.BlockAttack = false
+		_G.GOS.BlockMovement = false
+	end
 	onetimereset = true
 	castSpell.state = 0
 end
@@ -135,8 +142,7 @@ function ReturnCursor(pos)
 end
 
 function LeftClick(pos)
-	Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
-	Control.mouse_event(MOUSEEVENTF_LEFTUP)
+	
 	DelayAction(ReturnCursor,0.05,{pos})
 end
 
@@ -156,9 +162,15 @@ function TwistedFate:CastSpell(spell,pos)
 				--block movement
 				blockattack = true
 				blockmovement = true
+				if _G.GOS then
+					_G.GOS.BlockAttack = true
+					_G.GOS.BlockMovement = true
+				end
 				Control.SetCursorPos(pos)
 				Control.KeyDown(spell)
 				Control.KeyUp(spell)
+				Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
+				Control.mouse_event(MOUSEEVENTF_LEFTUP)
 				DelayAction(LeftClick,delay/1000,{castSpell.mouse})
 				castSpell.casting = ticker + 500
 			end
@@ -171,8 +183,7 @@ end
 function TwistedFate:CastQ(target)
 	local target = target or self:GetTarget(Q.range)
 	if target and self:CanCast(_Q) and self:IsValidTarget(target, Q.Range, false, myHero.pos) then
-		local qTarget = self:GetTarget(Q.Range)
-		if qTarget then
+		if target then
 			local castPos = target:GetPrediction(Q.Delay)
 			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
 			self:CastSpell(HK_Q, castPos)
@@ -257,15 +268,8 @@ end
 
 
 function TwistedFate:GetTarget(range)
-	local GetEnemyHeroes = self:GetEnemyHeroes()
-	local Target = nil
-	for i = 1, #GetEnemyHeroes do
-		local Enemy = GetEnemyHeroes[i]
-		if self:IsValidTarget(Enemy, range, false, myHero.pos) then
-			Target = Enemy
-		end
-	end
-	return Target
+	local currenttarget = (_G.SDK and _G.SDK.TargetSelector:GetTarget(range, _G.SDK.DAMAGE_TYPE_MAGICAL)) or (_G.GOS and _G.GOS:GetTarget(range,"AP"))
+	return currenttarget
 end
 
 function TwistedFate:HasBuff(unit, buffname)
