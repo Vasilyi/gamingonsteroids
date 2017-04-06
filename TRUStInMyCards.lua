@@ -1,4 +1,4 @@
---[v1.0]]
+if myHero.charName ~= "TwistedFate" then return end
 local Scriptname,Version,Author,LVersion = "TRUSt in my Cards","v1.0","TRUS","7.6"
 
 class "TwistedFate"
@@ -6,12 +6,10 @@ class "TwistedFate"
 
 
 function TwistedFate:__init()
-	if myHero.charName ~= "TwistedFate" then return end
 	self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
 	Callback.Add("Draw", function() self:Draw() end)
-	Callback.Add("WndMsg", function() self:OnWndMsg() end)
 	DelayAction(delayload,5)
 end
 onetimereset = true
@@ -88,9 +86,28 @@ end
 function TwistedFate:Tick()
 	if myHero.dead then return end
 	local WName = myHero:GetSpellData(_W).name
+	if (self:CanCast(_W)) and WName == "PickACard" and GetTickCount() > lastpick + 500 then
+		if self.Menu.CardPicker.GoldCard:Value() then
+			--PrintChat("gold")
+			ToSelect = "GOLD"
+			lastpick = GetTickCount()
+		elseif self.Menu.CardPicker.RedCard:Value() then
+			--PrintChat("red")
+			ToSelect = "RED"
+			lastpick = GetTickCount()
+		elseif self.Menu.CardPicker.BlueCard:Value() then
+			--PrintChat("blue")
+			ToSelect = "BLUE"
+			lastpick = GetTickCount()
+		end
+		if ToSelect ~= "NONE" then
+			Control.CastSpell(HK_W)
+		end
+	end
+	
 	if self.Menu.AutoW:Value() and self:HasBuff(myHero, "Gate") then
 		
-		if (self:CanCast(_W)) and WName == "PickACard" and GetTickCount() > lastpick + 200 and ToSelect == "NONE" then
+		if (self:CanCast(_W)) and WName == "PickACard" and GetTickCount() > lastpick + 500 and ToSelect == "NONE" then
 			ToSelect = "GOLD"
 			Control.CastSpell(HK_W)
 			lastpick = GetTickCount()
@@ -302,14 +319,6 @@ function TwistedFate:GetBuffData(unit, buffname)
 	return {type = 0, name = "", startTime = 0, expireTime = 0, duration = 0, stacks = 0, count = 0}
 end
 
-function TwistedFate:IsRecalling()
-	for K, Buff in pairs(self:GetBuffs(myHero)) do
-		if Buff.name == "recall" and Buff.duration > 0 then
-			return true
-		end
-	end
-	return false
-end
 
 function TwistedFate:IsReady(spellSlot)
 	return myHero:GetSpellData(spellSlot).currentCd == 0 and myHero:GetSpellData(spellSlot).level > 0
@@ -323,28 +332,6 @@ function TwistedFate:CanCast(spellSlot)
 	return self:IsReady(spellSlot) and self:CheckMana(spellSlot)
 end
 
-
-function TwistedFate:OnWndMsg(key, param)
-	local WName = myHero:GetSpellData(_W).name
-	if (self:CanCast(_W)) and WName == "PickACard" and GetTickCount() > lastpick + 200 then
-		if self.Menu.CardPicker.GoldCard:Value() then
-			--PrintChat("gold")
-			ToSelect = "GOLD"
-			lastpick = GetTickCount()
-		elseif self.Menu.CardPicker.RedCard:Value() then
-			--PrintChat("red")
-			ToSelect = "RED"
-			lastpick = GetTickCount()
-		elseif self.Menu.CardPicker.BlueCard:Value() then
-			--PrintChat("blue")
-			ToSelect = "BLUE"
-			lastpick = GetTickCount()
-		end
-		if ToSelect ~= "NONE" then
-			Control.CastSpell(HK_W)
-		end
-	end
-end
 function OnLoad()
 	TwistedFate()
 end
