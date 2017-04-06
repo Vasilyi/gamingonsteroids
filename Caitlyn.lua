@@ -33,7 +33,7 @@ function Caitlyn:__init()
 	Callback.Add("Draw", function() self:Draw() end)
 	local orbwalkername = ""
 	if _G.SDK then
-		orbwalkername = "IC'S orbwalker"
+			orbwalkername = "IC'S orbwalker"
 		_G.SDK.Orbwalker:OnPreMovement(function(arg) 
 			if blockmovement then
 				arg.Process = false
@@ -84,9 +84,12 @@ end
 
 function Caitlyn:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
-	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
+	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Combo") 
+	local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Harass") 
+	local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (not _G.SDK and _G.GOS and _G.GOS:CanMove())
+	local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (not _G.SDK and _G.GOS and _G.GOS:CanAttack())
+	local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (not _G.SDK and _G.GOS and _G.GOS:GetTarget())
 	
-	local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
 	if combomodeactive and self.Menu.UseBOTRK:Value() then
 		UseBotrk()
 	end
@@ -100,6 +103,7 @@ function Caitlyn:Tick()
 	if self:CanCast(_Q) and self:CanCast(_E) and useEQ then
 		self:CastE(currenttarget)
 	end
+	
 	if myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name == "CaitlynEntrapment" and self:CanCast(_Q) and useEQ then
 		Control.CastSpell(HK_Q,qtarget)
 	end
@@ -202,7 +206,7 @@ end
 
 
 function Caitlyn:GetImmobileTarget()
-local GetEnemyHeroes = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(800)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+	local GetEnemyHeroes = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(800)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
 	for i = 1, #GetEnemyHeroes do
 		local Enemy = GetEnemyHeroes[i]
 		if Enemy and self:Stunned(Enemy) and myHero.pos:DistanceTo(Enemy.pos) < 800 then
@@ -212,11 +216,6 @@ local GetEnemyHeroes = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(800)) or 
 	return false
 end
 
-function QCombo(pos)
-	Control.SetCursorPos(pos)
-	Control.KeyDown(HK_Q)
-	Control.KeyUp(HK_Q)
-end
 
 function Caitlyn:CastCombo(pos)
 	local delay = self.Menu.delay:Value()
@@ -236,7 +235,8 @@ function Caitlyn:CastCombo(pos)
 			Control.SetCursorPos(pos)
 			Control.KeyDown(HK_E)
 			Control.KeyUp(HK_E)
-			DelayAction(QCombo,0.01,{pos})
+			Control.KeyDown(HK_Q)
+			Control.KeyUp(HK_Q)
 			DelayAction(LeftClick,delay/1000,{castSpell.mouse})
 			castSpell.casting = ticker
 		end
@@ -246,14 +246,14 @@ end
 
 --[[CastEQ]]
 function Caitlyn:CastE(target)
-		if not _G.SDK and not _G.GOS then return end
-		if target and target:GetCollision(E.Radius,E.Speed,E.Delay) == 0 then
-			local castPos = target:GetPrediction(E.Speed, E.Delay)
-			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-			self:CastCombo(newpos)
-			qtarget = newpos
-		end
+	if not _G.SDK and not _G.GOS then return end
+	if target and target:GetCollision(E.Radius,E.Speed,E.Delay) == 0 then
+		local castPos = target:GetPrediction(E.Speed, E.Delay)
+		local newpos = myHero.pos:Extended(castPos,math.random(100,300))
+		self:CastCombo(newpos)
+		qtarget = newpos
 	end
+end
 
 
 function Caitlyn:IsReady(spellSlot)

@@ -60,19 +60,19 @@ function Lucian:__init()
 			end
 		end)
 	elseif _G.GOS then
-			orbwalkername = "Noddy orbwalker"
-			_G.GOS:OnAttackComplete(function() 
-				passive = false 
-				local combomodeactive = _G.GOS:GetMode() == "Combo"
-				local canmove = _G.GOS:CanMove()
-				if combomodeactive and canmove and Game.Timer() > lastbuff - 3.5 then 
-					if self:CanCast(_E) and self.Menu.UseE:Value() and _G.GOS:GetTarget() then
-						self:CastSpell(HK_E,mousePos)
-						return
-					end
+		orbwalkername = "Noddy orbwalker"
+		_G.GOS:OnAttackComplete(function() 
+			passive = false 
+			local combomodeactive = _G.GOS:GetMode() == "Combo"
+			local canmove = _G.GOS:CanMove()
+			if combomodeactive and canmove and Game.Timer() > lastbuff - 3.5 then 
+				if self:CanCast(_E) and self.Menu.UseE:Value() and _G.GOS:GetTarget() then
+					self:CastSpell(HK_E,mousePos)
+					return
 				end
-			end)
-
+			end
+		end)
+		
 		
 	else
 		orbwalkername = "Orbwalker not found"
@@ -144,11 +144,11 @@ function Lucian:Tick()
 		--PrintChat("Passive added : "..Game.Timer().." : "..lastbuff)
 		passive = true
 	end
-	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
-	local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
-	local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (_G.GOS and _G.GOS:CanMove())
-	local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (_G.GOS and _G.GOS:CanAttack())
-	local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
+	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Combo") 
+	local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Harass") 
+	local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (not _G.SDK and _G.GOS and _G.GOS:CanMove())
+	local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (not _G.SDK and _G.GOS and _G.GOS:CanAttack())
+	local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (not _G.SDK and _G.GOS and _G.GOS:GetTarget())
 	if combomodeactive and self.Menu.UseBOTRK:Value() then
 		UseBotrk()
 	end

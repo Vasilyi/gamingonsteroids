@@ -26,7 +26,7 @@ end
 
 if myHero.charName == "Ashe" then
 	
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.2","TRUS","7.7"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.3","TRUS","7.7"
 	class "Ashe"
 	
 	function Ashe:GetBuffs(unit)
@@ -66,7 +66,7 @@ if myHero.charName == "Ashe" then
 			_G.SDK.Orbwalker:OnPostAttack(function() 
 				local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
 				local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
-				if (combomodeactive or harassactive) and self.Menu.UseQCombo:Value() then
+				if (combomodeactive or harassactive) and self.Menu.UseQCombo:Value() and self:QBuff() then
 					self:CastQ()
 				end
 			end)
@@ -211,11 +211,12 @@ if myHero.charName == "Ashe" then
 	
 	function Ashe:Tick()
 		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
-		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
-		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
-		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (_G.GOS and _G.GOS:CanMove())
-		local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (_G.GOS and _G.GOS:CanAttack())
-		local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
+		
+		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Combo") 
+		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Harass") 
+		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (not _G.SDK and _G.GOS and _G.GOS:CanMove())
+		local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (not _G.SDK and _G.GOS and _G.GOS:CanAttack())
+		local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (not _G.SDK and _G.GOS and _G.GOS:GetTarget())
 		if combomodeactive and self.Menu.UseBOTRK:Value() then
 			UseBotrk()
 		end
@@ -226,7 +227,7 @@ if myHero.charName == "Ashe" then
 		if combomodeactive and self:QBuff() and self.Menu.UseQCombo:Value() and (not self.Menu.UseQAfterAA:Value()) and currenttarget and canmove and not canattack then
 			self:CastQ()
 		end
-		if harassmodeactive and self.Menu.UseWHarass:Value() and ((canmove and not canattack) or not currenttarget) then
+		if harassactive and self.Menu.UseWHarass:Value() and ((canmove and not canattack) or not currenttarget) then
 			self:CastW()
 		end
 	end
@@ -337,7 +338,7 @@ if myHero.charName == "Ashe" then
 end
 
 if myHero.charName == "Lucian" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.2","TRUS","7.7"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.3","TRUS","7.7"
 	
 	class "Lucian"
 	
@@ -461,11 +462,11 @@ if myHero.charName == "Lucian" then
 			--PrintChat("Passive added : "..Game.Timer().." : "..lastbuff)
 			passive = true
 		end
-		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
-		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
-		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (_G.GOS and _G.GOS:CanMove())
-		local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (_G.GOS and _G.GOS:CanAttack())
-		local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
+		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Combo") 
+		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Harass") 
+		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (not _G.SDK and _G.GOS and _G.GOS:CanMove())
+		local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (not _G.SDK and _G.GOS and _G.GOS:CanAttack())
+		local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (not _G.SDK and _G.GOS and _G.GOS:GetTarget())
 		if combomodeactive and self.Menu.UseBOTRK:Value() then
 			UseBotrk()
 		end
@@ -661,7 +662,7 @@ end
 
 
 if myHero.charName == "Caitlyn" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.1","TRUS","7.7"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.2","TRUS","7.7"
 	if myHero.charName ~= "Caitlyn" then return end
 	class "Caitlyn"
 	require "DamageLib"
@@ -725,8 +726,12 @@ if myHero.charName == "Caitlyn" then
 	
 	function Caitlyn:Tick()
 		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
-		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
-		local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
+		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Combo") 
+		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Harass") 
+		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (not _G.SDK and _G.GOS and _G.GOS:CanMove())
+		local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (not _G.SDK and _G.GOS and _G.GOS:CanAttack())
+		local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (not _G.SDK and _G.GOS and _G.GOS:GetTarget())
+		
 		if combomodeactive and self.Menu.UseBOTRK:Value() then
 			UseBotrk()
 		end
@@ -740,6 +745,7 @@ if myHero.charName == "Caitlyn" then
 		if self:CanCast(_Q) and self:CanCast(_E) and useEQ then
 			self:CastE(currenttarget)
 		end
+		
 		if myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name == "CaitlynEntrapment" and self:CanCast(_Q) and useEQ then
 			Control.CastSpell(HK_Q,qtarget)
 		end
@@ -852,11 +858,6 @@ if myHero.charName == "Caitlyn" then
 		return false
 	end
 	
-	function QCombo(pos)
-		Control.SetCursorPos(pos)
-		Control.KeyDown(HK_Q)
-		Control.KeyUp(HK_Q)
-	end
 	
 	function Caitlyn:CastCombo(pos)
 		local delay = self.Menu.delay:Value()
@@ -876,7 +877,8 @@ if myHero.charName == "Caitlyn" then
 				Control.SetCursorPos(pos)
 				Control.KeyDown(HK_E)
 				Control.KeyUp(HK_E)
-				DelayAction(QCombo,0.01,{pos})
+				Control.KeyDown(HK_Q)
+				Control.KeyUp(HK_Q)
 				DelayAction(LeftClick,delay/1000,{castSpell.mouse})
 				castSpell.casting = ticker
 			end
@@ -911,11 +913,10 @@ if myHero.charName == "Caitlyn" then
 	function OnLoad()
 		Caitlyn()
 	end
-	
 end
 
 if myHero.charName == "Ezreal" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.2","TRUS","7.7"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.3","TRUS","7.7"
 	
 	class "Ezreal"
 	
@@ -936,7 +937,7 @@ if myHero.charName == "Ezreal" then
 			_G.SDK.Orbwalker:OnPostAttack(function() 
 				local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 				local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
-				if (combomodeactive or harassactive) and self:CanCast(_Q) then
+				if (combomodeactive or harassactive) then
 					self:CastQ(_G.SDK.Orbwalker:GetTarget())
 				end
 			end)
@@ -985,11 +986,11 @@ if myHero.charName == "Ezreal" then
 	
 	function Ezreal:Tick()
 		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
-		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
-		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
-		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (_G.GOS and _G.GOS:CanMove())
-		local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (_G.GOS and _G.GOS:CanAttack())
-		local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
+		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Combo") 
+		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Harass") 
+		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (not _G.SDK and _G.GOS and _G.GOS:CanMove())
+		local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (not _G.SDK and _G.GOS and _G.GOS:CanAttack())
+		local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (not _G.SDK and _G.GOS and _G.GOS:GetTarget())
 		if combomodeactive and self.Menu.UseBOTRK:Value() then
 			UseBotrk()
 		end
@@ -1149,17 +1150,20 @@ if myHero.charName == "Twitch" then
 	end
 	function Twitch:Tick()
 		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
-		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
-		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
+		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Combo") 
+		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Harass") 
+		
 		
 		if combomodeactive then 
 			if self.Menu.UseBOTRK:Value() then
 				UseBotrk()
-			end
+			end	
 		end
+		
 		if self:CanCast(_E) and self.Menu.UseEKS:Value() then
 			self:UseEKS()
 		end
+		
 		if (harassactive or combomodeactive) and self.Menu.UseERange:Value() and self:CanCast(_E) then
 			self:UseERange()
 		end
@@ -1261,7 +1265,6 @@ if myHero.charName == "Twitch" then
 	function OnLoad()
 		Twitch()
 	end
-	
 end
 
 if myHero.charName == "KogMaw" then
@@ -1354,11 +1357,11 @@ if myHero.charName == "KogMaw" then
 	
 	function KogMaw:Tick()
 		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
-		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
-		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
-		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (_G.GOS and _G.GOS:CanMove())
-		local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (_G.GOS and _G.GOS:CanAttack())
-		local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
+		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Combo") 
+		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Harass") 
+		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (not _G.SDK and _G.GOS and _G.GOS:CanMove())
+		local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (not _G.SDK and _G.GOS and _G.GOS:CanAttack())
+		local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (not _G.SDK and _G.GOS and _G.GOS:GetTarget())
 		local HarassMinMana = self.Menu.Harass.harassMana:Value()
 		
 		
@@ -1520,9 +1523,10 @@ if myHero.charName == "KogMaw" then
 end
 
 if myHero.charName == "Kalista" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.1","TRUS","7.7"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.2","TRUS","7.7"
 	class "Kalista"
 	require "DamageLib"
+	
 	function Kalista:__init()
 		self:LoadSpells()
 		self:LoadMenu()
@@ -1540,7 +1544,7 @@ if myHero.charName == "Kalista" then
 			_G.SDK.Orbwalker:OnPostAttack(function() 
 				local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 				local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
-				if (combomodeactive or harassactive) and self:CanCast(_Q) then
+				if (combomodeactive or harassactive) then
 					self:CastQ(_G.SDK.Orbwalker:GetTarget())
 				end
 			end)
@@ -1618,11 +1622,11 @@ if myHero.charName == "Kalista" then
 	
 	function Kalista:Tick()
 		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
-		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (_G.GOS and _G.GOS:GetMode() == "Combo") 
-		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (_G.GOS and _G.GOS:GetMode() == "Harass") 
-		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (_G.GOS and _G.GOS:CanMove())
-		local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (_G.GOS and _G.GOS:CanAttack())
-		local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
+		local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Combo") 
+		local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Harass") 
+		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (not _G.SDK and _G.GOS and _G.GOS:CanMove())
+		local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (not _G.SDK and _G.GOS and _G.GOS:CanAttack())
+		local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (not _G.SDK and _G.GOS and _G.GOS:GetTarget())
 		local HarassMinMana = self.Menu.Harass.harassMana:Value()
 		
 		
