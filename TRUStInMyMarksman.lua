@@ -447,15 +447,7 @@ if myHero.charName == "Lucian" then
 	end
 	
 	function Lucian:Tick()
-		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
-		if _G.GOS then
-			if GetTickCount() - _G.GOS.lastAttack < 50 then
-				passive = false
-			end
-			
-		end
-		
-		
+		if myHero.dead or (not _G.SDK and not _G.GOS) then return end	
 		local buffcheck = self:HasBuff(myHero,"lucianpassivebuff")
 		if buffcheck and buffcheck ~= lastbuff then
 			lastbuff = buffcheck
