@@ -20,7 +20,7 @@ function UseBotrk()
 	end
 end
 
-local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.1","TRUS","7.6"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.4","TRUS","7.7"
 class "Kalista"
 require "DamageLib"
 
@@ -41,8 +41,11 @@ function Kalista:__init()
 		_G.SDK.Orbwalker:OnPostAttack(function() 
 			local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 			local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
+			local QMinMana = self.Menu.Combo.qMinMana:Value()
 			if (combomodeactive or harassactive) then
-				self:CastQ(_G.SDK.Orbwalker:GetTarget())
+				if (harassactive or (myHero.maxMana * QMinMana * 0.01 < myHero.mana)) then
+					self:CastQ(_G.SDK.Orbwalker:GetTarget())
+				end
 			end
 		end)
 		
@@ -56,8 +59,12 @@ function Kalista:__init()
 		_G.GOS:OnAttackComplete(function() 
 			local combomodeactive = _G.GOS:GetMode() == "Combo"
 			local harassactive = _G.GOS:GetMode() == "Harass"
+			local QMinMana = self.Menu.Combo.qMinMana:Value()
+			
 			if (combomodeactive or harassactive) then
-				self:CastQ(_G.GOS:GetTarget())
+				if (harassactive or (myHero.maxMana * QMinMana * 0.01 < myHero.mana)) then
+					self:CastQ(_G.GOS:GetTarget())
+				end
 			end
 		end)
 	else
@@ -85,6 +92,7 @@ function Kalista:LoadMenu()
 	self.Menu:MenuElement({id = "DrawColor", name = "Color for Killable circle", color = Draw.Color(0xBF3F3FFF)})
 	self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
 	self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
+	self.Menu.Combo:MenuElement({id = "qMinMana", name = "Minimal mana for Q:", value = 30, min = 0, max = 101, identifier = "%"})
 	self.Menu.Combo:MenuElement({id = "comboUseE", name = "Use E", value = true})
 	
 	--[[Harass]]
@@ -125,14 +133,17 @@ function Kalista:Tick()
 	local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (not _G.SDK and _G.GOS and _G.GOS:CanAttack())
 	local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (not _G.SDK and _G.GOS and _G.GOS:GetTarget())
 	local HarassMinMana = self.Menu.Harass.harassMana:Value()
-	
+	local QMinMana = self.Menu.Combo.qMinMana:Value()
 	
 	if combomodeactive and self.Menu.UseBOTRK:Value() then
 		UseBotrk()
 	end
 	
 	if ((combomodeactive) or (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana)) and (not canattack or not currenttarget) then
-		self:CastQ(currenttarget,combomodeactive or false)
+		
+		if (harassactive or (myHero.maxMana * QMinMana * 0.01 < myHero.mana)) then
+			self:CastQ(currenttarget,combomodeactive or false)
+		end
 		self:CastE(currenttarget,combomodeactive or false)
 	end
 	if self.Menu.Harass.harassUseELasthit:Value() then
