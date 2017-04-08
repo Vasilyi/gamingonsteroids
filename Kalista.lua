@@ -31,13 +31,7 @@ function Kalista:__init()
 	Callback.Add("Draw", function() self:Draw() end)
 	local orbwalkername = ""
 	if _G.SDK then
-		orbwalkername = "IC'S orbwalker"
-		_G.SDK.Orbwalker:OnPreMovement(function(arg) 
-			if blockmovement then
-				arg.Process = false
-			end
-		end)
-		
+		orbwalkername = "IC'S orbwalker"	
 		_G.SDK.Orbwalker:OnPostAttack(function() 
 			local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 			local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
@@ -46,12 +40,6 @@ function Kalista:__init()
 				if (harassactive or (myHero.maxMana * QMinMana * 0.01 < myHero.mana)) then
 					self:CastQ(_G.SDK.Orbwalker:GetTarget())
 				end
-			end
-		end)
-		
-		_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
-			if blockattack then
-				arg.Process = false
 			end
 		end)
 	elseif _G.GOS then
@@ -73,10 +61,7 @@ function Kalista:__init()
 	end
 	PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 end
-blockattack = false
-blockmovement = false
 
-local lastpick = 0
 --[[Spells]]
 function Kalista:LoadSpells()
 	Q = {Range = 1150, width = 40, Delay = 0.25, Speed = 2100}
@@ -164,9 +149,10 @@ local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 
 
 function EnableMovement()
 	--unblock movement
-	blockattack = false
-	blockmovement = false
-	if _G.GOS then
+	if _G.SDK then 
+		_G.SDK.Orbwalker:SetMovement(true)
+		_G.SDK.Orbwalker:SetAttack(true)
+	else
 		_G.GOS.BlockAttack = false
 		_G.GOS.BlockMovement = false
 	end
@@ -199,9 +185,10 @@ function Kalista:CastSpell(spell,pos)
 			castSpell.tick = ticker
 			if ticker - castSpell.tick < Game.Latency() then
 				--block movement
-				blockattack = true
-				blockmovement = true
-				if _G.GOS then
+				if _G.SDK then 
+					_G.SDK.Orbwalker:SetMovement(false)
+					_G.SDK.Orbwalker:SetAttack(false)
+				else
 					_G.GOS.BlockAttack = true
 					_G.GOS.BlockMovement = true
 				end

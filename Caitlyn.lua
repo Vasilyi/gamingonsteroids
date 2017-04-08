@@ -34,21 +34,8 @@ function Caitlyn:__init()
 	local orbwalkername = ""
 	if _G.SDK then
 			orbwalkername = "IC'S orbwalker"
-		_G.SDK.Orbwalker:OnPreMovement(function(arg) 
-			if blockmovement then
-				arg.Process = false
-			end
-		end)
-		
-		
-		_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
-			if blockattack then
-				arg.Process = false
-			end
-		end)
 	elseif _G.GOS then
 		orbwalkername = "Noddy orbwalker"
-		
 	else
 		orbwalkername = "Orbwalker not found"
 		
@@ -115,11 +102,12 @@ local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 
 
 
 function ReturnCursor(pos)
-	blockmovement = false
-	blockattack = false 
-	if _G.GOS then
-		_G.GOS.BlockAttack = blockattack
-		_G.GOS.BlockMovement = blockmovement
+	if _G.SDK then 
+	_G.SDK.Orbwalker:SetMovement(true)
+	_G.SDK.Orbwalker:SetAttack(true)
+	else
+		_G.GOS.BlockAttack = false
+		_G.GOS.BlockMovement = false
 	end
 	Control.SetCursorPos(pos)
 	castSpell.state = 0
@@ -226,12 +214,13 @@ function Caitlyn:CastCombo(pos)
 		castSpell.tick = ticker
 		if ticker - castSpell.tick < Game.Latency() then
 			--block movement
-			blockmovement = true
-			blockattack = true
-			if _G.GOS then
-				_G.GOS.BlockAttack = blockattack
-				_G.GOS.BlockMovement = blockmovement
-			end
+	if _G.SDK then 
+	_G.SDK.Orbwalker:SetMovement(false)
+	_G.SDK.Orbwalker:SetAttack(false)
+	else
+		_G.GOS.BlockAttack = true
+		_G.GOS.BlockMovement = true
+	end
 			Control.SetCursorPos(pos)
 			Control.KeyDown(HK_E)
 			Control.KeyUp(HK_E)

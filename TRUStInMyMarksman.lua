@@ -56,25 +56,13 @@ if myHero.charName == "Ashe" then
 		
 		local orbwalkername = ""
 		if _G.SDK then
-			orbwalkername = "IC'S orbwalker"
-			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
-				if blockmovement then
-					arg.Process = false
-				end
-			end)
-			
+			orbwalkername = "IC'S orbwalker"	
 			_G.SDK.Orbwalker:OnPostAttack(function() 
 				local combomodeactive = (_G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO])
 				local harassactive = (_G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS])
 				local currenttarget = _G.SDK.Orbwalker:GetTarget()
 				if (combomodeactive or harassactive) and self.Menu.UseQCombo:Value() and self:QBuff() then
 					self:CastQ()
-				end
-			end)
-			
-			_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
-				if blockattack then
-					arg.Process = false
 				end
 			end)
 		elseif _G.GOS then
@@ -241,9 +229,10 @@ if myHero.charName == "Ashe" then
 	
 	function EnableMovement()
 		--unblock movement
-		blockattack = false
-		blockmovement = false
-		if _G.GOS then
+		if _G.SDK then 
+			_G.SDK.Orbwalker:SetMovement(true)
+			_G.SDK.Orbwalker:SetAttack(true)
+		else
 			_G.GOS.BlockAttack = false
 			_G.GOS.BlockMovement = false
 		end
@@ -275,11 +264,12 @@ if myHero.charName == "Ashe" then
 				castSpell.tick = ticker
 				if ticker - castSpell.tick < Game.Latency() then
 					--block movement
-					blockattack = true
-					blockmovement = true
-					if _G.GOS then
-						_G.GOS.BlockAttack = blockattack
-						_G.GOS.BlockMovement = blockmovement
+					if _G.SDK then 
+						_G.SDK.Orbwalker:SetMovement(false)
+						_G.SDK.Orbwalker:SetAttack(false)
+					else
+						_G.GOS.BlockAttack = true
+						_G.GOS.BlockMovement = true
 					end
 					Control.SetCursorPos(pos)
 					Control.KeyDown(spell)
@@ -354,14 +344,7 @@ if myHero.charName == "Lucian" then
 		
 		local orbwalkername = ""
 		if _G.SDK then
-			orbwalkername = "IC'S orbwalker"
-			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
-				if blockmovement then
-					arg.Process = false
-				end
-			end)
-			
-			
+			orbwalkername = "IC'S orbwalker"		
 			_G.SDK.Orbwalker:OnPostAttack(function() 
 				passive = false 
 				--PrintChat("passive removed")
@@ -371,12 +354,6 @@ if myHero.charName == "Lucian" then
 						self:CastSpell(HK_E,mousePos)
 						return
 					end
-				end
-			end)
-			
-			_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
-				if blockattack then
-					arg.Process = false
 				end
 			end)
 		elseif _G.GOS then
@@ -449,7 +426,8 @@ if myHero.charName == "Lucian" then
 	end
 	
 	function Lucian:Tick()
-		if myHero.dead or (not _G.SDK and not _G.GOS) then return end	
+		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
+		
 		local buffcheck = self:HasBuff(myHero,"lucianpassivebuff")
 		if buffcheck and buffcheck ~= lastbuff then
 			lastbuff = buffcheck
@@ -498,11 +476,12 @@ if myHero.charName == "Lucian" then
 	
 	function EnableMovement()
 		--unblock movement
-		blockattack = false
-		blockmovement = false
-		if _G.GOS then
-			_G.GOS.BlockAttack = blockattack
-			_G.GOS.BlockMovement = blockmovement
+		if _G.SDK then 
+			_G.SDK.Orbwalker:SetMovement(true)
+			_G.SDK.Orbwalker:SetAttack(true)
+		else
+			_G.GOS.BlockAttack = false
+			_G.GOS.BlockMovement = false
 		end
 		onetimereset = true
 		castSpell.state = 0
@@ -533,11 +512,12 @@ if myHero.charName == "Lucian" then
 				castSpell.tick = ticker
 				if ticker - castSpell.tick < Game.Latency() then
 					--block movement
-					blockattack = true
-					blockmovement = true
-					if _G.GOS then
-						_G.GOS.BlockAttack = blockattack
-						_G.GOS.BlockMovement = blockmovement
+					if _G.SDK then 
+						_G.SDK.Orbwalker:SetMovement(false)
+						_G.SDK.Orbwalker:SetAttack(false)
+					else
+						_G.GOS.BlockAttack = true
+						_G.GOS.BlockMovement = true
 					end
 					Control.SetCursorPos(pos)
 					Control.KeyDown(spell)
@@ -670,21 +650,8 @@ if myHero.charName == "Caitlyn" then
 		local orbwalkername = ""
 		if _G.SDK then
 			orbwalkername = "IC'S orbwalker"
-			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
-				if blockmovement then
-					arg.Process = false
-				end
-			end)
-			
-			
-			_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
-				if blockattack then
-					arg.Process = false
-				end
-			end)
 		elseif _G.GOS then
 			orbwalkername = "Noddy orbwalker"
-			
 		else
 			orbwalkername = "Orbwalker not found"
 			
@@ -751,11 +718,12 @@ if myHero.charName == "Caitlyn" then
 	
 	
 	function ReturnCursor(pos)
-		blockmovement = false
-		blockattack = false 
-		if _G.GOS then
-			_G.GOS.BlockAttack = blockattack
-			_G.GOS.BlockMovement = blockmovement
+		if _G.SDK then 
+			_G.SDK.Orbwalker:SetMovement(true)
+			_G.SDK.Orbwalker:SetAttack(true)
+		else
+			_G.GOS.BlockAttack = false
+			_G.GOS.BlockMovement = false
 		end
 		Control.SetCursorPos(pos)
 		castSpell.state = 0
@@ -862,11 +830,12 @@ if myHero.charName == "Caitlyn" then
 			castSpell.tick = ticker
 			if ticker - castSpell.tick < Game.Latency() then
 				--block movement
-				blockmovement = true
-				blockattack = true
-				if _G.GOS then
-					_G.GOS.BlockAttack = blockattack
-					_G.GOS.BlockMovement = blockmovement
+				if _G.SDK then 
+					_G.SDK.Orbwalker:SetMovement(false)
+					_G.SDK.Orbwalker:SetAttack(false)
+				else
+					_G.GOS.BlockAttack = true
+					_G.GOS.BlockMovement = true
 				end
 				Control.SetCursorPos(pos)
 				Control.KeyDown(HK_E)
@@ -921,44 +890,14 @@ if myHero.charName == "Ezreal" then
 		
 		local orbwalkername = ""
 		if _G.SDK then
-			orbwalkername = "IC'S orbwalker"
-			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
-				if blockmovement then
-					arg.Process = false
-				end
-			end)
-			
-			_G.SDK.Orbwalker:OnPostAttack(function() 
-				local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
-				local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
-				if (combomodeactive or harassactive) then
-					self:CastQ(_G.SDK.Orbwalker:GetTarget())
-				end
-			end)
-			
-			_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
-				if blockattack then
-					arg.Process = false
-				end
-			end)
+			orbwalkername = "IC'S orbwalker"	
 		elseif _G.GOS then
 			orbwalkername = "Noddy orbwalker"
-			_G.GOS:OnAttackComplete(function() 
-				local combomodeactive = _G.GOS:GetMode() == "Combo"
-				local harassactive = _G.GOS:GetMode() == "Harass"
-				if (combomodeactive or harassactive) then
-					self:CastQ(_G.GOS:GetTarget())
-				end
-			end)
 		else
 			orbwalkername = "Orbwalker not found"
-			
 		end
 		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 	end
-	onetimereset = true
-	blockattack = false
-	blockmovement = false
 	
 	local lastpick = 0
 	--[[Spells]]
@@ -1002,13 +941,13 @@ if myHero.charName == "Ezreal" then
 	
 	function EnableMovement()
 		--unblock movement
-		blockattack = false
-		blockmovement = false
-		if _G.GOS then
+		if _G.SDK then 
+			_G.SDK.Orbwalker:SetMovement(true)
+			_G.SDK.Orbwalker:SetAttack(true)
+		else
 			_G.GOS.BlockAttack = false
 			_G.GOS.BlockMovement = false
 		end
-		onetimereset = true
 		castSpell.state = 0
 	end
 	
@@ -1037,9 +976,10 @@ if myHero.charName == "Ezreal" then
 				castSpell.tick = ticker
 				if ticker - castSpell.tick < Game.Latency() then
 					--block movement
-					blockattack = true
-					blockmovement = true
-					if _G.GOS then
+					if _G.SDK then 
+						_G.SDK.Orbwalker:SetMovement(false)
+						_G.SDK.Orbwalker:SetAttack(false)
+					else
 						_G.GOS.BlockAttack = true
 						_G.GOS.BlockMovement = true
 					end
@@ -1096,21 +1036,9 @@ if myHero.charName == "Twitch" then
 		Callback.Add("Draw", function() self:Draw() end)
 		local orbwalkername = ""
 		if _G.SDK then
-			orbwalkername = "IC'S orbwalker"
-			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
-				if blockmovement then
-					arg.Process = false
-				end
-			end)
-			
+			orbwalkername = "IC'S orbwalker"		
 			_G.SDK.Orbwalker:OnPostAttack(function(arg) 		
 				DelayAction(recheckparticle,0.2)
-			end)
-			
-			_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
-				if blockattack then
-					arg.Process = false
-				end
 			end)
 		elseif _G.GOS then
 			orbwalkername = "Noddy orbwalker"
@@ -1123,9 +1051,6 @@ if myHero.charName == "Twitch" then
 		end
 		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 	end
-	blockattack = false
-	blockmovement = false
-	
 	
 	function Twitch:LoadMenu()
 		self.Menu = MenuElement({type = MENU, id = "TRUStinymyTwitch", name = Scriptname})
@@ -1273,23 +1198,11 @@ if myHero.charName == "KogMaw" then
 		local orbwalkername = ""
 		if _G.SDK then
 			orbwalkername = "IC'S orbwalker"
-			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
-				if blockmovement then
-					arg.Process = false
-				end
-			end)
-			
 			_G.SDK.Orbwalker:OnPostAttack(function() 
 				local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 				local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
 				if (combomodeactive or harassactive) then
 					self:CastQ(_G.SDK.Orbwalker:GetTarget())
-				end
-			end)
-			
-			_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
-				if blockattack then
-					arg.Process = false
 				end
 			end)
 		elseif _G.GOS then
@@ -1382,9 +1295,10 @@ if myHero.charName == "KogMaw" then
 	
 	function EnableMovement()
 		--unblock movement
-		blockattack = false
-		blockmovement = false
-		if _G.GOS then
+		if _G.SDK then 
+			_G.SDK.Orbwalker:SetMovement(true)
+			_G.SDK.Orbwalker:SetAttack(true)
+		else
 			_G.GOS.BlockAttack = false
 			_G.GOS.BlockMovement = false
 		end
@@ -1417,11 +1331,12 @@ if myHero.charName == "KogMaw" then
 				castSpell.tick = ticker
 				if ticker - castSpell.tick < Game.Latency() then
 					--block movement
-					blockattack = true
-					blockmovement = true
-					if _G.GOS then
-						_G.GOS.BlockAttack = blockattack
-						_G.GOS.BlockMovement = blockmovement
+					if _G.SDK then 
+						_G.SDK.Orbwalker:SetMovement(false)
+						_G.SDK.Orbwalker:SetAttack(false)
+					else
+						_G.GOS.BlockAttack = true
+						_G.GOS.BlockMovement = true
 					end
 					Control.SetCursorPos(pos)
 					Control.KeyDown(spell)
@@ -1513,7 +1428,6 @@ if myHero.charName == "KogMaw" then
 	function OnLoad()
 		KogMaw()
 	end
-	
 end
 
 if myHero.charName == "Kalista" then 
@@ -1528,13 +1442,7 @@ if myHero.charName == "Kalista" then
 		Callback.Add("Draw", function() self:Draw() end)
 		local orbwalkername = ""
 		if _G.SDK then
-			orbwalkername = "IC'S orbwalker"
-			_G.SDK.Orbwalker:OnPreMovement(function(arg) 
-				if blockmovement then
-					arg.Process = false
-				end
-			end)
-			
+			orbwalkername = "IC'S orbwalker"	
 			_G.SDK.Orbwalker:OnPostAttack(function() 
 				local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 				local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
@@ -1543,12 +1451,6 @@ if myHero.charName == "Kalista" then
 					if (harassactive or (myHero.maxMana * QMinMana * 0.01 < myHero.mana)) then
 						self:CastQ(_G.SDK.Orbwalker:GetTarget())
 					end
-				end
-			end)
-			
-			_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
-				if blockattack then
-					arg.Process = false
 				end
 			end)
 		elseif _G.GOS then
@@ -1570,10 +1472,7 @@ if myHero.charName == "Kalista" then
 		end
 		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 	end
-	blockattack = false
-	blockmovement = false
 	
-	local lastpick = 0
 	--[[Spells]]
 	function Kalista:LoadSpells()
 		Q = {Range = 1150, width = 40, Delay = 0.25, Speed = 2100}
@@ -1661,9 +1560,10 @@ if myHero.charName == "Kalista" then
 	
 	function EnableMovement()
 		--unblock movement
-		blockattack = false
-		blockmovement = false
-		if _G.GOS then
+		if _G.SDK then 
+			_G.SDK.Orbwalker:SetMovement(true)
+			_G.SDK.Orbwalker:SetAttack(true)
+		else
 			_G.GOS.BlockAttack = false
 			_G.GOS.BlockMovement = false
 		end
@@ -1696,9 +1596,10 @@ if myHero.charName == "Kalista" then
 				castSpell.tick = ticker
 				if ticker - castSpell.tick < Game.Latency() then
 					--block movement
-					blockattack = true
-					blockmovement = true
-					if _G.GOS then
+					if _G.SDK then 
+						_G.SDK.Orbwalker:SetMovement(false)
+						_G.SDK.Orbwalker:SetAttack(false)
+					else
 						_G.GOS.BlockAttack = true
 						_G.GOS.BlockMovement = true
 					end

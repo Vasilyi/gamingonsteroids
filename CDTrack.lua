@@ -254,12 +254,14 @@ function ReturnState(champion,spell)
 end
 
 function OnProcessSpell(champion,spell)
-	seconds = Game.Timer()+spell.cd
+	seconds = Game.Timer()+spell.currentCd
+	if seconds > 20 then
 	hours = string.format("%02.f", math.floor(seconds/3600));
 	mins = string.format("%02.f", math.floor(seconds/60 - (hours*60)));
 	secs = string.format("%02.f", math.floor(seconds - hours*3600 - mins *60));
 	result = mins..":"..secs
 	PrintChat(champion.charName.." : "..spell.name.." : "..result)
+	end
 end
 
 function ProcessSpellsLoad()

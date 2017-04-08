@@ -32,21 +32,9 @@ function Twitch:__init()
 	Callback.Add("Draw", function() self:Draw() end)
 	local orbwalkername = ""
 	if _G.SDK then
-		orbwalkername = "IC'S orbwalker"
-		_G.SDK.Orbwalker:OnPreMovement(function(arg) 
-			if blockmovement then
-				arg.Process = false
-			end
-		end)
-		
+		orbwalkername = "IC'S orbwalker"		
 		_G.SDK.Orbwalker:OnPostAttack(function(arg) 		
 			DelayAction(recheckparticle,0.2)
-		end)
-		
-		_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
-			if blockattack then
-				arg.Process = false
-			end
 		end)
 	elseif _G.GOS then
 		orbwalkername = "Noddy orbwalker"
@@ -59,9 +47,6 @@ function Twitch:__init()
 	end
 	PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 end
-blockattack = false
-blockmovement = false
-
 
 function Twitch:LoadMenu()
 	self.Menu = MenuElement({type = MENU, id = "TRUStinymyTwitch", name = Scriptname})

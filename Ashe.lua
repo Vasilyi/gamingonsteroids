@@ -51,25 +51,13 @@ function Ashe:__init()
 	
 	local orbwalkername = ""
 	if _G.SDK then
-		orbwalkername = "IC'S orbwalker"
-		_G.SDK.Orbwalker:OnPreMovement(function(arg) 
-			if blockmovement then
-				arg.Process = false
-			end
-		end)
-		
+		orbwalkername = "IC'S orbwalker"	
 		_G.SDK.Orbwalker:OnPostAttack(function() 
 			local combomodeactive = (_G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO])
 			local harassactive = (_G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS])
 			local currenttarget = _G.SDK.Orbwalker:GetTarget()
 			if (combomodeactive or harassactive) and self.Menu.UseQCombo:Value() and self:QBuff() then
 				self:CastQ()
-			end
-		end)
-		
-		_G.SDK.Orbwalker:OnPreAttack(function(arg) 		
-			if blockattack then
-				arg.Process = false
 			end
 		end)
 	elseif _G.GOS then
@@ -236,9 +224,10 @@ local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 
 
 function EnableMovement()
 	--unblock movement
-	blockattack = false
-	blockmovement = false
-	if _G.GOS then
+	if _G.SDK then 
+		_G.SDK.Orbwalker:SetMovement(true)
+		_G.SDK.Orbwalker:SetAttack(true)
+	else
 		_G.GOS.BlockAttack = false
 		_G.GOS.BlockMovement = false
 	end
@@ -270,11 +259,12 @@ function Ashe:CastSpell(spell,pos)
 			castSpell.tick = ticker
 			if ticker - castSpell.tick < Game.Latency() then
 				--block movement
-				blockattack = true
-				blockmovement = true
-				if _G.GOS then
-					_G.GOS.BlockAttack = blockattack
-					_G.GOS.BlockMovement = blockmovement
+				if _G.SDK then 
+					_G.SDK.Orbwalker:SetMovement(false)
+					_G.SDK.Orbwalker:SetAttack(false)
+				else
+					_G.GOS.BlockAttack = true
+					_G.GOS.BlockMovement = true
 				end
 				Control.SetCursorPos(pos)
 				Control.KeyDown(spell)
