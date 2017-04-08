@@ -1647,6 +1647,7 @@ if myHero.charName == "Kalista" then
 	
 	function Kalista:CheckKillableMinion()
 		local minionlist = {}
+		local level = myHero:GetSpellData(_E).level
 		if _G.SDK then
 			minionlist = _G.SDK.ObjectManager:GetMonsters(E.Range)
 		elseif _G.GOS then
@@ -1658,10 +1659,13 @@ if myHero.charName == "Kalista" then
 			end
 		end
 		for i, minion in pairs(minionlist) do
-			if self:GetSpears(minion) > 0 then 
+			local spearsamount = self:GetSpears(minion)
+			if spearsamount > 0 then 
 				local EDamage = getdmg("E",minion,myHero)
-				if EDamage > minion.health then
-					
+				-- local basedmg = ({20, 30, 40, 50, 60})[level] + 0.6* (myHero.totalDamage)
+				-- local perspear = ({10, 14, 19, 25, 32})[level] + ({0.2, 0.225, 0.25, 0.275, 0.3})[level]* (myHero.totalDamage)
+				-- local tempdamage = basedmg + perspear*spearsamount
+				if EDamage*((minion.charName == "SRU_RiftHerald" and 0.65) or (self:HasBuff(myHero,"barontarget") and 0.5) or 0.79) > minion.health then
 					local minionName = minion.charName
 					self:DrawSmiteableMinion(SmiteTable[minionName], minion)
 				end
@@ -1682,12 +1686,20 @@ if myHero.charName == "Kalista" then
 	function Kalista:GetSpears(unit, buffname)
 		for K, Buff in pairs(self:GetBuffs(unit)) do
 			if Buff.name:lower() == "kalistaexpungemarker" then
-				return Buff.count
+				return Buff.count -1
 			end
 		end
 		return 0
 	end
 	
+	function Kalista:HasBuff(unit, buffname)
+		for K, Buff in pairs(self:GetBuffs(unit)) do
+			if Buff.name:lower() == buffname:lower() then
+				return true
+			end
+		end
+		return false
+	end
 	function Kalista:UseERange()
 		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
 		local useE = false
@@ -1710,7 +1722,6 @@ if myHero.charName == "Kalista" then
 		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
 		local useE = false
 		local minionlist = {}
-		
 		for i, hero in pairs(heroeslist) do
 			if self:GetSpears(hero) >= self.Menu.Harass.HarassMinEStacks:Value() then
 				if _G.SDK then

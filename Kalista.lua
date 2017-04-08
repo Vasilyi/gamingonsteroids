@@ -314,10 +314,15 @@ function Kalista:UseEOnLasthit()
 			end
 			
 			for i, minion in pairs(minionlist) do
-				if self:GetSpears(minion) > 0 then 
+				local spearsamount = self:GetSpears(minion)
+				if spearsamount > 0 then 
 					local EDamage = getdmg("E",minion,myHero)
-					if EDamage > minion.health then
-						useE = true 
+					-- local basedmg = ({20, 30, 40, 50, 60})[level] + 0.6* (myHero.totalDamage)
+					-- local perspear = ({10, 14, 19, 25, 32})[level] + ({0.2, 0.225, 0.25, 0.275, 0.3})[level]* (myHero.totalDamage)
+					-- local tempdamage = basedmg + perspear*spearsamount
+					if EDamage*((minion.charName == "SRU_RiftHerald" and 0.65) or (self:HasBuff(myHero,"barontarget") and 0.5) or 0.79) > minion.health then
+						local minionName = minion.charName
+						self:DrawSmiteableMinion(SmiteTable[minionName], minion)
 					end
 				end
 			end
