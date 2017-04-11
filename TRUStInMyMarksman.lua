@@ -1238,7 +1238,6 @@ if myHero.charName == "KogMaw" then
 		self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 		self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
 		self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
-		self.Menu.Combo:MenuElement({id = "comboUseW", name = "Use W", value = true})
 		self.Menu.Combo:MenuElement({id = "comboUseE", name = "Use E", value = true})
 		self.Menu.Combo:MenuElement({id = "comboUseR", name = "Use R", value = true})
 		self.Menu.Combo:MenuElement({id = "MaxStacks", name = "Max R stacks: ", value = 3, min = 0, max = 10})

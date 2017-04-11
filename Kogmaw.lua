@@ -1,4 +1,5 @@
 local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.0","TRUS","7.6"
+local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.0","TRUS","7.6"
 if myHero.charName ~= "KogMaw" then return end
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
 
@@ -71,7 +72,6 @@ function KogMaw:LoadMenu()
 	self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 	self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
 	self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
-	self.Menu.Combo:MenuElement({id = "comboUseW", name = "Use W", value = true})
 	self.Menu.Combo:MenuElement({id = "comboUseE", name = "Use E", value = true})
 	self.Menu.Combo:MenuElement({id = "comboUseR", name = "Use R", value = true})
 	self.Menu.Combo:MenuElement({id = "MaxStacks", name = "Max R stacks: ", value = 3, min = 0, max = 10})
