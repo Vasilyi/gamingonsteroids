@@ -87,6 +87,7 @@ function TwistedFate:Tick()
 	if myHero.dead then return end
 	local WName = myHero:GetSpellData(_W).name
 	if (self:CanCast(_W)) and WName == "PickACard" and GetTickCount() > lastpick + 500 then
+		ToSelect = "NONE"
 		if self.Menu.CardPicker.GoldCard:Value() then
 			--PrintChat("gold")
 			ToSelect = "GOLD"
