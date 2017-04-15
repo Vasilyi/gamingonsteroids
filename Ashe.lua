@@ -197,6 +197,10 @@ end
 function Ashe:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
 	
+	if myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name == "Volley" then 
+		EnableMovement()
+	end
+	
 	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Combo") 
 	local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Harass") 
 	local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (not _G.SDK and _G.GOS and _G.GOS:CanMove())
@@ -236,7 +240,6 @@ end
 
 function ReturnCursor(pos)
 	Control.SetCursorPos(pos)
-	DelayAction(EnableMovement,0.1)
 end
 
 function LeftClick(pos)
