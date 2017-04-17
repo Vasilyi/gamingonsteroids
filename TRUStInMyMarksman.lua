@@ -59,9 +59,8 @@ function Ashe:__init()
 		orbwalkername = "IC'S orbwalker"	
 		_G.SDK.Orbwalker:OnPostAttack(function() 
 			local combomodeactive = (_G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO])
-			local harassactive = (_G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS])
 			local currenttarget = _G.SDK.Orbwalker:GetTarget()
-			if (combomodeactive or harassactive) and self.Menu.UseQCombo:Value() and self:QBuff() then
+			if (combomodeactive) and self.Menu.UseQCombo:Value() and self:QBuff() then
 				self:CastQ()
 			end
 		end)
@@ -70,9 +69,8 @@ function Ashe:__init()
 		
 		_G.GOS:OnAttackComplete(function() 
 			local combomodeactive = _G.GOS:GetMode() == "Combo"
-			local harassactive = _G.GOS:GetMode() == "Harass"
 			local currenttarget = _G.GOS:GetTarget()
-			if (combomodeactive or harassactive) and currenttarget and self.Menu.UseQCombo:Value() and self:QBuff() and currenttarget then
+			if (combomodeactive) and currenttarget and self.Menu.UseQCombo:Value() and self:QBuff() and currenttarget then
 				self:CastQ()
 			end
 		end)
