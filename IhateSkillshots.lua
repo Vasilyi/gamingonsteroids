@@ -483,21 +483,26 @@ function IHateSkillshots:CastSpell(spell,pos)
 	else
 		local delay = self.Menu.delay:Value()
 		local ticker = GetTickCount()
-		if castSpell.state == 0 then
-			castSpell.state = 1
-			castSpell.mouse = mousePos
-			castSpell.tick = ticker
-			if ticker - castSpell.tick < Game.Latency() then
-				--block movement
-				blockattack = true
-				blockmovement = true
-				Control.SetCursorPos(pos)
-				Control.KeyDown(spell)
-				Control.KeyUp(spell)
-				DelayAction(LeftClick,delay/1000,{castSpell.mouse})
-				castSpell.casting = ticker + delay
+		if castSpell.state == 0 and ticker > castSpell.casting then
+				castSpell.state = 1
+				castSpell.mouse = mousePos
+				castSpell.tick = ticker
+				if ticker - castSpell.tick < Game.Latency() then
+					--block movement
+					if _G.SDK then 
+						_G.SDK.Orbwalker:SetMovement(false)
+						_G.SDK.Orbwalker:SetAttack(false)
+					else
+						_G.GOS.BlockAttack = true
+						_G.GOS.BlockMovement = true
+					end
+					Control.SetCursorPos(pos)
+					Control.KeyDown(spell)
+					Control.KeyUp(spell)
+					DelayAction(LeftClick,delay/1000,{castSpell.mouse})
+					castSpell.casting = ticker + 500
+				end
 			end
-		end
 	end
 end
 
