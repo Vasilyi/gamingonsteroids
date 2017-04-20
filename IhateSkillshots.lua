@@ -1,8 +1,8 @@
 class "IHateSkillshots"
 local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.1","TRUS","7.6"
 if FileExist(COMMON_PATH .. "Collision.lua") then
-require 'Collision'
-PrintChat("Collision library loaded")
+	require 'Collision'
+	PrintChat("Collision library loaded")
 end
 Champs = {
 	
@@ -363,7 +363,7 @@ function IHateSkillshots:LoadMenu()
 		self.Menu.Skillshots:MenuElement({id = str[i], name = "Use"..str[i], key = keybindings[i]})
 	end
 	if _G.Collision then
-	self.Menu:MenuElement({id = "addcollision", name = "Additional collision size", value = 50, min = 0, max = 200, step = 5, identifier = ""})
+		self.Menu:MenuElement({id = "addcollision", name = "Additional collision size", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	end
 	
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
@@ -459,13 +459,18 @@ local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 
 
 function EnableMovement()
 	--unblock movement
-	blockattack = false
-	blockmovement = false
+	if _G.SDK then 
+		_G.SDK.Orbwalker:SetMovement(true)
+		_G.SDK.Orbwalker:SetAttack(true)
+	else
+		_G.GOS.BlockAttack = false
+		_G.GOS.BlockMovement = false
+	end
+	castSpell.state = 0
 end
 
 function ReturnCursor(pos)
 	Control.SetCursorPos(pos)
-	castSpell.state = 0
 	DelayAction(EnableMovement,0.1)
 end
 
@@ -484,25 +489,25 @@ function IHateSkillshots:CastSpell(spell,pos)
 		local delay = self.Menu.delay:Value()
 		local ticker = GetTickCount()
 		if castSpell.state == 0 and ticker > castSpell.casting then
-				castSpell.state = 1
-				castSpell.mouse = mousePos
-				castSpell.tick = ticker
-				if ticker - castSpell.tick < Game.Latency() then
-					--block movement
-					if _G.SDK then 
-						_G.SDK.Orbwalker:SetMovement(false)
-						_G.SDK.Orbwalker:SetAttack(false)
-					else
-						_G.GOS.BlockAttack = true
-						_G.GOS.BlockMovement = true
-					end
-					Control.SetCursorPos(pos)
-					Control.KeyDown(spell)
-					Control.KeyUp(spell)
-					DelayAction(LeftClick,delay/1000,{castSpell.mouse})
-					castSpell.casting = ticker + 500
+			castSpell.state = 1
+			castSpell.mouse = mousePos
+			castSpell.tick = ticker
+			if ticker - castSpell.tick < Game.Latency() then
+				--block movement
+				if _G.SDK then 
+					_G.SDK.Orbwalker:SetMovement(false)
+					_G.SDK.Orbwalker:SetAttack(false)
+				else
+					_G.GOS.BlockAttack = true
+					_G.GOS.BlockMovement = true
 				end
+				Control.SetCursorPos(pos)
+				Control.KeyDown(spell)
+				Control.KeyUp(spell)
+				DelayAction(LeftClick,delay/1000,{castSpell.mouse})
+				castSpell.casting = ticker + 500
 			end
+		end
 	end
 end
 
@@ -518,10 +523,10 @@ function IHateSkillshots:Tick()
 			
 			if collisionc > 0 then
 				if _G.Collision then
-				local block, list = CollSpell[i]:__GetCollision(myHero, temppred, 5)
-						if block then 
-							return 
-						end							
+					local block, list = CollSpell[i]:__GetCollision(myHero, temppred, 5)
+					if block then 
+						return 
+					end							
 				elseif (temptarget:GetCollision(spell.minionCollisionWidth,spell.speed,spell.delay)) >0 then
 					return 
 				end
