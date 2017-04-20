@@ -341,7 +341,6 @@ function IHateSkillshots:__init()
 			end
 		end
 	end
-	DelayAction(delayload,5)
 end
 str = { [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R" }
 keybindings = { [_Q] = 0x5A, [_W] = 0x58, [_E] = 0x43, [_R] = 0x56 }
@@ -375,24 +374,7 @@ function IHateSkillshots:LoadMenu()
 	
 	
 end
-blockattack = false
-blockmovement = false
-function delayload()
-	if _G.SDK then
-		_G.SDK.Orbwalker:OnPreMovement(function(arg) 
-			if blockmovement then
-				arg.Process = false
-			end
-		end)
-		
-		_G.SDK.Orbwalker:OnPreAttack(function(arg) 
-			if blockattack then
-				arg.Process = false
-			end
-		end)
-		
-	end
-end
+
 function GetDistanceSqr(p1, p2)
 	assert(p1, "GetDistance: invalid argument: cannot calculate distance to "..type(p1))
 	p2 = p2 or myHero.pos
