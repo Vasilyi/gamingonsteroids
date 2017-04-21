@@ -517,7 +517,7 @@ function IHateSkillshots:Tick()
 			
 			if temppred == nil or GetDistance(temppred)>spell.range then return end
 			
-			if spell.circular then 
+			if spell.circular or myHero.charName == "Urgot" then 
 				self:CastSpell(castbuttons[i],temppred)
 			else
 				local newpos = myHero.pos:Extended(temppred,math.random(100,300))
