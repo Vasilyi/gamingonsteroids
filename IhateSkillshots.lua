@@ -303,6 +303,9 @@ Champs = {
 	["Zilean"] = {
 		[_Q] = {delay = 300, range = 900, minionCollisionWidth = 210, speed = 2000}
 	},
+	["Rakan"] = {
+		[_Q] = {delay = 250, range = 750, minionCollisionWidth = 65, speed = 1850}
+	},
 	["Zyra"] = {
 		[_E] = {delay = 250, range = 1150, minionCollisionWidth = 70, speed = 1150,ignorecol = true}
 	},
@@ -311,6 +314,7 @@ Champs = {
 
 local CollSpell = {}
 function IHateSkillshots:__init()
+	--PrintChat(myHero.charName.." : ".." Speed: "..myHero:GetSpellData(_Q).speed.." Range: "..myHero:GetSpellData(_Q).range.." Width: "..myHero:GetSpellData(_Q).width)
 	if Champs[myHero.charName] == nil then
 		PrintChat "Hero didnt have skillshots, IHateSkillshots unloaded"
 		return
