@@ -1,5 +1,5 @@
 class "IHateSkillshots"
-local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.1","TRUS","7.6"
+local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.2","TRUS","7.8"
 if FileExist(COMMON_PATH .. "Collision.lua") then
 	require 'Collision'
 	PrintChat("Collision library loaded")
@@ -301,7 +301,7 @@ Champs = {
 		[_Q] = {delay = 250, range = 850, minionCollisionWidth = 140, speed = 1700}
 	},
 	["Zilean"] = {
-		[_Q] = {delay = 300, range = 900, minionCollisionWidth = 210, speed = 2000}
+		[_Q] = {delay = 300, range = 900, minionCollisionWidth = 210, speed = 2000, circular = true}
 	},
 	["Rakan"] = {
 		[_Q] = {delay = 250, range = 750, minionCollisionWidth = 65, speed = 1850}
