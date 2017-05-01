@@ -1,4 +1,4 @@
-local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.1","TRUS","7.6"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.2","TRUS","7.8"
 if myHero.charName ~= "Ezreal" then return end
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
 
@@ -22,7 +22,7 @@ function UseBotrk()
 end
 
 class "Ezreal"
-
+require "DamageLib"
 function Ezreal:__init()
 	self:LoadSpells()
 	self:LoadMenu()
@@ -47,7 +47,8 @@ end
 
 function Ezreal:LoadMenu()
 	self.Menu = MenuElement({type = MENU, id = "TRUStinymyEzreal", name = Scriptname})
-	self.Menu:MenuElement({id = "UseQ", name = "UseQ", value = true})
+	self.Menu:MenuElement({id = "UseQ", name = "UseQ on champions", value = true})
+	self.Menu:MenuElement({id = "UseQLH", name = "[WIP] UseQ to lasthit", value = true})
 	self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
@@ -61,6 +62,8 @@ function Ezreal:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
 	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Combo") 
 	local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Harass") 
+	local farmactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LASTHIT]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Lasthit") 
+	local laneclear = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LANECLEAR]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Clear") 
 	local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (not _G.SDK and _G.GOS and _G.GOS:CanMove())
 	local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (not _G.SDK and _G.GOS and _G.GOS:CanAttack())
 	local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (not _G.SDK and _G.GOS and _G.GOS:GetTarget())
@@ -69,6 +72,10 @@ function Ezreal:Tick()
 	end
 	if (combomodeactive or harassactive) and self:CanCast(_Q) and self.Menu.UseQ:Value() and canmove and (not canattack or not currenttarget) then
 		self:CastQ()
+	end
+	
+	if (farmactive or laneclear) and self.Menu.UseQLH:Value() then 
+		self:QLastHit()
 	end
 	
 	
@@ -144,7 +151,35 @@ function Ezreal:CastQ(target)
 		self:CastSpell(HK_Q, newpos)
 	end
 end
-
+function Ezreal:QLastHit()
+	local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (not _G.SDK and _G.GOS and _G.GOS:CanAttack())
+	local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (not _G.SDK and _G.GOS and _G.GOS:CanMove())
+	if _G.SDK then
+		minionlist = _G.SDK.ObjectManager:GetEnemyMinions(Q.Range)
+	elseif _G.GOS then
+		for i = 1, Game.MinionCount() do
+			local minion = Game.Minion(i)
+			if minion.valid and minion.isEnemy and minion.pos:DistanceTo(myHero.pos) < Q.Range then
+				table.insert(minionlist, minion)
+			end
+		end
+	end
+	
+	for i, minion in pairs(minionlist) do
+		local distancetominion = myHero.pos:DistanceTo(minion.pos)
+		if distancetominion > myHero.range or (not canattack and canmove) and not _G.SDK.Orbwalker:ShouldWait() then
+			local QDamage = getdmg("Q",minion,myHero)
+			local timetohit = distancetominion/Q.Speed
+			if _G.SDK.HealthPrediction:GetPrediction(minion, timetohit + 0.3)<0 and _G.SDK.HealthPrediction:GetPrediction(minion, timetohit)< QDamage and _G.SDK.HealthPrediction:GetPrediction(minion, timetohit)>0 then
+				if minion and self:CanCast(_Q) and minion:GetCollision(Q.Radius,Q.Speed,Q.Delay) == 1 then
+					local castPos = minion:GetPrediction(Q.Speed,Q.Delay)
+					local newpos = myHero.pos:Extended(castPos,math.random(100,300))
+					self:CastSpell(HK_Q, newpos)
+				end
+			end
+		end
+	end
+end
 
 function Ezreal:IsReady(spellSlot)
 	return myHero:GetSpellData(spellSlot).currentCd == 0 and myHero:GetSpellData(spellSlot).level > 0
