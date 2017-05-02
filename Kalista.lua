@@ -279,14 +279,13 @@ end
 
 function Kalista:UseERange()
 	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
-	local useE = false
 	for i, hero in pairs(heroeslist) do
 		if self:GetSpears(hero) >= self.Menu.Harass.HarassMinEStacks:Value() then
-			if myHero.pos:DistanceTo(hero.pos)<1100 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25).pos) < 600 then
+			if myHero.pos:DistanceTo(hero.pos)<1000 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25)) < 600 then
 				return
 			end
-			if myHero.pos:DistanceTo(hero.pos)<1100 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25).pos) > 1100 then
-				useE = true
+			if myHero.pos:DistanceTo(hero.pos)<1100 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25)) > 900 then
+				Control.CastSpell(HK_E)
 			end
 		end
 	end
