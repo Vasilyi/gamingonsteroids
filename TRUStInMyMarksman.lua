@@ -1065,7 +1065,7 @@ if myHero.charName == "Twitch" then
 	class "Twitch"
 	require "DamageLib"
 	local qtarget
-	
+	stacks = {}
 	function Twitch:__init()
 		self:LoadMenu()
 		Callback.Add("Tick", function() self:Tick() end)
@@ -1126,12 +1126,16 @@ if myHero.charName == "Twitch" then
 	
 	function Twitch:UseERange()
 		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+		local target = (_G.SDK and _G.SDK.TargetSelector.SelectedTarget) or (_G.GOS and _G.GOS:GetTarget())
+		if target then return end 
 		for i, hero in pairs(heroeslist) do
 			if stacks[hero.charName] and self:GetStacks(stacks[hero.charName].name) >= self.Menu.MinStacks:Value() then
+				
 				if myHero.pos:DistanceTo(hero.pos)<1000 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25)) < 600 then
 					return
 				end
-				if myHero.pos:DistanceTo(hero.pos)<1100 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25)) > 900 then
+				
+				if myHero.pos:DistanceTo(hero.pos)<1000 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25)) > 1000 then
 					Control.CastSpell(HK_E)
 				end
 			end
@@ -1148,7 +1152,7 @@ if myHero.charName == "Twitch" then
 		end
 		return 0
 	end
-	stacks = {}
+	
 	function recheckparticle()
 		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
 		for i = 1, Game.ObjectCount() do
@@ -1733,18 +1737,17 @@ if myHero.charName == "Kalista" then
 	end
 	function Kalista:UseERange()
 		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+		local target = (_G.SDK and _G.SDK.TargetSelector.SelectedTarget) or (_G.GOS and _G.GOS:GetTarget())
+		if target then return end 
 		for i, hero in pairs(heroeslist) do
 			if self:GetSpears(hero) >= self.Menu.Harass.HarassMinEStacks:Value() then
 				if myHero.pos:DistanceTo(hero.pos)<1000 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25)) < 600 then
 					return
 				end
-				if myHero.pos:DistanceTo(hero.pos)<1100 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25)) > 900 then
+				if myHero.pos:DistanceTo(hero.pos)<1000 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25)) > 1000 then
 					Control.CastSpell(HK_E)
 				end
 			end
-		end
-		if useE then
-			Control.CastSpell(_E)
 		end
 	end
 	
