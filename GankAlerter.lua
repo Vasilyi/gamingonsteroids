@@ -25,7 +25,7 @@ function GankAlerter:Draw()
 		end
 		if newdistance < 3000 and enemy.visible then
 
-			if (olddistance[enemy.charName] and olddistance[enemy.charName] > 3000 and oldvisible[enemy.charName] == false) or (oldvisible[enemy.charName] and GetTickCount() - oldvisible[enemy.charName]  > 3000) then
+			if (olddistance[enemy.charName] and olddistance[enemy.charName] > 3000 and oldvisible[enemy.charName] == false) or (oldvisible[enemy.charName] and GetTickCount() - oldvisible[enemy.charName]  > 10000) then
 					PrintChat(oldvisible[enemy.charName])
 				starttime[enemy.charName] = GetTickCount()
 			end
