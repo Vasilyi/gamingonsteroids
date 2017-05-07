@@ -637,7 +637,7 @@ end
 
 
 if myHero.charName == "Caitlyn" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.2","TRUS","7.7"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.3","TRUS","7.9"
 	if myHero.charName ~= "Caitlyn" then return end
 	class "Caitlyn"
 	require "DamageLib"
@@ -711,7 +711,9 @@ if myHero.charName == "Caitlyn" then
 		if myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name == "CaitlynEntrapment" and self:CanCast(_Q) and useEQ then
 			Control.CastSpell(HK_Q,qtarget)
 		end
-		self:AutoW()
+		if self:CanCast(_W) then
+			self:AutoW()
+		end
 	end
 	
 	

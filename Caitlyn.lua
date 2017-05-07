@@ -1,4 +1,4 @@
-local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.1","TRUS","7.6"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.3","TRUS","7.9"
 if myHero.charName ~= "Caitlyn" then return end
 
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
@@ -33,7 +33,7 @@ function Caitlyn:__init()
 	Callback.Add("Draw", function() self:Draw() end)
 	local orbwalkername = ""
 	if _G.SDK then
-			orbwalkername = "IC'S orbwalker"
+		orbwalkername = "IC'S orbwalker"
 	elseif _G.GOS then
 		orbwalkername = "Noddy orbwalker"
 	else
@@ -94,7 +94,9 @@ function Caitlyn:Tick()
 	if myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name == "CaitlynEntrapment" and self:CanCast(_Q) and useEQ then
 		Control.CastSpell(HK_Q,qtarget)
 	end
-	self:AutoW()
+	if self:CanCast(_W) then
+		self:AutoW()
+	end
 end
 
 
@@ -103,8 +105,8 @@ local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 
 
 function ReturnCursor(pos)
 	if _G.SDK then 
-	_G.SDK.Orbwalker:SetMovement(true)
-	_G.SDK.Orbwalker:SetAttack(true)
+		_G.SDK.Orbwalker:SetMovement(true)
+		_G.SDK.Orbwalker:SetAttack(true)
 	else
 		_G.GOS.BlockAttack = false
 		_G.GOS.BlockMovement = false
@@ -214,13 +216,13 @@ function Caitlyn:CastCombo(pos)
 		castSpell.tick = ticker
 		if ticker - castSpell.tick < Game.Latency() then
 			--block movement
-	if _G.SDK then 
-	_G.SDK.Orbwalker:SetMovement(false)
-	_G.SDK.Orbwalker:SetAttack(false)
-	else
-		_G.GOS.BlockAttack = true
-		_G.GOS.BlockMovement = true
-	end
+			if _G.SDK then 
+				_G.SDK.Orbwalker:SetMovement(false)
+				_G.SDK.Orbwalker:SetAttack(false)
+			else
+				_G.GOS.BlockAttack = true
+				_G.GOS.BlockMovement = true
+			end
 			Control.SetCursorPos(pos)
 			Control.KeyDown(HK_E)
 			Control.KeyUp(HK_E)
