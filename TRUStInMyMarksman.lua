@@ -1030,7 +1030,7 @@ if myHero.charName == "Ezreal" then
 		
 		for i, minion in pairs(minionlist) do
 			local distancetominion = myHero.pos:DistanceTo(minion.pos)
-			if distancetominion > myHero.range or (not canattack and canmove) and not _G.SDK.Orbwalker:ShouldWait() then
+			if (distancetominion > myHero.range or (not canattack and canmove)) and not _G.SDK.Orbwalker:ShouldWait() then
 				local QDamage = getdmg("Q",minion,myHero)
 				local timetohit = distancetominion/Q.Speed
 				if _G.SDK.HealthPrediction:GetPrediction(minion, timetohit + 0.3)<0 and _G.SDK.HealthPrediction:GetPrediction(minion, timetohit)< QDamage and _G.SDK.HealthPrediction:GetPrediction(minion, timetohit)>0 then
@@ -1848,6 +1848,74 @@ if myHero.charName == "Kalista" then
 	
 	function OnLoad()
 		Kalista()
+	end
+	
+end
+
+
+if myHero.charName == "Sivir" then 
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Sivir","v1.0","TRUS","7.10"
+	class "Sivir"
+	
+	function Sivir:__init()
+		self:LoadMenu()
+		local orbwalkername = ""
+		if _G.SDK then
+			orbwalkername = "IC'S orbwalker"	
+			_G.SDK.Orbwalker:OnPostAttack(function() 
+				local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
+				local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
+				if (combomodeactive or harassactive) and self:CanCast(_W) and self.Menu.UseW:Value()then
+					Control.CastSpell(HK_W)
+				end
+			end)
+		elseif _G.GOS then
+			orbwalkername = "Noddy orbwalker"
+			_G.GOS:OnAttackComplete(function() 
+				local combomodeactive = _G.GOS:GetMode() == "Combo"
+				local harassactive = _G.GOS:GetMode() == "Harass"
+				local QMinMana = self.Menu.Combo.qMinMana:Value()	
+				if (combomodeactive or harassactive) and self:CanCast(_W) and self.Menu.UseW:Value() then
+					Control.CastSpell(HK_W)
+				end
+			end)
+		else
+			orbwalkername = "Orbwalker not found"
+			
+		end
+		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
+	end
+	
+	
+	function Sivir:LoadMenu()
+		self.Menu = MenuElement({type = MENU, id = "TRUStinymySivir", name = Scriptname})
+		
+		--[[Combo]]
+		self.Menu:MenuElement({id = "UseW", name = "Use W", value = true})
+		
+		
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
+	end
+	
+	
+	local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
+	
+	function Sivir:IsReady(spellSlot)
+		return myHero:GetSpellData(spellSlot).currentCd == 0 and myHero:GetSpellData(spellSlot).level > 0
+	end
+	
+	function Sivir:CheckMana(spellSlot)
+		return myHero:GetSpellData(spellSlot).mana < myHero.mana
+	end
+	
+	function Sivir:CanCast(spellSlot)
+		return self:IsReady(spellSlot) and self:CheckMana(spellSlot)
+	end
+	
+	function OnLoad()
+		Sivir()
 	end
 	
 end
