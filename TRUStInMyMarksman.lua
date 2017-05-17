@@ -1468,7 +1468,7 @@ if myHero.charName == "KogMaw" then
 end
 
 if myHero.charName == "Kalista" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.4","TRUS","7.7"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.5","TRUS","7.10"
 	class "Kalista"
 	require "DamageLib"
 	
@@ -1484,9 +1484,9 @@ if myHero.charName == "Kalista" then
 				local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 				local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
 				local QMinMana = self.Menu.Combo.qMinMana:Value()
-				if (combomodeactive or harassactive) then
+				if (combomodeactive or harassactive) then	
 					if (harassactive or (myHero.maxMana * QMinMana * 0.01 < myHero.mana)) then
-						self:CastQ(_G.SDK.Orbwalker:GetTarget())
+						self:CastQ(_G.SDK.Orbwalker:GetTarget(),combomodeactive or false)
 					end
 				end
 			end)
@@ -1499,7 +1499,7 @@ if myHero.charName == "Kalista" then
 				
 				if (combomodeactive or harassactive) then
 					if (harassactive or (myHero.maxMana * QMinMana * 0.01 < myHero.mana)) then
-						self:CastQ(_G.GOS:GetTarget())
+						self:CastQ(_G.GOS:GetTarget(),combomodeactive or false)
 					end
 				end
 			end)
@@ -1572,12 +1572,13 @@ if myHero.charName == "Kalista" then
 			UseBotrk()
 		end
 		
-		if ((combomodeactive) or (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana)) and (not canattack or not currenttarget) then
-			
-			if (harassactive or (myHero.maxMana * QMinMana * 0.01 < myHero.mana)) then
+		if ((combomodeactive) or (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana)) then
+			if (harassactive or (myHero.maxMana * QMinMana * 0.01 < myHero.mana)) and not currenttarget then
 				self:CastQ(currenttarget,combomodeactive or false)
 			end
-			self:CastE(currenttarget,combomodeactive or false)
+			if (not canattack or not currenttarget) and self.Menu.Combo.comboUseE:Value() then
+				self:CastE(currenttarget,combomodeactive or false)
+			end
 		end
 		if self.Menu.Harass.harassUseELasthit:Value() then
 			self:UseEOnLasthit()
@@ -1610,6 +1611,8 @@ if myHero.charName == "Kalista" then
 	
 	function ReturnCursor(pos)
 		Control.SetCursorPos(pos)
+		Control.mouse_event(MOUSEEVENTF_RIGHTDOWN)
+		Control.mouse_event(MOUSEEVENTF_RIGHTUP)
 		DelayAction(EnableMovement,0.1)
 	end
 	
@@ -1684,7 +1687,6 @@ if myHero.charName == "Kalista" then
 	
 	function Kalista:CheckKillableMinion()
 		local minionlist = {}
-		local level = myHero:GetSpellData(_E).level
 		if _G.SDK then
 			minionlist = _G.SDK.ObjectManager:GetMonsters(E.Range)
 		elseif _G.GOS then
@@ -1696,13 +1698,10 @@ if myHero.charName == "Kalista" then
 			end
 		end
 		for i, minion in pairs(minionlist) do
-			local spearsamount = self:GetSpears(minion)
-			if spearsamount > 0 then 
+			if self:GetSpears(minion) > 0 then 
 				local EDamage = getdmg("E",minion,myHero)
-				-- local basedmg = ({20, 30, 40, 50, 60})[level] + 0.6* (myHero.totalDamage)
-				-- local perspear = ({10, 14, 19, 25, 32})[level] + ({0.2, 0.225, 0.25, 0.275, 0.3})[level]* (myHero.totalDamage)
-				-- local tempdamage = basedmg + perspear*spearsamount
-				if EDamage*((minion.charName == "SRU_RiftHerald" and 0.65) or (self:HasBuff(myHero,"barontarget") and 0.5) or 0.79) > minion.health then
+				if EDamage > minion.health then
+					
 					local minionName = minion.charName
 					self:DrawSmiteableMinion(SmiteTable[minionName], minion)
 				end
@@ -1723,20 +1722,12 @@ if myHero.charName == "Kalista" then
 	function Kalista:GetSpears(unit, buffname)
 		for K, Buff in pairs(self:GetBuffs(unit)) do
 			if Buff.name:lower() == "kalistaexpungemarker" then
-				return Buff.count -1
+				return Buff.count
 			end
 		end
 		return 0
 	end
 	
-	function Kalista:HasBuff(unit, buffname)
-		for K, Buff in pairs(self:GetBuffs(unit)) do
-			if Buff.name:lower() == buffname:lower() then
-				return true
-			end
-		end
-		return false
-	end
 	function Kalista:UseERange()
 		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
 		local target = (_G.SDK and _G.SDK.TargetSelector.SelectedTarget) or (_G.GOS and _G.GOS:GetTarget())
@@ -1746,7 +1737,7 @@ if myHero.charName == "Kalista" then
 				if myHero.pos:DistanceTo(hero.pos)<1000 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25)) < 600 then
 					return
 				end
-				if myHero.pos:DistanceTo(hero.pos)<1000 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25)) > 1000 then
+				if myHero.pos:DistanceTo(hero.pos)<1000 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25)) > 700 then
 					Control.CastSpell(HK_E)
 				end
 			end
@@ -1757,6 +1748,7 @@ if myHero.charName == "Kalista" then
 		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
 		local useE = false
 		local minionlist = {}
+		
 		for i, hero in pairs(heroeslist) do
 			if self:GetSpears(hero) >= self.Menu.Harass.HarassMinEStacks:Value() then
 				if _G.SDK then
@@ -1771,10 +1763,15 @@ if myHero.charName == "Kalista" then
 				end
 				
 				for i, minion in pairs(minionlist) do
-					if self:GetSpears(minion) > 0 then 
+					local spearsamount = self:GetSpears(minion)
+					if spearsamount > 0 then 
 						local EDamage = getdmg("E",minion,myHero)
-						if EDamage > minion.health then
-							useE = true 
+						-- local basedmg = ({20, 30, 40, 50, 60})[level] + 0.6* (myHero.totalDamage)
+						-- local perspear = ({10, 14, 19, 25, 32})[level] + ({0.2, 0.225, 0.25, 0.275, 0.3})[level]* (myHero.totalDamage)
+						-- local tempdamage = basedmg + perspear*spearsamount
+						if EDamage*((minion.charName == "SRU_RiftHerald" and 0.65) or (self:HasBuff(myHero,"barontarget") and 0.5) or 0.79) > minion.health then
+							local minionName = minion.charName
+							self:DrawSmiteableMinion(SmiteTable[minionName], minion)
 						end
 					end
 				end
