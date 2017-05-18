@@ -20,7 +20,7 @@ function UseBotrk()
 	end
 end
 
-local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.5","TRUS","7.10"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.6","TRUS","7.10"
 class "Kalista"
 require "DamageLib"
 
@@ -74,7 +74,8 @@ function Kalista:LoadMenu()
 	--[[Combo]]
 	self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 	self.Menu:MenuElement({id = "DrawE", name = "Draw Killable with E", value = true})
-	self.Menu:MenuElement({id = "DrawColor", name = "Color for Killable circle", color = Draw.Color(0xBF3F3FFF)})
+	self.Menu:MenuElement({id = "DrawEDamage", name = "Draw health remaining after E", value = true})
+	self.Menu:MenuElement({id = "DrawColor", name = "Color for drawing", color = Draw.Color(0xBF3F3FFF)})
 	self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
 	self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
 	self.Menu.Combo:MenuElement({id = "qMinMana", name = "Minimal mana for Q:", value = 30, min = 0, max = 101, identifier = "%"})
@@ -102,6 +103,19 @@ function Kalista:LoadMenu()
 	self.Menu.SmiteMarker:MenuElement({id = "MarkCrab", name = "Crab", value = true, leftIcon = "http://puu.sh/rPwaw/10f0766f4d.png"})
 	
 	
+	self.Menu:MenuElement({type = MENU, id = "SmiteDamage", name = "Draw damage in Jungle"})
+	self.Menu.SmiteDamage:MenuElement({id = "Enabled", name = "Enabled", value = true})
+	self.Menu.SmiteDamage:MenuElement({id = "MarkBaron", name = "Baron", value = true, leftIcon = "http://puu.sh/rPuVv/933a78e350.png"})
+	self.Menu.SmiteDamage:MenuElement({id = "MarkHerald", name = "Herald", value = true, leftIcon = "http://puu.sh/rQs4A/47c27fa9ea.png"})
+	self.Menu.SmiteDamage:MenuElement({id = "MarkDragon", name = "Dragon", value = true, leftIcon = "http://puu.sh/rPvdF/a00d754b30.png"})
+	self.Menu.SmiteDamage:MenuElement({id = "MarkBlue", name = "Blue Buff", value = true, leftIcon = "http://puu.sh/rPvNd/f5c6cfb97c.png"})
+	self.Menu.SmiteDamage:MenuElement({id = "MarkRed", name = "Red Buff", value = true, leftIcon = "http://puu.sh/rPvQs/fbfc120d17.png"})
+	self.Menu.SmiteDamage:MenuElement({id = "MarkGromp", name = "Gromp", value = true, leftIcon = "http://puu.sh/rPvSY/2cf9ff7a8e.png"})
+	self.Menu.SmiteDamage:MenuElement({id = "MarkWolves", name = "Wolves", value = true, leftIcon = "http://puu.sh/rPvWu/d9ae64a105.png"})
+	self.Menu.SmiteDamage:MenuElement({id = "MarkRazorbeaks", name = "Razorbeaks", value = true, leftIcon = "http://puu.sh/rPvZ5/acf0e03cc7.png"})
+	self.Menu.SmiteDamage:MenuElement({id = "MarkKrugs", name = "Krugs", value = true, leftIcon = "http://puu.sh/rPw6a/3096646ec4.png"})
+	self.Menu.SmiteDamage:MenuElement({id = "MarkCrab", name = "Crab", value = true, leftIcon = "http://puu.sh/rPwaw/10f0766f4d.png"})
+	
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	
@@ -128,7 +142,7 @@ function Kalista:Tick()
 		if (harassactive or (myHero.maxMana * QMinMana * 0.01 < myHero.mana)) and not currenttarget then
 			self:CastQ(currenttarget,combomodeactive or false)
 		end
-		if (not canattack or not currenttarget) and self.Menu.Combo.comboUseE:Value()  then
+		if (not canattack or not currenttarget) and self.Menu.Combo.comboUseE:Value() then
 			self:CastE(currenttarget,combomodeactive or false)
 		end
 	end
@@ -223,16 +237,30 @@ local SmiteTable = {
 }
 
 
+function Kalista:DrawDamageMinion(type, minion, killable, damage)
+	if not type or not self.Menu.SmiteDamage[type] or not self.Menu.SmiteDamage.Enabled:Value() then
+		return
+	end
+	if self.Menu.SmiteDamage[type]:Value() then
+		if not killable then 
+			Draw.Text(math.floor(minion.health - damage,1), 30, minion.pos2D.x, minion.pos2D.y,self.Menu.DrawColor:Value())
+		end
+	end
+	
+end
+
 function Kalista:DrawSmiteableMinion(type,minion)
 	if not type or not self.Menu.SmiteMarker[type] then
 		return
 	end
 	if self.Menu.SmiteMarker[type]:Value() then
-		if minion.pos2D.onScreen then
-			Draw.Circle(minion.pos,minion.boundingRadius,6,Draw.Color(0xFF00FF00));
-		end
-		if self:CanCast(_E) then
-			Control.CastSpell(HK_E)
+		if killable then 
+			if minion.pos2D.onScreen then
+				Draw.Circle(minion.pos,minion.boundingRadius,6,Draw.Color(0xFF00FF00));
+			end
+			if self:CanCast(_E) then
+				Control.CastSpell(HK_E)
+			end
 		end
 	end
 end
@@ -252,11 +280,9 @@ function Kalista:CheckKillableMinion()
 	for i, minion in pairs(minionlist) do
 		if self:GetSpears(minion) > 0 then 
 			local EDamage = getdmg("E",minion,myHero)
-			if EDamage > minion.health then
-				
-				local minionName = minion.charName
-				self:DrawSmiteableMinion(SmiteTable[minionName], minion)
-			end
+			local minionName = minion.charName
+			self:DrawSmiteableMinion(SmiteTable[minionName], minion)
+			self:DrawDamageMinion(SmiteTable[minionName], minion, EDamage > minion.health, EDamage)
 		end
 	end
 end
@@ -336,17 +362,20 @@ end
 
 function Kalista:GetETarget()
 	self.KillableHeroes = {}
+	self.DamageHeroes = {}
 	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1200)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
 	local level = myHero:GetSpellData(_E).level
 	for i, hero in pairs(heroeslist) do
-		if self:GetSpears(hero) > 0 then 
+		if self:GetSpears(hero) > 0 and myHero.pos:DistanceTo(hero.pos)<E.Range then 
 			local EDamage = getdmg("E",hero,myHero)
-			if hero.health and EDamage and EDamage > hero.health and myHero.pos:DistanceTo(hero.pos)<E.Range then
+			if hero.health and EDamage and EDamage > hero.health then
 				table.insert(self.KillableHeroes, hero)
+			else
+				table.insert(self.DamageHeroes, {hero = hero, damage = EDamage})
 			end
 		end
 	end
-	return self.KillableHeroes
+	return self.KillableHeroes, self.DamageHeroes
 end
 
 --[[CastQ]]
@@ -362,7 +391,8 @@ end
 
 --[[CastE]]
 function Kalista:CastE(target,combo)
-	if self:CanCast(_E) and #self:GetETarget() > 0 then
+	local killable, damaged = self:GetETarget()
+	if self:CanCast(_E) and #killable > 0 then
 		Control.CastSpell(HK_E)
 	end
 end
@@ -385,12 +415,17 @@ function Kalista:Draw()
 	if self.Menu.SmiteMarker.Enabled:Value() then
 		self:CheckKillableMinion()
 	end
-	
+	local killable, damaged = self:GetETarget()
 	if self.Menu.DrawE:Value() then
-		local ETarget = self:GetETarget()
-		for i, hero in pairs(ETarget) do
+		
+		for i, hero in pairs(killable) do
 			Draw.Circle(hero.pos, 80, 6, self.Menu.DrawColor:Value())
 			Draw.Text("killable", 30, hero.pos2D.x, hero.pos2D.y,self.Menu.DrawColor:Value())
+		end	
+	end
+	if self.Menu.DrawEDamage:Value() then
+		for i, hero in pairs(damaged) do
+			Draw.Text(math.floor(hero.hero.health - hero.damage,1), 30, hero.hero.pos2D.x, hero.hero.pos2D.y,self.Menu.DrawColor:Value())
 		end
 	end
 end
