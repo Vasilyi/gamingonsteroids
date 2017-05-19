@@ -1468,7 +1468,7 @@ if myHero.charName == "KogMaw" then
 end
 
 if myHero.charName == "Kalista" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.6","TRUS","7.10"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.7","TRUS","7.10"
 	class "Kalista"
 	require "DamageLib"
 	
@@ -1521,13 +1521,22 @@ if myHero.charName == "Kalista" then
 		
 		--[[Combo]]
 		self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
-		self.Menu:MenuElement({id = "DrawE", name = "Draw Killable with E", value = true})
-		self.Menu:MenuElement({id = "DrawEDamage", name = "Draw health remaining after E", value = true})
-		self.Menu:MenuElement({id = "DrawColor", name = "Color for drawing", color = Draw.Color(0xBF3F3FFF)})
+		self.Menu:MenuElement({id = "AlwaysKS", name = "Always KS with E", value = true})
+		
 		self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
 		self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
 		self.Menu.Combo:MenuElement({id = "qMinMana", name = "Minimal mana for Q:", value = 30, min = 0, max = 101, identifier = "%"})
 		self.Menu.Combo:MenuElement({id = "comboUseE", name = "Use E", value = true})
+		
+		--[[Draw]]
+		self.Menu:MenuElement({type = MENU, id = "Draw", name = "Draw Settings"})
+		self.Menu.Draw:MenuElement({id = "DrawEDamage", name = "Draw health remaining after E", value = true})
+		self.Menu.Draw:MenuElement({id = "DrawInPrecent", name = "Draw numbers in percent", value = true})
+		self.Menu.Draw:MenuElement({id = "DrawE", name = "Draw Killable with E", value = true})
+		self.Menu.Draw:MenuElement({id = "TextOffset", name = "Z offset for text ", value = 0, min = -100, max = 100})
+		self.Menu.Draw:MenuElement({id = "TextSize", name = "Font size ", value = 30, min = 2, max = 64})
+		self.Menu.Draw:MenuElement({id = "DrawColor", name = "Color for drawing", color = Draw.Color(0xBF3F3FFF)})
+		
 		
 		--[[Harass]]
 		self.Menu:MenuElement({type = MENU, id = "Harass", name = "Harass Settings"})
@@ -1594,6 +1603,11 @@ if myHero.charName == "Kalista" then
 				self:CastE(currenttarget,combomodeactive or false)
 			end
 		end
+		
+		if self.Menu.AlwaysKS:Value() then
+			self:CastE(false,combomodeactive or false)
+		end
+		
 		if self.Menu.Harass.harassUseELasthit:Value() then
 			self:UseEOnLasthit()
 		end
@@ -1685,14 +1699,16 @@ if myHero.charName == "Kalista" then
 	}
 	
 	
-	function Kalista:DrawDamageMinion(type, minion, killable, damage)
+	function Kalista:DrawDamageMinion(type, minion, damage)
 		if not type or not self.Menu.SmiteDamage[type] or not self.Menu.SmiteDamage.Enabled:Value() then
 			return
 		end
 		if self.Menu.SmiteDamage[type]:Value() then
-			if not killable then 
-				Draw.Text(math.floor(minion.health - damage,1), 30, minion.pos2D.x, minion.pos2D.y,self.Menu.DrawColor:Value())
-			end
+			local offset = self.Menu.Draw.TextOffset:Value()
+			local fontsize = self.Menu.Draw.TextSize:Value()
+			local InPercents = self.Menu.Draw.DrawInPrecent:Value()
+			local healthremaining = InPercents and math.floor((minion.health - damage)/minion.maxHealth*100).."%" or math.floor(hero.hero.health - hero.damage,1)
+			Draw.Text(healthremaining, fontsize, minion.pos2D.x, minion.pos2D.y+offset,self.Menu.Draw.DrawColor:Value())
 		end
 		
 	end
@@ -1702,16 +1718,23 @@ if myHero.charName == "Kalista" then
 			return
 		end
 		if self.Menu.SmiteMarker[type]:Value() then
-			if killable then 
-				if minion.pos2D.onScreen then
-					Draw.Circle(minion.pos,minion.boundingRadius,6,Draw.Color(0xFF00FF00));
-				end
-				if self:CanCast(_E) then
-					Control.CastSpell(HK_E)
-				end
+			if minion.pos2D.onScreen then
+				Draw.Circle(minion.pos,minion.boundingRadius,6,Draw.Color(0xFF00FF00));
+			end
+			if self:CanCast(_E) then
+				Control.CastSpell(HK_E)
 			end
 		end
 	end
+	function Kalista:HasBuff(unit, buffname)
+		for K, Buff in pairs(self:GetBuffs(unit)) do
+			if Buff.name:lower() == buffname:lower() then
+				return Buff.expireTime
+			end
+		end
+		return false
+	end
+	
 	
 	function Kalista:CheckKillableMinion()
 		local minionlist = {}
@@ -1729,8 +1752,12 @@ if myHero.charName == "Kalista" then
 			if self:GetSpears(minion) > 0 then 
 				local EDamage = getdmg("E",minion,myHero)
 				local minionName = minion.charName
-				self:DrawSmiteableMinion(SmiteTable[minionName], minion)
-				self:DrawDamageMinion(SmiteTable[minionName], minion, EDamage > minion.health, EDamage)
+				if EDamage*((minion.charName == "SRU_RiftHerald" and 0.65) or (self:HasBuff(myHero,"barontarget") and 0.5) or 0.79) > minion.health then
+					local minionName = minion.charName
+					self:DrawSmiteableMinion(SmiteTable[minionName], minion)
+				else
+					self:DrawDamageMinion(SmiteTable[minionName], minion, EDamage)
+				end
 			end
 		end
 	end
@@ -1795,16 +1822,12 @@ if myHero.charName == "Kalista" then
 						-- local basedmg = ({20, 30, 40, 50, 60})[level] + 0.6* (myHero.totalDamage)
 						-- local perspear = ({10, 14, 19, 25, 32})[level] + ({0.2, 0.225, 0.25, 0.275, 0.3})[level]* (myHero.totalDamage)
 						-- local tempdamage = basedmg + perspear*spearsamount
-						if EDamage*((minion.charName == "SRU_RiftHerald" and 0.65) or (self:HasBuff(myHero,"barontarget") and 0.5) or 0.79) > minion.health then
-							local minionName = minion.charName
-							self:DrawSmiteableMinion(SmiteTable[minionName], minion)
+						if EDamage*0.8 > minion.health then
+							Control.CastSpell(HK_E)
 						end
 					end
 				end
 			end
-		end
-		if useE then
-			Control.CastSpell(HK_E)
 		end
 	end
 	
@@ -1815,7 +1838,7 @@ if myHero.charName == "Kalista" then
 		local level = myHero:GetSpellData(_E).level
 		for i, hero in pairs(heroeslist) do
 			if self:GetSpears(hero) > 0 and myHero.pos:DistanceTo(hero.pos)<E.Range then 
-				local EDamage = getdmg("E",hero,myHero)
+				local EDamage = getdmg("E",hero,myHero)*0.9
 				if hero.health and EDamage and EDamage > hero.health then
 					table.insert(self.KillableHeroes, hero)
 				else
@@ -1864,16 +1887,20 @@ if myHero.charName == "Kalista" then
 			self:CheckKillableMinion()
 		end
 		local killable, damaged = self:GetETarget()
-		if self.Menu.DrawE:Value() then
-			
+		local offset = self.Menu.Draw.TextOffset:Value()
+		local fontsize = self.Menu.Draw.TextSize:Value()
+		local InPercents = self.Menu.Draw.DrawInPrecent:Value()
+		if self.Menu.Draw.DrawE:Value() then
 			for i, hero in pairs(killable) do
-				Draw.Circle(hero.pos, 80, 6, self.Menu.DrawColor:Value())
-				Draw.Text("killable", 30, hero.pos2D.x, hero.pos2D.y,self.Menu.DrawColor:Value())
+				Draw.Circle(hero.pos, 80, 6, self.Menu.Draw.DrawColor:Value())
+				Draw.Text("killable", fontsize, hero.pos2D.x, hero.pos2D.y+offset,self.Menu.Draw.DrawColor:Value())
 			end	
 		end
-		if self.Menu.DrawEDamage:Value() then
+		if self.Menu.Draw.DrawEDamage:Value() then
 			for i, hero in pairs(damaged) do
-				Draw.Text(math.floor(hero.hero.health - hero.damage,1), 30, hero.hero.pos2D.x, hero.hero.pos2D.y,self.Menu.DrawColor:Value())
+				
+				local healthremaining = InPercents and math.floor((hero.hero.health - hero.damage)/hero.hero.maxHealth*100).."%" or math.floor(hero.hero.health - hero.damage,1)
+				Draw.Text(healthremaining, fontsize, hero.hero.pos2D.x, hero.hero.pos2D.y+offset,self.Menu.Draw.DrawColor:Value())
 			end
 		end
 	end
