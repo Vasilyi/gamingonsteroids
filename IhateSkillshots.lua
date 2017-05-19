@@ -107,7 +107,7 @@ Champs = {
 	},
 	
 	["Heimerdinger"] = {
-		[_W] = {delay = 250, range = 1500, minionCollisionWidth = 70, speed = 1800},
+		[_W] = {delay = 250, range = 1500, minionCollisionWidth = 70, speed = 1800, circular = true},
 		[_E] = {delay = 250, range = 925, minionCollisionWidth = 100, speed = 1200, ignorecol = true,circular = true}
 	},
 	["Illaoi"] = {
