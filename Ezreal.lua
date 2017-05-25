@@ -1,4 +1,4 @@
-local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.2","TRUS","7.8"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.5","TRUS","7.10"
 if myHero.charName ~= "Ezreal" then return end
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
 
@@ -152,6 +152,7 @@ function Ezreal:CastQ(target)
 	end
 end
 function Ezreal:QLastHit()
+	local minionlist = {}
 	local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (not _G.SDK and _G.GOS and _G.GOS:CanAttack())
 	local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (not _G.SDK and _G.GOS and _G.GOS:CanMove())
 	if _G.SDK then
@@ -167,7 +168,7 @@ function Ezreal:QLastHit()
 	
 	for i, minion in pairs(minionlist) do
 		local distancetominion = myHero.pos:DistanceTo(minion.pos)
-		if distancetominion > myHero.range or (not canattack and canmove) and not _G.SDK.Orbwalker:ShouldWait() then
+		if (distancetominion > myHero.range or (not canattack and canmove)) and not _G.SDK.Orbwalker:ShouldWait() then
 			local QDamage = getdmg("Q",minion,myHero)
 			local timetohit = distancetominion/Q.Speed
 			if _G.SDK.HealthPrediction:GetPrediction(minion, timetohit + 0.3)<0 and _G.SDK.HealthPrediction:GetPrediction(minion, timetohit)< QDamage and _G.SDK.HealthPrediction:GetPrediction(minion, timetohit)>0 then

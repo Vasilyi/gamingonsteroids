@@ -882,7 +882,7 @@ if myHero.charName == "Caitlyn" then
 end
 
 if myHero.charName == "Ezreal" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.4","TRUS","7.8"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.5","TRUS","7.10"
 	
 	class "Ezreal"
 	require "DamageLib"
@@ -1015,6 +1015,7 @@ if myHero.charName == "Ezreal" then
 		end
 	end
 	function Ezreal:QLastHit()
+		local minionlist = {}
 		local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (not _G.SDK and _G.GOS and _G.GOS:CanAttack())
 		local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (not _G.SDK and _G.GOS and _G.GOS:CanMove())
 		if _G.SDK then
