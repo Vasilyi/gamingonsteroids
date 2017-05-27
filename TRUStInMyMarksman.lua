@@ -637,12 +637,12 @@ end
 
 
 if myHero.charName == "Caitlyn" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.3","TRUS","7.10"
 	if myHero.charName ~= "Caitlyn" then return end
 	class "Caitlyn"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.4","TRUS","7.10"
 	require "DamageLib"
 	local qtarget
-	
+	local LastW
 	function Caitlyn:__init()
 		self:LoadSpells()
 		self:LoadMenu()
@@ -771,7 +771,7 @@ if myHero.charName == "Caitlyn" then
 	function Caitlyn:Stunned(enemy)
 		for i = 0, enemy.buffCount do
 			local buff = enemy:GetBuff(i);
-			if (buff.type == 5 or buff.type == 11 or buff.type == 24) and buff.duration > 0.5 then
+			if (buff.type == 5 or buff.type == 11 or buff.type == 24) and buff.duration > 0.5 and buff.name ~= "caitlynyordletrapdebuff" then
 				return true
 			end
 		end

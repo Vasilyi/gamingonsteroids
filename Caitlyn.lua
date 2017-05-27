@@ -1,4 +1,3 @@
-local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.3","TRUS","7.10"
 if myHero.charName ~= "Caitlyn" then return end
 
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
@@ -23,9 +22,10 @@ function UseBotrk()
 end
 
 class "Caitlyn"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.4","TRUS","7.10"
 require "DamageLib"
 local qtarget
-
+local LastW
 function Caitlyn:__init()
 	self:LoadSpells()
 	self:LoadMenu()
@@ -154,7 +154,7 @@ end
 function Caitlyn:Stunned(enemy)
 	for i = 0, enemy.buffCount do
 		local buff = enemy:GetBuff(i);
-		if (buff.type == 5 or buff.type == 11 or buff.type == 24) and buff.duration > 0.5 then
+		if (buff.type == 5 or buff.type == 11 or buff.type == 24) and buff.duration > 0.5 and buff.name ~= "caitlynyordletrapdebuff" then
 			return true
 		end
 	end
