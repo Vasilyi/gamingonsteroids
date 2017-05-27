@@ -1,5 +1,5 @@
 class "IHateSkillshots"
-local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.2","TRUS","7.8"
+local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.2","TRUS","7.10"
 if FileExist(COMMON_PATH .. "Collision.lua") then
 	require 'Collision'
 	PrintChat("Collision library loaded")

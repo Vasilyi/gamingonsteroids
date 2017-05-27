@@ -1,4 +1,4 @@
-local Scriptname,Version,Author,LVersion = "TRUStInMyTiming","v1.0","TRUS","7.4"
+local Scriptname,Version,Author,LVersion = "TRUStInMyTiming","v1.0","TRUS","7.10"
 
 class "TRUStInMyTiming"
 local lasttick = 0

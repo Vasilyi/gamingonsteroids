@@ -1,5 +1,5 @@
 class "IHateCC"
-local Scriptname,Version,Author,LVersion = "IHateCC","v1.0","TRUS","7.4"
+local Scriptname,Version,Author,LVersion = "IHateCC","v1.0","TRUS","7.10"
 local function GrabSummSpell(summName)
   local retval = 0;
   local spellName = myHero:GetSpellData(SUMMONER_1).name;
@@ -64,6 +64,7 @@ function IHateCC:LoadMenu()
   cleanseslotS = GrabSummSpell("SummonerBoost")
   if myHero.charName == "Gangplank" then
     cleanseslotS2 = _W
+	PrintChat("GP FOUND")
   elseif myHero.charName == "Olaf" then
     cleanseslotS2 = _R
   else
@@ -87,7 +88,7 @@ end
 function IHateCC:UseCleanse(cleanseslot)
 local cleansedelay = self.IHateCCMenu.delay:Value()
 if cleansedelay > 0 then
-DelayAction(Control.CastSpell, cleansedelay, { keybindings[cleanseslot] }) --ForceQuit
+DelayAction(Control.CastSpell, cleansedelay, { keybindings[cleanseslot] })
 else
   Control.CastSpell(keybindings[cleanseslot]);
   end
@@ -97,7 +98,7 @@ function IHateCC:IsReady(spellSlot)
 end
 
 function IHateCC:Tick()
-  cleanseslotS = self:GetInventorySlotItem(3140) or self:GetInventorySlotItem(3139);
+  cleanseslotS = self:GetInventorySlotItem(3140) or self:GetInventorySlotItem(3139)
   if self.IHateCCMenu.Enabled:Value() == false and self.IHateCCMenu.HKEnabled:Value() == false then return end
   if cleanseslotS2 and self:IsReady(cleanseslotS2) then
     cleanseslot = cleanseslotS2

@@ -1,6 +1,6 @@
 do
 
-local Scriptname,Version,Author,LVersion = "GankAlerter","v1.0","TRUS","7.9"
+local Scriptname,Version,Author,LVersion = "GankAlerter","v1.0","TRUS","7.10"
 
 class "GankAlerter"
 

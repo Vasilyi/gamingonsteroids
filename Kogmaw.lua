@@ -1,5 +1,4 @@
-local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.0","TRUS","7.6"
-local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.0","TRUS","7.6"
+local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.0","TRUS","7.10"
 if myHero.charName ~= "KogMaw" then return end
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
 

@@ -26,7 +26,7 @@ end
 
 if myHero.charName == "Ashe" then
 	
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.4","TRUS","7.7"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.4","TRUS","7.10"
 	class "Ashe"
 	
 	function Ashe:GetBuffs(unit)
@@ -331,7 +331,7 @@ if myHero.charName == "Ashe" then
 end
 
 if myHero.charName == "Lucian" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.3","TRUS","7.7"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.3","TRUS","7.10"
 	
 	class "Lucian"
 	
@@ -637,7 +637,7 @@ end
 
 
 if myHero.charName == "Caitlyn" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.3","TRUS","7.9"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.3","TRUS","7.10"
 	if myHero.charName ~= "Caitlyn" then return end
 	class "Caitlyn"
 	require "DamageLib"
@@ -1064,7 +1064,7 @@ if myHero.charName == "Ezreal" then
 end
 
 if myHero.charName == "Twitch" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.1","TRUS","7.7"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.1","TRUS","7.10"
 	class "Twitch"
 	require "DamageLib"
 	local qtarget
@@ -1226,7 +1226,7 @@ if myHero.charName == "Twitch" then
 end
 
 if myHero.charName == "KogMaw" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.0","TRUS","7.7"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.0","TRUS","7.10"
 	class "KogMaw"
 	
 	function KogMaw:__init()

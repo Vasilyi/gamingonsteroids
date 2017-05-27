@@ -1,4 +1,4 @@
-local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.1","TRUS","7.6"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.1","TRUS","7.10"
 if myHero.charName ~= "Ashe" then return end
 
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
@@ -171,7 +171,7 @@ function GetConeAOECastPosition(unit, delay, angle, range, speed, from)
 		
 		return Vector(from) + range * (((p1 + p2) / 2)):Normalized(), MaxHit
 	else
-		return mainCastPosition, 1
+		return unit.pos, 1
 	end
 end
 
