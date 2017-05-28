@@ -20,9 +20,15 @@ function UseBotrk()
 	end
 end
 
-local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.7","TRUS","7.10"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.8","TRUS","7.10"
 class "Kalista"
 require "DamageLib"
+
+local barHeight = 8
+local barWidth = 103
+local barXOffset = 0
+local barYOffset = 0
+
 
 function Kalista:__init()
 	self:LoadSpells()
@@ -82,7 +88,8 @@ function Kalista:LoadMenu()
 	
 	--[[Draw]]
 	self.Menu:MenuElement({type = MENU, id = "Draw", name = "Draw Settings"})
-	self.Menu.Draw:MenuElement({id = "DrawEDamage", name = "Draw health remaining after E", value = true})
+	self.Menu.Draw:MenuElement({id = "DrawEDamage", name = "Draw number health after E", value = true})
+	self.Menu.Draw:MenuElement({id = "DrawEBarDamage", name = "On hpbar after E", value = true})
 	self.Menu.Draw:MenuElement({id = "DrawInPrecent", name = "Draw numbers in percent", value = true})
 	self.Menu.Draw:MenuElement({id = "DrawE", name = "Draw Killable with E", value = true})
 	self.Menu.Draw:MenuElement({id = "TextOffset", name = "Z offset for text ", value = 0, min = -100, max = 100})
@@ -113,7 +120,8 @@ function Kalista:LoadMenu()
 	
 	
 	self.Menu:MenuElement({type = MENU, id = "SmiteDamage", name = "Draw damage in Jungle"})
-	self.Menu.SmiteDamage:MenuElement({id = "Enabled", name = "Enabled", value = true})
+	self.Menu.SmiteDamage:MenuElement({id = "Enabled", name = "Display text", value = true})
+	self.Menu.SmiteDamage:MenuElement({id = "EnabledHPBar", name = "Display on HPBar", value = true})
 	self.Menu.SmiteDamage:MenuElement({id = "MarkBaron", name = "Baron", value = true, leftIcon = "http://puu.sh/rPuVv/933a78e350.png"})
 	self.Menu.SmiteDamage:MenuElement({id = "MarkHerald", name = "Herald", value = true, leftIcon = "http://puu.sh/rQs4A/47c27fa9ea.png"})
 	self.Menu.SmiteDamage:MenuElement({id = "MarkDragon", name = "Dragon", value = true, leftIcon = "http://puu.sh/rPvdF/a00d754b30.png"})
@@ -252,15 +260,32 @@ local SmiteTable = {
 
 
 function Kalista:DrawDamageMinion(type, minion, damage)
-	if not type or not self.Menu.SmiteDamage[type] or not self.Menu.SmiteDamage.Enabled:Value() then
+	if not type or not self.Menu.SmiteDamage[type] then
 		return
 	end
+	
+	
 	if self.Menu.SmiteDamage[type]:Value() then
-		local offset = self.Menu.Draw.TextOffset:Value()
-		local fontsize = self.Menu.Draw.TextSize:Value()
-		local InPercents = self.Menu.Draw.DrawInPrecent:Value()
-		local healthremaining = InPercents and math.floor((minion.health - damage)/minion.maxHealth*100).."%" or math.floor(hero.hero.health - hero.damage,1)
-		Draw.Text(healthremaining, fontsize, minion.pos2D.x, minion.pos2D.y+offset,self.Menu.Draw.DrawColor:Value())
+		
+		if self.Menu.SmiteDamage.Enabled:Value() then
+			local offset = self.Menu.Draw.TextOffset:Value()
+			local fontsize = self.Menu.Draw.TextSize:Value()
+			local InPercents = self.Menu.Draw.DrawInPrecent:Value()
+			local healthremaining = InPercents and math.floor((minion.health - damage)/minion.maxHealth*100).."%" or math.floor(minion.health - damage,1)
+			Draw.Text(healthremaining, fontsize, minion.pos2D.x, minion.pos2D.y+offset,self.Menu.Draw.DrawColor:Value())
+		end
+		
+		if self.Menu.SmiteDamage.EnabledHPBar:Value() then 
+			local barPos = minion.hpBar
+			if barPos.onScreen then
+				local damage = damage
+				local percentHealthAfterDamage = math.max(0, minion.health - damage) / minion.maxHealth
+				local xPos = barPos.x + barXOffset + barWidth * percentHealthAfterDamage
+				local xPosend = barPos.x + barXOffset + barWidth * 100
+				Draw.Line(xPos, barPos.y - 80, xPos, barPos.y - 80 + 40, 2, 0xFF00FF00)
+			end
+		end
+		
 	end
 	
 end
@@ -448,11 +473,22 @@ function Kalista:Draw()
 			Draw.Text("killable", fontsize, hero.pos2D.x, hero.pos2D.y+offset,self.Menu.Draw.DrawColor:Value())
 		end	
 	end
-	if self.Menu.Draw.DrawEDamage:Value() then
+	if self.Menu.Draw.DrawEDamage:Value() or self.Menu.Draw.DrawEBarDamage:Value()then
 		for i, hero in pairs(damaged) do
-			
-			local healthremaining = InPercents and math.floor((hero.hero.health - hero.damage)/hero.hero.maxHealth*100).."%" or math.floor(hero.hero.health - hero.damage,1)
-			Draw.Text(healthremaining, fontsize, hero.hero.pos2D.x, hero.hero.pos2D.y+offset,self.Menu.Draw.DrawColor:Value())
+			if self.Menu.Draw.DrawEBarDamage:Value() then 
+				local barPos = hero.hero.hpBar
+				if barPos.onScreen then
+					local damage = hero.damage
+					local percentHealthAfterDamage = math.max(0, hero.hero.health - damage) / hero.hero.maxHealth
+					local xPos = barPos.x + barXOffset + barWidth * percentHealthAfterDamage
+					local xPosend = barPos.x + barXOffset + barWidth * 100
+					Draw.Line(xPos, barPos.y - 8, xPos, barPos.y + barHeight, 2, 0xFF00FF00)
+				end
+			end
+			if self.Menu.Draw.DrawEDamage:Value() then 
+				local healthremaining = InPercents and math.floor((hero.hero.health - hero.damage)/hero.hero.maxHealth*100).."%" or math.floor(hero.hero.health - hero.damage,1)
+				Draw.Text(healthremaining, fontsize, hero.hero.pos2D.x, hero.hero.pos2D.y+offset,self.Menu.Draw.DrawColor:Value())
+			end
 		end
 	end
 end

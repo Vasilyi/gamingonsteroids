@@ -1,4 +1,3 @@
-local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.1","TRUS","7.10"
 if myHero.charName ~= "Twitch" then return end
 
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
@@ -21,11 +20,14 @@ function UseBotrk()
 		end
 	end
 end
-
+local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.2","TRUS","7.10"
 class "Twitch"
 require "DamageLib"
 local qtarget
-
+local barHeight = 8
+local barWidth = 103
+local barXOffset = 0
+local barYOffset = 0
 function Twitch:__init()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
@@ -56,6 +58,7 @@ function Twitch:LoadMenu()
 	self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", value = true})
 	self.Menu:MenuElement({id = "DrawE", name = "Draw Killable with E", value = true})
+	self.Menu:MenuElement({id = "DrawEDamage", name = "Draw E damage on HPBar", value = true})
 	self.Menu:MenuElement({id = "DrawColor", name = "Color for Killable circle", color = Draw.Color(0xBF3F3FFF)})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	
@@ -133,6 +136,7 @@ end
 
 function Twitch:GetETarget()
 	self.KillableHeroes = {}
+	self.DamageHeroes = {}
 	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1200)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
 	local level = myHero:GetSpellData(_E).level
 	for i, hero in pairs(heroeslist) do
@@ -141,14 +145,16 @@ function Twitch:GetETarget()
 			local tmpdmg = CalcPhysicalDamage(myHero, hero, EDamage)
 			if hero.health and tmpdmg and tmpdmg > hero.health and myHero.pos:DistanceTo(hero.pos)<1200 then
 				table.insert(self.KillableHeroes, hero)
+			else
+				table.insert(self.DamageHeroes, {hero = hero, damage = EDamage})
 			end
 		end
 	end
-	return self.KillableHeroes
+	return self.KillableHeroes, self.DamageHeroes
 end
 
 function Twitch:UseEKS()
-	local ETarget = self:GetETarget()
+	local ETarget, damaged = self:GetETarget()
 	if #ETarget > 0 then
 		Control.KeyDown(HK_E)
 		Control.KeyUp(HK_E)
@@ -156,10 +162,24 @@ function Twitch:UseEKS()
 end
 
 function Twitch:Draw()
-	if self.Menu.DrawE:Value() then
-		local ETarget = self:GetETarget()
-		for i, hero in pairs(ETarget) do
-			Draw.Circle(hero.pos, 60, 3, self.Menu.DrawColor:Value())
+	if self.Menu.DrawE:Value() or self.Menu.DrawEDamage:Value() then
+		local ETarget, damaged = self:GetETarget()
+		if self.Menu.DrawE:Value() then
+			for i, hero in pairs(ETarget) do
+				Draw.Circle(hero.pos, 60, 3, self.Menu.DrawColor:Value())
+			end
+		end
+		if self.Menu.DrawEDamage:Value() then 
+			for i, hero in pairs(damaged) do
+				local barPos = hero.hero.hpBar
+				if barPos.onScreen then
+					local damage = hero.damage
+					local percentHealthAfterDamage = math.max(0, hero.hero.health - damage) / hero.hero.maxHealth
+					local xPos = barPos.x + barXOffset + barWidth * percentHealthAfterDamage
+					local xPosend = barPos.x + barXOffset + barWidth * 100
+					Draw.Line(xPos, barPos.y - 8, xPos, barPos.y + barHeight, 2, 0xFF00FF00)
+				end
+			end
 		end
 	end
 end
