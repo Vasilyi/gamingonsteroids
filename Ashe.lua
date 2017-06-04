@@ -1,8 +1,30 @@
-local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.1","TRUS","7.10"
 if myHero.charName ~= "Ashe" then return end
 
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
 
+function CurrentModes()
+	local combomodeactive, harassactive, canmove, canattack, currenttarget
+	if _G.SDK then -- ic orbwalker
+		combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
+		harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
+		canmove = _G.SDK.Orbwalker:CanMove()
+		canattack = _G.SDK.Orbwalker:CanAttack()
+		currenttarget = _G.SDK.Orbwalker:GetTarget()
+	elseif _G.EOW then -- eternal orbwalker
+		combomodeactive = _G.EOW:Mode() == 1
+		harassactive = _G.EOW:Mode() == 2
+		canmove = _G.EOW:CanMove() 
+		canattack = _G.EOW:CanAttack()
+		currenttarget = _G.EOW:GetTarget()
+	else -- default orbwalker
+		combomodeactive = _G.GOS:GetMode() == "Combo"
+		harassactive = _G.GOS:GetMode() == "Harass"
+		canmove = _G.GOS:CanMove()
+		canattack = _G.GOS:CanAttack()
+		currenttarget = _G.GOS:GetTarget()
+	end
+	return combomodeactive, harassactive, canmove, canattack, currenttarget
+end
 
 function GetInventorySlotItem(itemID)
 	assert(type(itemID) == "number", "GetInventorySlotItem: wrong argument types (<number> expected)")
@@ -23,7 +45,7 @@ function UseBotrk()
 end
 
 class "Ashe"
-
+local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","7.11"
 function Ashe:GetBuffs(unit)
 	self.T = {}
 	for i = 0, unit.buffCount do
@@ -55,6 +77,15 @@ function Ashe:__init()
 		_G.SDK.Orbwalker:OnPostAttack(function() 
 			local combomodeactive = (_G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO])
 			local currenttarget = _G.SDK.Orbwalker:GetTarget()
+			if (combomodeactive) and self.Menu.UseQCombo:Value() and self:QBuff() then
+				self:CastQ()
+			end
+		end)
+	elseif _G.EOW then
+		orbwalkername = "EOW"	
+		_G.EOW:AddCallback(_G.EOW.AfterAttack, function() 
+			local combomodeactive = _G.EOW:Mode() == 1
+			local currenttarget = _G.EOW:GetTarget()
 			if (combomodeactive) and self.Menu.UseQCombo:Value() and self:QBuff() then
 				self:CastQ()
 			end
@@ -198,12 +229,7 @@ function Ashe:Tick()
 	if myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name == "Volley" then 
 		EnableMovement()
 	end
-	
-	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Combo") 
-	local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Harass") 
-	local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (not _G.SDK and _G.GOS and _G.GOS:CanMove())
-	local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (not _G.SDK and _G.GOS and _G.GOS:CanAttack())
-	local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (not _G.SDK and _G.GOS and _G.GOS:GetTarget())
+	local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
 	if combomodeactive and self.Menu.UseBOTRK:Value() then
 		UseBotrk()
 	end
@@ -229,6 +255,9 @@ function EnableMovement()
 	if _G.SDK then 
 		_G.SDK.Orbwalker:SetMovement(true)
 		_G.SDK.Orbwalker:SetAttack(true)
+	elseif _G.EOW then 
+		EOW:SetMovements(true)
+		EOW:SetAttacks(true)
 	else
 		_G.GOS.BlockAttack = false
 		_G.GOS.BlockMovement = false
@@ -263,6 +292,9 @@ function Ashe:CastSpell(spell,pos)
 				if _G.SDK then 
 					_G.SDK.Orbwalker:SetMovement(false)
 					_G.SDK.Orbwalker:SetAttack(false)
+				elseif _G.EOW then 
+					EOW:SetMovements(false)
+					EOW:SetAttacks(false)	
 				else
 					_G.GOS.BlockAttack = true
 					_G.GOS.BlockMovement = true

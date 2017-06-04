@@ -1,7 +1,29 @@
-local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.0","TRUS","7.10"
 if myHero.charName ~= "KogMaw" then return end
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
 
+function CurrentModes()
+	local combomodeactive, harassactive, canmove, canattack, currenttarget
+	if _G.SDK then -- ic orbwalker
+		combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
+		harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
+		canmove = _G.SDK.Orbwalker:CanMove()
+		canattack = _G.SDK.Orbwalker:CanAttack()
+		currenttarget = _G.SDK.Orbwalker:GetTarget()
+	elseif _G.EOW then -- eternal orbwalker
+		combomodeactive = _G.EOW:Mode() == 1
+		harassactive = _G.EOW:Mode() == 2
+		canmove = _G.EOW:CanMove() 
+		canattack = _G.EOW:CanAttack()
+		currenttarget = _G.EOW:GetTarget()
+	else -- default orbwalker
+		combomodeactive = _G.GOS:GetMode() == "Combo"
+		harassactive = _G.GOS:GetMode() == "Harass"
+		canmove = _G.GOS:CanMove()
+		canattack = _G.GOS:CanAttack()
+		currenttarget = _G.GOS:GetTarget()
+	end
+	return combomodeactive, harassactive, canmove, canattack, currenttarget
+end
 
 function GetInventorySlotItem(itemID)
 	assert(type(itemID) == "number", "GetInventorySlotItem: wrong argument types (<number> expected)")
@@ -22,7 +44,7 @@ function UseBotrk()
 end
 
 class "KogMaw"
-
+local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.1","TRUS","7.11"
 function KogMaw:__init()
 	self:LoadSpells()
 	self:LoadMenu()
@@ -35,7 +57,16 @@ function KogMaw:__init()
 			local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 			local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
 			if (combomodeactive or harassactive) then
-				self:CastQ(_G.SDK.Orbwalker:GetTarget())
+				self:CastQ(_G.SDK.Orbwalker:GetTarget(),combomodeactive)
+			end
+		end)
+	elseif _G.EOW then
+		orbwalkername = "EOW"	
+		_G.EOW:AddCallback(_G.EOW.AfterAttack, function() 
+			local combomodeactive = _G.EOW:Mode() == 1
+			local harassactive = _G.EOW:Mode() == 2
+			if (combomodeactive or harassactive) then
+				self:CastQ(_G.EOW:GetTarget(),combomodeactive)
 			end
 		end)
 	elseif _G.GOS then
@@ -44,7 +75,7 @@ function KogMaw:__init()
 			local combomodeactive = _G.GOS:GetMode() == "Combo"
 			local harassactive = _G.GOS:GetMode() == "Harass"
 			if (combomodeactive or harassactive) then
-				self:CastQ(_G.GOS:GetTarget())
+				self:CastQ(_G.GOS:GetTarget(),combomodeactive)
 			end
 		end)
 	else
@@ -96,11 +127,7 @@ end
 
 function KogMaw:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
-	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Combo") 
-	local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Harass") 
-	local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (not _G.SDK and _G.GOS and _G.GOS:CanMove())
-	local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (not _G.SDK and _G.GOS and _G.GOS:CanAttack())
-	local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (not _G.SDK and _G.GOS and _G.GOS:GetTarget())
+	local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
 	local HarassMinMana = self.Menu.Harass.harassMana:Value()
 	
 	
@@ -130,6 +157,9 @@ function EnableMovement()
 	if _G.SDK then 
 		_G.SDK.Orbwalker:SetMovement(true)
 		_G.SDK.Orbwalker:SetAttack(true)
+	elseif _G.EOW then 
+		EOW:SetMovements(true)
+		EOW:SetAttacks(true)
 	else
 		_G.GOS.BlockAttack = false
 		_G.GOS.BlockMovement = false
@@ -166,6 +196,9 @@ function KogMaw:CastSpell(spell,pos)
 				if _G.SDK then 
 					_G.SDK.Orbwalker:SetMovement(false)
 					_G.SDK.Orbwalker:SetAttack(false)
+				elseif _G.EOW then 
+					EOW:SetMovements(false)
+					EOW:SetAttacks(false)	
 				else
 					_G.GOS.BlockAttack = true
 					_G.GOS.BlockMovement = true
@@ -207,7 +240,7 @@ end
 
 --[[CastQ]]
 function KogMaw:CastQ(target, combo)
-	if (not _G.SDK and not _G.GOS) then return end
+	if (not _G.SDK and not _G.GOS and not _G.EOW) then return end
 	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AP"))
 	if target and target.type == "AIHeroClient" and self:CanCast(_Q) and ((combo and self.Menu.Combo.comboUseQ:Value()) or (combo == false and self.Menu.Harass.harassUseQ:Value())) and target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0 then
 		local castPos = target:GetPrediction(Q.Speed,Q.Delay)
@@ -219,7 +252,7 @@ end
 
 --[[CastE]]
 function KogMaw:CastE(target,combo)
-	if (not _G.SDK and not _G.GOS) then return end
+	if (not _G.SDK and not _G.GOS and not _G.EOW) then return end
 	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(E.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(E.Range,"AP"))
 	if target and target.type == "AIHeroClient" and self:CanCast(_E) and ((combo and self.Menu.Combo.comboUseE:Value()) or (combo == false and self.Menu.Harass.harassUseE:Value())) then
 		local castPos = target:GetPrediction(E.Speed,E.Delay)
@@ -230,7 +263,7 @@ end
 
 --[[CastR]]
 function KogMaw:CastR(target,combo)
-	if (not _G.SDK and not _G.GOS) then return end
+	if (not _G.SDK and not _G.GOS and not _G.EOW) then return end
 	local RRange = self:GetRRange()
 	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(RRange, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(RRange,"AP"))
 	local currentultstacks = self:UltStacks()

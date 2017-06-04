@@ -1,9 +1,30 @@
---[v1.0]]
-local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.1","TRUS","7.6"
 if myHero.charName ~= "Lucian" then return end
 require "2DGeometry"
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
 
+function CurrentModes()
+	local combomodeactive, harassactive, canmove, canattack, currenttarget
+	if _G.SDK then -- ic orbwalker
+		combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
+		harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
+		canmove = _G.SDK.Orbwalker:CanMove()
+		canattack = _G.SDK.Orbwalker:CanAttack()
+		currenttarget = _G.SDK.Orbwalker:GetTarget()
+	elseif _G.EOW then -- eternal orbwalker
+		combomodeactive = _G.EOW:Mode() == 1
+		harassactive = _G.EOW:Mode() == 2
+		canmove = _G.EOW:CanMove() 
+		canattack = _G.EOW:CanAttack()
+		currenttarget = _G.EOW:GetTarget()
+	else -- default orbwalker
+		combomodeactive = _G.GOS:GetMode() == "Combo"
+		harassactive = _G.GOS:GetMode() == "Harass"
+		canmove = _G.GOS:CanMove()
+		canattack = _G.GOS:CanAttack()
+		currenttarget = _G.GOS:GetTarget()
+	end
+	return combomodeactive, harassactive, canmove, canattack, currenttarget
+end
 
 function GetInventorySlotItem(itemID)
 	assert(type(itemID) == "number", "GetInventorySlotItem: wrong argument types (<number> expected)")
@@ -23,7 +44,7 @@ function UseBotrk()
 	end
 end
 class "Lucian"
-
+local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.4","TRUS","7.11"
 local passive = true
 local lastbuff = 0
 function Lucian:__init()
@@ -41,6 +62,19 @@ function Lucian:__init()
 			local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 			if combomodeactive and _G.SDK.Orbwalker:CanMove() and Game.Timer() > lastbuff - 3.5 then 
 				if self:CanCast(_E) and self.Menu.UseE:Value() and _G.SDK.Orbwalker:GetTarget() then
+					self:CastSpell(HK_E,mousePos)
+					return
+				end
+			end
+		end)
+	elseif _G.EOW then
+		orbwalkername = "EOW"	
+		_G.EOW:AddCallback(_G.EOW.AfterAttack, function() 
+			passive = false 
+			local combomodeactive = _G.EOW:Mode() == 1
+			local canmove = _G.EOW:CanMove()
+			if combomodeactive and canmove and Game.Timer() > lastbuff - 3.5 then 
+				if self:CanCast(_E) and self.Menu.UseE:Value() and _G.EOW:GetTarget() then
 					self:CastSpell(HK_E,mousePos)
 					return
 				end
@@ -117,18 +151,13 @@ end
 
 function Lucian:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
-	
 	local buffcheck = self:HasBuff(myHero,"lucianpassivebuff")
 	if buffcheck and buffcheck ~= lastbuff then
 		lastbuff = buffcheck
 		--PrintChat("Passive added : "..Game.Timer().." : "..lastbuff)
 		passive = true
 	end
-	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Combo") 
-	local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Harass") 
-	local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (not _G.SDK and _G.GOS and _G.GOS:CanMove())
-	local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (not _G.SDK and _G.GOS and _G.GOS:CanAttack())
-	local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (not _G.SDK and _G.GOS and _G.GOS:GetTarget())
+	local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
 	if combomodeactive and self.Menu.UseBOTRK:Value() then
 		UseBotrk()
 	end
@@ -169,6 +198,9 @@ function EnableMovement()
 	if _G.SDK then 
 		_G.SDK.Orbwalker:SetMovement(true)
 		_G.SDK.Orbwalker:SetAttack(true)
+	elseif _G.EOW then 
+		EOW:SetMovements(true)
+		EOW:SetAttacks(true)
 	else
 		_G.GOS.BlockAttack = false
 		_G.GOS.BlockMovement = false
@@ -205,6 +237,9 @@ function Lucian:CastSpell(spell,pos)
 				if _G.SDK then 
 					_G.SDK.Orbwalker:SetMovement(false)
 					_G.SDK.Orbwalker:SetAttack(false)
+				elseif _G.EOW then 
+					EOW:SetMovements(false)
+					EOW:SetAttacks(false)	
 				else
 					_G.GOS.BlockAttack = true
 					_G.GOS.BlockMovement = true

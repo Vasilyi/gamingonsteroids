@@ -2,6 +2,30 @@ if myHero.charName ~= "Kalista" then return end
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
 
 
+function CurrentModes()
+	local combomodeactive, harassactive, canmove, canattack, currenttarget
+	if _G.SDK then -- ic orbwalker
+		combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
+		harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
+		canmove = _G.SDK.Orbwalker:CanMove()
+		canattack = _G.SDK.Orbwalker:CanAttack()
+		currenttarget = _G.SDK.Orbwalker:GetTarget()
+	elseif _G.EOW then -- eternal orbwalker
+		combomodeactive = _G.EOW:Mode() == 1
+		harassactive = _G.EOW:Mode() == 2
+		canmove = _G.EOW:CanMove() 
+		canattack = _G.EOW:CanAttack()
+		currenttarget = _G.EOW:GetTarget()
+	else -- default orbwalker
+		combomodeactive = _G.GOS:GetMode() == "Combo"
+		harassactive = _G.GOS:GetMode() == "Harass"
+		canmove = _G.GOS:CanMove()
+		canattack = _G.GOS:CanAttack()
+		currenttarget = _G.GOS:GetTarget()
+	end
+	return combomodeactive, harassactive, canmove, canattack, currenttarget
+end
+
 function GetInventorySlotItem(itemID)
 	assert(type(itemID) == "number", "GetInventorySlotItem: wrong argument types (<number> expected)")
 	for _, j in pairs({ ITEM_1, ITEM_2, ITEM_3, ITEM_4, ITEM_5, ITEM_6}) do
@@ -20,7 +44,7 @@ function UseBotrk()
 	end
 end
 
-local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.8","TRUS","7.10"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.9","TRUS","7.11"
 class "Kalista"
 require "DamageLib"
 
@@ -28,6 +52,7 @@ local barHeight = 8
 local barWidth = 103
 local barXOffset = 0
 local barYOffset = 0
+
 
 
 function Kalista:__init()
@@ -48,13 +73,15 @@ function Kalista:__init()
 				end
 			end
 		end)
+	elseif _G.EOW then
+		orbwalkername = "EOW"	
+		_G.EOW:AddCallback(_G.EOW.AfterAttack, function() self:DelayedQ() end)
 	elseif _G.GOS then
 		orbwalkername = "Noddy orbwalker"
 		_G.GOS:OnAttackComplete(function() 
 			local combomodeactive = _G.GOS:GetMode() == "Combo"
 			local harassactive = _G.GOS:GetMode() == "Harass"
 			local QMinMana = self.Menu.Combo.qMinMana:Value()
-			
 			if (combomodeactive or harassactive) then
 				if (harassactive or (myHero.maxMana * QMinMana * 0.01 < myHero.mana)) then
 					self:CastQ(_G.GOS:GetTarget(),combomodeactive or false)
@@ -67,7 +94,18 @@ function Kalista:__init()
 	end
 	PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 end
-
+function Kalista:DelayedQ()
+	DelayAction(function() 
+		local combomodeactive = _G.EOW:Mode() == 1
+		local harassactive = _G.EOW:Mode() == 2
+		local QMinMana = self.Menu.Combo.qMinMana:Value()
+		if (combomodeactive or harassactive) then
+			if (harassactive or (myHero.maxMana * QMinMana * 0.01 < myHero.mana)) then
+				self:CastQ(_G.EOW:GetTarget(),combomodeactive or false)
+			end
+		end
+	end, 0.05)
+end
 --[[Spells]]
 function Kalista:LoadSpells()
 	Q = {Range = 1150, width = 40, Delay = 0.25, Speed = 2100}
@@ -143,18 +181,13 @@ end
 
 function Kalista:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
-	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Combo") 
-	local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Harass") 
-	local canmove = (_G.SDK and _G.SDK.Orbwalker:CanMove()) or (not _G.SDK and _G.GOS and _G.GOS:CanMove())
-	local canattack = (_G.SDK and _G.SDK.Orbwalker:CanAttack()) or (not _G.SDK and _G.GOS and _G.GOS:CanAttack())
-	local currenttarget = (_G.SDK and _G.SDK.Orbwalker:GetTarget()) or (not _G.SDK and _G.GOS and _G.GOS:GetTarget())
+	local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
 	local HarassMinMana = self.Menu.Harass.harassMana:Value()
 	local QMinMana = self.Menu.Combo.qMinMana:Value()
 	
 	if combomodeactive and self.Menu.UseBOTRK:Value() then
 		UseBotrk()
 	end
-	
 	if ((combomodeactive) or (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana)) then
 		if (harassactive or (myHero.maxMana * QMinMana * 0.01 < myHero.mana)) and not currenttarget then
 			self:CastQ(currenttarget,combomodeactive or false)
@@ -189,6 +222,9 @@ function EnableMovement()
 	if _G.SDK then 
 		_G.SDK.Orbwalker:SetMovement(true)
 		_G.SDK.Orbwalker:SetAttack(true)
+	elseif _G.EOW then 
+		EOW:SetMovements(true)
+		EOW:SetAttacks(true)
 	else
 		_G.GOS.BlockAttack = false
 		_G.GOS.BlockMovement = false
@@ -227,6 +263,9 @@ function Kalista:CastSpell(spell,pos)
 				if _G.SDK then 
 					_G.SDK.Orbwalker:SetMovement(false)
 					_G.SDK.Orbwalker:SetAttack(false)
+				elseif _G.EOW then 
+					EOW:SetMovements(false)
+					EOW:SetAttacks(false)	
 				else
 					_G.GOS.BlockAttack = true
 					_G.GOS.BlockMovement = true

@@ -2,6 +2,29 @@ if myHero.charName ~= "Twitch" then return end
 
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
 
+function CurrentModes()
+	local combomodeactive, harassactive, canmove, canattack, currenttarget
+	if _G.SDK then -- ic orbwalker
+		combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
+		harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
+		canmove = _G.SDK.Orbwalker:CanMove()
+		canattack = _G.SDK.Orbwalker:CanAttack()
+		currenttarget = _G.SDK.Orbwalker:GetTarget()
+	elseif _G.EOW then -- eternal orbwalker
+		combomodeactive = _G.EOW:Mode() == 1
+		harassactive = _G.EOW:Mode() == 2
+		canmove = _G.EOW:CanMove() 
+		canattack = _G.EOW:CanAttack()
+		currenttarget = _G.EOW:GetTarget()
+	else -- default orbwalker
+		combomodeactive = _G.GOS:GetMode() == "Combo"
+		harassactive = _G.GOS:GetMode() == "Harass"
+		canmove = _G.GOS:CanMove()
+		canattack = _G.GOS:CanAttack()
+		currenttarget = _G.GOS:GetTarget()
+	end
+	return combomodeactive, harassactive, canmove, canattack, currenttarget
+end
 
 function GetInventorySlotItem(itemID)
 	assert(type(itemID) == "number", "GetInventorySlotItem: wrong argument types (<number> expected)")
@@ -20,7 +43,7 @@ function UseBotrk()
 		end
 	end
 end
-local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.2","TRUS","7.10"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.3","TRUS","7.11"
 class "Twitch"
 require "DamageLib"
 local qtarget
@@ -36,6 +59,11 @@ function Twitch:__init()
 	if _G.SDK then
 		orbwalkername = "IC'S orbwalker"		
 		_G.SDK.Orbwalker:OnPostAttack(function(arg) 		
+			DelayAction(recheckparticle,0.2)
+		end)
+	elseif _G.EOW then
+		orbwalkername = "EOW"	
+		_G.EOW:AddCallback(_G.EOW.AfterAttack, function() 
 			DelayAction(recheckparticle,0.2)
 		end)
 	elseif _G.GOS then
@@ -68,9 +96,7 @@ function Twitch:LoadMenu()
 end
 function Twitch:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
-	local combomodeactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Combo") 
-	local harassactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Harass") 
-	
+	local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
 	
 	if combomodeactive then 
 		if self.Menu.UseBOTRK:Value() then
