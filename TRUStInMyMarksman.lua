@@ -49,7 +49,7 @@ end
 
 if myHero.charName == "Ashe" then
 	class "Ashe"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.2","TRUS","7.11"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","7.11"
 	function Ashe:GetBuffs(unit)
 		self.T = {}
 		for i = 0, unit.buffCount do
@@ -363,7 +363,7 @@ end
 
 if myHero.charName == "Lucian" then
 	class "Lucian"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.2","TRUS","7.11"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.4","TRUS","7.11"
 	local passive = true
 	local lastbuff = 0
 	function Lucian:__init()
