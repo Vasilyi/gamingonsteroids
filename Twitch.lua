@@ -132,12 +132,12 @@ function Twitch:UseERange()
 end
 
 function Twitch:GetStacks(str)
-	if str:lower():find("twitch_poison_counter_01.troy") then return 1
-	elseif str:lower():find("twitch_poison_counter_02.troy") then return 2
-	elseif str:lower():find("twitch_poison_counter_03.troy") then return 3
-	elseif str:lower():find("twitch_poison_counter_04.troy") then return 4
-	elseif str:lower():find("twitch_poison_counter_05.troy") then return 5
-	elseif str:lower():find("twitch_poison_counter_06.troy") then return 6
+	if str:lower():find("twitch_base_p_stack_01.troy") then return 1
+	elseif str:lower():find("twitch_base_p_stack_02.troy") then return 2
+	elseif str:lower():find("twitch_base_p_stack_03.troy") then return 3
+	elseif str:lower():find("twitch_base_p_stack_04.troy") then return 4
+	elseif str:lower():find("twitch_base_p_stack_05.troy") then return 5
+	elseif str:lower():find("twitch_base_p_stack_06.troy") then return 6
 	end
 	return 0
 end

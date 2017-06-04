@@ -49,7 +49,7 @@ end
 
 if myHero.charName == "Ashe" then
 	class "Ashe"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","7.11"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.2","TRUS","7.11"
 	function Ashe:GetBuffs(unit)
 		self.T = {}
 		for i = 0, unit.buffCount do
@@ -363,7 +363,7 @@ end
 
 if myHero.charName == "Lucian" then
 	class "Lucian"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.4","TRUS","7.11"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.2","TRUS","7.11"
 	local passive = true
 	local lastbuff = 0
 	function Lucian:__init()
@@ -1199,12 +1199,12 @@ if myHero.charName == "Twitch" then
 	end
 	
 	function Twitch:GetStacks(str)
-		if str:lower():find("twitch_poison_counter_01.troy") then return 1
-		elseif str:lower():find("twitch_poison_counter_02.troy") then return 2
-		elseif str:lower():find("twitch_poison_counter_03.troy") then return 3
-		elseif str:lower():find("twitch_poison_counter_04.troy") then return 4
-		elseif str:lower():find("twitch_poison_counter_05.troy") then return 5
-		elseif str:lower():find("twitch_poison_counter_06.troy") then return 6
+		if str:lower():find("twitch_base_p_stack_01.troy") then return 1
+		elseif str:lower():find("twitch_base_p_stack_02.troy") then return 2
+		elseif str:lower():find("twitch_base_p_stack_03.troy") then return 3
+		elseif str:lower():find("twitch_base_p_stack_04.troy") then return 4
+		elseif str:lower():find("twitch_base_p_stack_05.troy") then return 5
+		elseif str:lower():find("twitch_base_p_stack_06.troy") then return 6
 		end
 		return 0
 	end
