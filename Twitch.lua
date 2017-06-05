@@ -43,7 +43,7 @@ function UseBotrk()
 		end
 	end
 end
-local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.3","TRUS","7.11"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.4","TRUS","7.11"
 class "Twitch"
 require "DamageLib"
 local qtarget
@@ -87,15 +87,23 @@ function Twitch:LoadMenu()
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", value = true})
 	self.Menu:MenuElement({id = "DrawE", name = "Draw Killable with E", value = true})
 	self.Menu:MenuElement({id = "DrawEDamage", name = "Draw E damage on HPBar", value = true})
-	self.Menu:MenuElement({id = "DrawColor", name = "Color for Killable circle", color = Draw.Color(0xBF3F3FFF)})
+	self.Menu:MenuElement({id = "DrawColor", name = "Color for drawing", color = Draw.Color(0xBF3F3FFF)})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 end
+local lastcasttime = 0
 function Twitch:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
+	
+	if myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name:lower() == "twitchvenomcask" and myHero.activeSpell.startTime ~= lastcasttime then
+		lastcasttime = myHero.activeSpell.startTime
+		DelayAction(recheckparticle,0.3)
+	end
+	
+	
 	local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
 	
 	if combomodeactive then 
@@ -165,6 +173,7 @@ function Twitch:GetETarget()
 	self.DamageHeroes = {}
 	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1200)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
 	local level = myHero:GetSpellData(_E).level
+	if level == 0 then return end
 	for i, hero in pairs(heroeslist) do
 		if stacks[hero.charName] and self:GetStacks(stacks[hero.charName].name) > 0 then 
 			local EDamage = (self:GetStacks(stacks[hero.charName].name) * (({15, 20, 25, 30, 35})[level] + 0.2 * myHero.ap + 0.25 * myHero.bonusDamage)) + ({20, 35, 50, 65, 80})[level]
@@ -191,19 +200,21 @@ function Twitch:Draw()
 	if self.Menu.DrawE:Value() or self.Menu.DrawEDamage:Value() then
 		local ETarget, damaged = self:GetETarget()
 		if self.Menu.DrawE:Value() then
+			if not ETarget then return end
 			for i, hero in pairs(ETarget) do
 				Draw.Circle(hero.pos, 60, 3, self.Menu.DrawColor:Value())
 			end
 		end
 		if self.Menu.DrawEDamage:Value() then 
+			if not damaged then return end
 			for i, hero in pairs(damaged) do
 				local barPos = hero.hero.hpBar
 				if barPos.onScreen then
 					local damage = hero.damage
 					local percentHealthAfterDamage = math.max(0, hero.hero.health - damage) / hero.hero.maxHealth
-					local xPos = barPos.x + barXOffset + barWidth * percentHealthAfterDamage
-					local xPosend = barPos.x + barXOffset + barWidth * 100
-					Draw.Line(xPos, barPos.y - 8, xPos, barPos.y + barHeight, 2, 0xFF00FF00)
+					local xPosEnd = barPos.x + barXOffset + barWidth * hero.hero.health/hero.hero.maxHealth
+					local xPosStart = barPos.x + barXOffset + percentHealthAfterDamage * 100
+					Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 10, self.Menu.DrawColor:Value())
 				end
 			end
 		end
