@@ -1549,15 +1549,31 @@ if myHero.charName == "KogMaw" then
 end
 
 if myHero.charName == "Kalista" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.9","TRUS","7.11"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.10","TRUS","7.11"
 	class "Kalista"
 	require "DamageLib"
 	
 	local barHeight = 8
 	local barWidth = 103
 	local barXOffset = 0
-	local barYOffset = 0
+	local barYOffset = 5
 	
+	JungleHpBarOffset = {
+		["SRU_Dragon_Water"] = {Width = 140, Height = 4, XOffset = -9, YOffset = -60},
+		["SRU_Dragon_Fire"] = {Width = 140, Height = 4, XOffset = -9, YOffset = -60},
+		["SRU_Dragon_Earth"] = {Width = 140, Height = 4, XOffset = -9, YOffset = -60},
+		["SRU_Dragon_Air"] = {Width = 140, Height = 4, XOffset = -9, YOffset = -60},
+		["SRU_Dragon_Elder"] = {Width = 140, Height = 4, XOffset = 11, YOffset = -142},
+		["SRU_Baron"] = {Width = 190, Height = 10, XOffset = 16, YOffset = 24},
+		["SRU_RiftHerald"] = {Width = 139, Height = 6, XOffset = 12, YOffset = 22},
+		["SRU_Red"] = {Width = 139, Height = 4, XOffset = -7, YOffset = -19},
+		["SRU_Blue"] = {Width = 139, Height = 4, XOffset = -14, YOffset = -38},
+		["SRU_Gromp"] = {Width = 86, Height = 2, XOffset = 16, YOffset = -28},
+		["Sru_Crab"] = {Width = 61, Height = 2, XOffset = 37, YOffset = -8},
+		["SRU_Krug"] = {Width = 79, Height = 2, XOffset = 22, YOffset = -30},
+		["SRU_Razorbeak"] = {Width = 74, Height = 2, XOffset = 15, YOffset = -23},
+		["SRU_Murkwolf"] = {Width = 74, Height = 2, XOffset = 24, YOffset = -30}
+	}
 	
 	
 	function Kalista:__init()
@@ -1824,9 +1840,14 @@ if myHero.charName == "Kalista" then
 				if barPos.onScreen then
 					local damage = damage
 					local percentHealthAfterDamage = math.max(0, minion.health - damage) / minion.maxHealth
-					local xPos = barPos.x + barXOffset + barWidth * percentHealthAfterDamage
-					local xPosend = barPos.x + barXOffset + barWidth * 100
-					Draw.Line(xPos, barPos.y - 80, xPos, barPos.y - 80 + 40, 2, 0xFF00FF00)
+					local BarWidth = JungleHpBarOffset[minion.charName]["Width"]
+					local BarHeight = JungleHpBarOffset[minion.charName]["Height"]
+					local YOffset = JungleHpBarOffset[minion.charName]["YOffset"]
+					local XOffset = JungleHpBarOffset[minion.charName]["XOffset"]
+					local XPosStart = barPos.x + XOffset + BarWidth * 0
+					local xPosEnd = barPos.x + XOffset + BarWidth * percentHealthAfterDamage
+					
+					Draw.Line(XPosStart, barPos.y + YOffset,xPosEnd, barPos.y + YOffset, BarHeight, self.Menu.Draw.DrawColor:Value())
 				end
 			end
 			
@@ -2024,9 +2045,9 @@ if myHero.charName == "Kalista" then
 					if barPos.onScreen then
 						local damage = hero.damage
 						local percentHealthAfterDamage = math.max(0, hero.hero.health - damage) / hero.hero.maxHealth
-						local xPos = barPos.x + barXOffset + barWidth * percentHealthAfterDamage
-						local xPosend = barPos.x + barXOffset + barWidth * 100
-						Draw.Line(xPos, barPos.y - 8, xPos, barPos.y + barHeight, 2, 0xFF00FF00)
+						local xPosEnd = barPos.x + barXOffset + barWidth * hero.hero.health/hero.hero.maxHealth
+						local xPosStart = barPos.x + barXOffset + percentHealthAfterDamage * 100
+						Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 10, self.Menu.Draw.DrawColor:Value())
 					end
 				end
 				if self.Menu.Draw.DrawEDamage:Value() then 
