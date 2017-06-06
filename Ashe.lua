@@ -126,10 +126,7 @@ function Ashe:__init()
 	end
 	PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 end
-blockattack = false
-blockmovement = false
 
-local lastpick = 0
 --[[Spells]]
 function Ashe:LoadSpells()
 	W = {Range = 1200, width = nil, Delay = 0.25, Radius = 30, Speed = 900}
@@ -266,6 +263,7 @@ end
 
 function ReturnCursor(pos)
 	Control.SetCursorPos(pos)
+	SetMovement(true)
 end
 
 function LeftClick(pos)
