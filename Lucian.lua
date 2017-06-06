@@ -2,6 +2,23 @@ if myHero.charName ~= "Lucian" then return end
 require "2DGeometry"
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
 
+
+local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
+function SetMovement(bool)
+	if _G.EOWLoaded then
+		EOW:SetMovements(bool)
+		EOW:SetAttacks(bool)
+	elseif _G.SDK then
+		_G.SDK.Orbwalker:SetMovement(bool)
+		_G.SDK.Orbwalker:SetAttack(bool)
+	else
+		GOS.BlockMovement = not bool
+		GOS.BlockAttack = not bool
+	end
+	if bool then
+		castSpell.state = 0
+	end
+end
 function CurrentModes()
 	local combomodeactive, harassactive, canmove, canattack, currenttarget
 	if _G.SDK then -- ic orbwalker
@@ -101,11 +118,6 @@ function Lucian:__init()
 	end
 	PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 end
-onetimereset = true
-blockattack = false
-blockmovement = false
-
-local lastpick = 0
 
 --[[Spells]]
 function Lucian:LoadSpells()
@@ -188,25 +200,9 @@ function Lucian:Tick()
 	
 end
 
-
-local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
-
-
-
 function EnableMovement()
 	--unblock movement
-	if _G.SDK then 
-		_G.SDK.Orbwalker:SetMovement(true)
-		_G.SDK.Orbwalker:SetAttack(true)
-	elseif _G.EOW then 
-		EOW:SetMovements(true)
-		EOW:SetAttacks(true)
-	else
-		_G.GOS.BlockAttack = false
-		_G.GOS.BlockMovement = false
-	end
-	onetimereset = true
-	castSpell.state = 0
+	SetMovement(true)
 end
 
 function ReturnCursor(pos)
@@ -234,16 +230,7 @@ function Lucian:CastSpell(spell,pos)
 			castSpell.tick = ticker
 			if ticker - castSpell.tick < Game.Latency() then
 				--block movement
-				if _G.SDK then 
-					_G.SDK.Orbwalker:SetMovement(false)
-					_G.SDK.Orbwalker:SetAttack(false)
-				elseif _G.EOW then 
-					EOW:SetMovements(false)
-					EOW:SetAttacks(false)	
-				else
-					_G.GOS.BlockAttack = true
-					_G.GOS.BlockMovement = true
-				end
+				SetMovement(false)
 				Control.SetCursorPos(pos)
 				Control.KeyDown(spell)
 				Control.KeyUp(spell)

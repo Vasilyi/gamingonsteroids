@@ -2,6 +2,25 @@ if myHero.charName ~= "Ashe" then return end
 
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
 
+
+local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
+function SetMovement(bool)
+	if _G.EOWLoaded then
+		EOW:SetMovements(bool)
+		EOW:SetAttacks(bool)
+	elseif _G.SDK then
+		_G.SDK.Orbwalker:SetMovement(bool)
+		_G.SDK.Orbwalker:SetAttack(bool)
+	else
+		GOS.BlockMovement = not bool
+		GOS.BlockAttack = not bool
+	end
+	if bool then
+		castSpell.state = 0
+	end
+end
+
+
 function CurrentModes()
 	local combomodeactive, harassactive, canmove, canattack, currenttarget
 	if _G.SDK then -- ic orbwalker
@@ -227,7 +246,7 @@ function Ashe:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
 	
 	if myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name == "Volley" then 
-		EnableMovement()
+		SetMovement(true)
 	end
 	local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
 	if combomodeactive and self.Menu.UseBOTRK:Value() then
@@ -243,26 +262,6 @@ function Ashe:Tick()
 	if harassactive and self.Menu.UseWHarass:Value() and ((canmove and not canattack) or not currenttarget) then
 		self:CastW()
 	end
-end
-
-
-local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
-
-
-
-function EnableMovement()
-	--unblock movement
-	if _G.SDK then 
-		_G.SDK.Orbwalker:SetMovement(true)
-		_G.SDK.Orbwalker:SetAttack(true)
-	elseif _G.EOW then 
-		EOW:SetMovements(true)
-		EOW:SetAttacks(true)
-	else
-		_G.GOS.BlockAttack = false
-		_G.GOS.BlockMovement = false
-	end
-	castSpell.state = 0
 end
 
 function ReturnCursor(pos)
@@ -289,16 +288,7 @@ function Ashe:CastSpell(spell,pos)
 			castSpell.tick = ticker
 			if ticker - castSpell.tick < Game.Latency() then
 				--block movement
-				if _G.SDK then 
-					_G.SDK.Orbwalker:SetMovement(false)
-					_G.SDK.Orbwalker:SetAttack(false)
-				elseif _G.EOW then 
-					EOW:SetMovements(false)
-					EOW:SetAttacks(false)	
-				else
-					_G.GOS.BlockAttack = true
-					_G.GOS.BlockMovement = true
-				end
+				SetMovement(false)
 				Control.SetCursorPos(pos)
 				Control.KeyDown(spell)
 				Control.KeyUp(spell)

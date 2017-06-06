@@ -4,6 +4,23 @@ if myHero.charName == "Ashe" or myHero.charName == "Ezreal" or myHero.charName =
 	
 	keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
 	
+	castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
+	function SetMovement(bool)
+		if _G.EOWLoaded then
+			EOW:SetMovements(bool)
+			EOW:SetAttacks(bool)
+		elseif _G.SDK then
+			_G.SDK.Orbwalker:SetMovement(bool)
+			_G.SDK.Orbwalker:SetAttack(bool)
+		else
+			GOS.BlockMovement = not bool
+			GOS.BlockAttack = not bool
+		end
+		if bool then
+			castSpell.state = 0
+		end
+	end
+	
 	function CurrentModes()
 		local combomodeactive, harassactive, canmove, canattack, currenttarget
 		if _G.SDK then -- ic orbwalker
@@ -231,7 +248,7 @@ if myHero.charName == "Ashe" then
 		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
 		
 		if myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name == "Volley" then 
-			EnableMovement()
+			SetMovement(true)
 		end
 		local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
 		if combomodeactive and self.Menu.UseBOTRK:Value() then
@@ -247,26 +264,6 @@ if myHero.charName == "Ashe" then
 		if harassactive and self.Menu.UseWHarass:Value() and ((canmove and not canattack) or not currenttarget) then
 			self:CastW()
 		end
-	end
-	
-	
-	local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
-	
-	
-	
-	function EnableMovement()
-		--unblock movement
-		if _G.SDK then 
-			_G.SDK.Orbwalker:SetMovement(true)
-			_G.SDK.Orbwalker:SetAttack(true)
-		elseif _G.EOW then 
-			EOW:SetMovements(true)
-			EOW:SetAttacks(true)
-		else
-			_G.GOS.BlockAttack = false
-			_G.GOS.BlockMovement = false
-		end
-		castSpell.state = 0
 	end
 	
 	function ReturnCursor(pos)
@@ -293,16 +290,7 @@ if myHero.charName == "Ashe" then
 				castSpell.tick = ticker
 				if ticker - castSpell.tick < Game.Latency() then
 					--block movement
-					if _G.SDK then 
-						_G.SDK.Orbwalker:SetMovement(false)
-						_G.SDK.Orbwalker:SetAttack(false)
-					elseif _G.EOW then 
-						EOW:SetMovements(false)
-						EOW:SetAttacks(false)	
-					else
-						_G.GOS.BlockAttack = true
-						_G.GOS.BlockMovement = true
-					end
+					SetMovement(false)
 					Control.SetCursorPos(pos)
 					Control.KeyDown(spell)
 					Control.KeyUp(spell)
@@ -420,11 +408,6 @@ if myHero.charName == "Lucian" then
 		end
 		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 	end
-	onetimereset = true
-	blockattack = false
-	blockmovement = false
-	
-	local lastpick = 0
 	
 	--[[Spells]]
 	function Lucian:LoadSpells()
@@ -506,26 +489,10 @@ if myHero.charName == "Lucian" then
 		
 		
 	end
-	
-	
-	local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
-	
-	
-	
+		
 	function EnableMovement()
 		--unblock movement
-		if _G.SDK then 
-			_G.SDK.Orbwalker:SetMovement(true)
-			_G.SDK.Orbwalker:SetAttack(true)
-		elseif _G.EOW then 
-			EOW:SetMovements(true)
-			EOW:SetAttacks(true)
-		else
-			_G.GOS.BlockAttack = false
-			_G.GOS.BlockMovement = false
-		end
-		onetimereset = true
-		castSpell.state = 0
+		SetMovement(true)
 	end
 	
 	function ReturnCursor(pos)
@@ -553,16 +520,7 @@ if myHero.charName == "Lucian" then
 				castSpell.tick = ticker
 				if ticker - castSpell.tick < Game.Latency() then
 					--block movement
-					if _G.SDK then 
-						_G.SDK.Orbwalker:SetMovement(false)
-						_G.SDK.Orbwalker:SetAttack(false)
-					elseif _G.EOW then 
-						EOW:SetMovements(false)
-						EOW:SetAttacks(false)	
-					else
-						_G.GOS.BlockAttack = true
-						_G.GOS.BlockMovement = true
-					end
+					SetMovement(false)
 					Control.SetCursorPos(pos)
 					Control.KeyDown(spell)
 					Control.KeyUp(spell)
@@ -754,24 +712,9 @@ if myHero.charName == "Caitlyn" then
 		end
 	end
 	
-	
-	local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
-	
-	
 	function ReturnCursor(pos)
-		if _G.SDK then 
-			_G.SDK.Orbwalker:SetMovement(true)
-			_G.SDK.Orbwalker:SetAttack(true)
-		elseif _G.EOW then 
-			EOW:SetMovements(true)
-			EOW:SetAttacks(true)
-		else
-			_G.GOS.BlockAttack = false
-			_G.GOS.BlockMovement = false
-		end
 		Control.SetCursorPos(pos)
-		castSpell.state = 0
-		
+		SetMovement(true)
 	end
 	
 	function LeftClick(pos)
@@ -865,6 +808,7 @@ if myHero.charName == "Caitlyn" then
 	end
 	
 	
+	
 	function Caitlyn:CastCombo(pos)
 		local delay = self.Menu.delay:Value()
 		local ticker = GetTickCount()
@@ -874,16 +818,7 @@ if myHero.charName == "Caitlyn" then
 			castSpell.tick = ticker
 			if ticker - castSpell.tick < Game.Latency() then
 				--block movement
-				if _G.SDK then 
-					_G.SDK.Orbwalker:SetMovement(false)
-					_G.SDK.Orbwalker:SetAttack(false)
-				elseif _G.EOW then 
-					EOW:SetMovements(false)
-					EOW:SetAttacks(false)	
-				else
-					_G.GOS.BlockAttack = true
-					_G.GOS.BlockMovement = true
-				end
+				SetMovement(false)
 				Control.SetCursorPos(pos)
 				Control.KeyDown(HK_E)
 				Control.KeyUp(HK_E)
@@ -937,6 +872,8 @@ if myHero.charName == "Ezreal" then
 		local orbwalkername = ""
 		if _G.SDK then
 			orbwalkername = "IC'S orbwalker"	
+		elseif _G.EOW then
+			orbwalkername = "EOW"	
 		elseif _G.GOS then
 			orbwalkername = "Noddy orbwalker"
 		else
@@ -983,25 +920,10 @@ if myHero.charName == "Ezreal" then
 		
 		
 	end
-	
-	
-	local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
-	
-	
-	
+		
 	function EnableMovement()
 		--unblock movement
-		if _G.SDK then 
-			_G.SDK.Orbwalker:SetMovement(true)
-			_G.SDK.Orbwalker:SetAttack(true)
-		elseif _G.EOW then 
-			EOW:SetMovements(true)
-			EOW:SetAttacks(true)
-		else
-			_G.GOS.BlockAttack = false
-			_G.GOS.BlockMovement = false
-		end
-		castSpell.state = 0
+		SetMovement(true)
 	end
 	
 	function ReturnCursor(pos)
@@ -1029,16 +951,7 @@ if myHero.charName == "Ezreal" then
 				castSpell.tick = ticker
 				if ticker - castSpell.tick < Game.Latency() then
 					--block movement
-					if _G.SDK then 
-						_G.SDK.Orbwalker:SetMovement(false)
-						_G.SDK.Orbwalker:SetAttack(false)
-					elseif _G.EOW then 
-						EOW:SetMovements(false)
-						EOW:SetAttacks(false)
-					else
-						_G.GOS.BlockAttack = true
-						_G.GOS.BlockMovement = true
-					end
+					SetMovement(false)
 					Control.SetCursorPos(pos)
 					Control.KeyDown(spell)
 					Control.KeyUp(spell)
@@ -1052,9 +965,11 @@ if myHero.charName == "Ezreal" then
 	
 	--[[CastQ]]
 	function Ezreal:CastQ(target)
-		if (not _G.SDK and not _G.GOS) then return end
+		if (not _G.SDK and not _G.GOS and not _G.EOW) then return end
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
+			
 		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and self.Menu.UseQ:Value() and target:GetCollision(Q.Radius,Q.Speed,Q.Delay) == 0 then
+			
 			local castPos = target:GetPrediction(Q.Speed,Q.Delay)
 			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
 			self:CastSpell(HK_Q, newpos)
@@ -1321,7 +1236,7 @@ if myHero.charName == "KogMaw" then
 				local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 				local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
 				if (combomodeactive or harassactive) then
-					self:CastQ(_G.SDK.Orbwalker:GetTarget())
+					self:CastQ(_G.SDK.Orbwalker:GetTarget(),combomodeactive)
 				end
 			end)
 		elseif _G.EOW then
@@ -1330,7 +1245,7 @@ if myHero.charName == "KogMaw" then
 				local combomodeactive = _G.EOW:Mode() == 1
 				local harassactive = _G.EOW:Mode() == 2
 				if (combomodeactive or harassactive) then
-					self:CastQ(_G.EOW:GetTarget())
+					self:CastQ(_G.EOW:GetTarget(),combomodeactive)
 				end
 			end)
 		elseif _G.GOS then
@@ -1339,7 +1254,7 @@ if myHero.charName == "KogMaw" then
 				local combomodeactive = _G.GOS:GetMode() == "Combo"
 				local harassactive = _G.GOS:GetMode() == "Harass"
 				if (combomodeactive or harassactive) then
-					self:CastQ(_G.GOS:GetTarget())
+					self:CastQ(_G.GOS:GetTarget(),combomodeactive)
 				end
 			end)
 		else
@@ -1348,10 +1263,7 @@ if myHero.charName == "KogMaw" then
 		end
 		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 	end
-	blockattack = false
-	blockmovement = false
 	
-	local lastpick = 0
 	--[[Spells]]
 	function KogMaw:LoadSpells()
 		Q = {Range = 1175, width = 70, Delay = 0.25, Speed = 1650}
@@ -1361,7 +1273,6 @@ if myHero.charName == "KogMaw" then
 	
 	function KogMaw:LoadMenu()
 		self.Menu = MenuElement({type = MENU, id = "TRUStinymyKogMaw", name = Scriptname})
-		
 		--[[Combo]]
 		self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 		self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
@@ -1411,25 +1322,8 @@ if myHero.charName == "KogMaw" then
 		end
 	end
 	
-	
-	local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
-	
-	
-	
 	function EnableMovement()
-		--unblock movement
-		if _G.SDK then 
-			_G.SDK.Orbwalker:SetMovement(true)
-			_G.SDK.Orbwalker:SetAttack(true)
-		elseif _G.EOW then 
-			EOW:SetMovements(true)
-			EOW:SetAttacks(true)
-		else
-			_G.GOS.BlockAttack = false
-			_G.GOS.BlockMovement = false
-		end
-		onetimereset = true
-		castSpell.state = 0
+		SetMovement(true)
 	end
 	
 	function ReturnCursor(pos)
@@ -1457,16 +1351,7 @@ if myHero.charName == "KogMaw" then
 				castSpell.tick = ticker
 				if ticker - castSpell.tick < Game.Latency() then
 					--block movement
-					if _G.SDK then 
-						_G.SDK.Orbwalker:SetMovement(false)
-						_G.SDK.Orbwalker:SetAttack(false)
-					elseif _G.EOW then 
-						EOW:SetMovements(false)
-						EOW:SetAttacks(false)	
-					else
-						_G.GOS.BlockAttack = true
-						_G.GOS.BlockMovement = true
-					end
+					SetMovement(false)
 					Control.SetCursorPos(pos)
 					Control.KeyDown(spell)
 					Control.KeyUp(spell)
@@ -1504,7 +1389,7 @@ if myHero.charName == "KogMaw" then
 	
 	--[[CastQ]]
 	function KogMaw:CastQ(target, combo)
-		if (not _G.SDK and not _G.GOS) then return end
+		if (not _G.SDK and not _G.GOS and not _G.EOW) then return end
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AP"))
 		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and ((combo and self.Menu.Combo.comboUseQ:Value()) or (combo == false and self.Menu.Harass.harassUseQ:Value())) and target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0 then
 			local castPos = target:GetPrediction(Q.Speed,Q.Delay)
@@ -1516,7 +1401,7 @@ if myHero.charName == "KogMaw" then
 	
 	--[[CastE]]
 	function KogMaw:CastE(target,combo)
-		if (not _G.SDK and not _G.GOS) then return end
+		if (not _G.SDK and not _G.GOS and not _G.EOW) then return end
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(E.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(E.Range,"AP"))
 		if target and target.type == "AIHeroClient" and self:CanCast(_E) and ((combo and self.Menu.Combo.comboUseE:Value()) or (combo == false and self.Menu.Harass.harassUseE:Value())) then
 			local castPos = target:GetPrediction(E.Speed,E.Delay)
@@ -1527,7 +1412,7 @@ if myHero.charName == "KogMaw" then
 	
 	--[[CastR]]
 	function KogMaw:CastR(target,combo)
-		if (not _G.SDK and not _G.GOS) then return end
+		if (not _G.SDK and not _G.GOS and not _G.EOW) then return end
 		local RRange = self:GetRRange()
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(RRange, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(RRange,"AP"))
 		local currentultstacks = self:UltStacks()
@@ -1743,26 +1628,10 @@ if myHero.charName == "Kalista" then
 		end
 		
 	end
-	
-	
-	local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
-	
-	
-	
+		
 	function EnableMovement()
 		--unblock movement
-		if _G.SDK then 
-			_G.SDK.Orbwalker:SetMovement(true)
-			_G.SDK.Orbwalker:SetAttack(true)
-		elseif _G.EOW then 
-			EOW:SetMovements(true)
-			EOW:SetAttacks(true)
-		else
-			_G.GOS.BlockAttack = false
-			_G.GOS.BlockMovement = false
-		end
-		onetimereset = true
-		castSpell.state = 0
+		SetMovement(true)
 	end
 	
 	function ReturnCursor(pos)
@@ -1792,16 +1661,7 @@ if myHero.charName == "Kalista" then
 				castSpell.tick = ticker
 				if ticker - castSpell.tick < Game.Latency() then
 					--block movement
-					if _G.SDK then 
-						_G.SDK.Orbwalker:SetMovement(false)
-						_G.SDK.Orbwalker:SetAttack(false)
-					elseif _G.EOW then 
-						EOW:SetMovements(false)
-						EOW:SetAttacks(false)	
-					else
-						_G.GOS.BlockAttack = true
-						_G.GOS.BlockMovement = true
-					end
+					SetMovement(false)
 					Control.SetCursorPos(pos)
 					Control.KeyDown(spell)
 					Control.KeyUp(spell)
@@ -2122,10 +1982,7 @@ if myHero.charName == "Sivir" then
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 	end
-	
-	
-	local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
-	
+
 	function Sivir:IsReady(spellSlot)
 		return myHero:GetSpellData(spellSlot).currentCd == 0 and myHero:GetSpellData(spellSlot).level > 0
 	end
