@@ -410,8 +410,8 @@ function Kalista:GetSpears(unit, buffname)
 end
 
 function Kalista:UseERange()
-	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
-	local target = (_G.SDK and _G.SDK.TargetSelector.SelectedTarget) or (_G.GOS and _G.GOS:GetTarget())
+	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or self:GetEnemyHeroes()
+	local target = (_G.SDK and _G.SDK.TargetSelector.SelectedTarget) or (_G.EOW and _G.EOW:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
 	if target then return end 
 	for i, hero in pairs(heroeslist) do
 		if self:GetSpears(hero) >= self.Menu.Harass.HarassMinEStacks:Value() then
@@ -426,7 +426,7 @@ function Kalista:UseERange()
 end
 
 function Kalista:UseEOnLasthit()
-	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or self:GetEnemyHeroes()
 	local useE = false
 	local minionlist = {}
 	
@@ -458,11 +458,21 @@ function Kalista:UseEOnLasthit()
 		end
 	end
 end
+function Kalista:GetEnemyHeroes()
+	self.EnemyHeroes = {}
+	for i = 1, Game.HeroCount() do
+		local Hero = Game.Hero(i)
+		if Hero.isEnemy and Hero.isTargetable then
+			table.insert(self.EnemyHeroes, Hero)
+		end
+	end
+	return self.EnemyHeroes
+end
 
 function Kalista:GetETarget()
 	self.KillableHeroes = {}
 	self.DamageHeroes = {}
-	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1200)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1200)) or self:GetEnemyHeroes()
 	local level = myHero:GetSpellData(_E).level
 	for i, hero in pairs(heroeslist) do
 		if self:GetSpears(hero) > 0 and myHero.pos:DistanceTo(hero.pos)<E.Range then 

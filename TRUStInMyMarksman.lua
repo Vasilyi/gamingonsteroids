@@ -128,7 +128,7 @@ if myHero.charName == "Ashe" then
 		end
 		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 	end
-
+	
 	--[[Spells]]
 	function Ashe:LoadSpells()
 		W = {Range = 1200, width = nil, Delay = 0.25, Radius = 30, Speed = 900}
@@ -487,7 +487,7 @@ if myHero.charName == "Lucian" then
 		
 		
 	end
-		
+	
 	function EnableMovement()
 		--unblock movement
 		SetMovement(true)
@@ -918,7 +918,7 @@ if myHero.charName == "Ezreal" then
 		
 		
 	end
-		
+	
 	function EnableMovement()
 		--unblock movement
 		SetMovement(true)
@@ -965,7 +965,7 @@ if myHero.charName == "Ezreal" then
 	function Ezreal:CastQ(target)
 		if (not _G.SDK and not _G.GOS and not _G.EOW) then return end
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
-			
+		
 		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and self.Menu.UseQ:Value() and target:GetCollision(Q.Radius,Q.Speed,Q.Delay) == 0 then
 			
 			local castPos = target:GetPrediction(Q.Speed,Q.Delay)
@@ -1626,7 +1626,7 @@ if myHero.charName == "Kalista" then
 		end
 		
 	end
-		
+	
 	function EnableMovement()
 		--unblock movement
 		SetMovement(true)
@@ -1793,8 +1793,8 @@ if myHero.charName == "Kalista" then
 	end
 	
 	function Kalista:UseERange()
-		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
-		local target = (_G.SDK and _G.SDK.TargetSelector.SelectedTarget) or (_G.GOS and _G.GOS:GetTarget())
+		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or self:GetEnemyHeroes()
+		local target = (_G.SDK and _G.SDK.TargetSelector.SelectedTarget) or (_G.EOW and _G.EOW:GetTarget()) or (_G.GOS and _G.GOS:GetTarget())
 		if target then return end 
 		for i, hero in pairs(heroeslist) do
 			if self:GetSpears(hero) >= self.Menu.Harass.HarassMinEStacks:Value() then
@@ -1809,7 +1809,7 @@ if myHero.charName == "Kalista" then
 	end
 	
 	function Kalista:UseEOnLasthit()
-		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or self:GetEnemyHeroes()
 		local useE = false
 		local minionlist = {}
 		
@@ -1841,11 +1841,21 @@ if myHero.charName == "Kalista" then
 			end
 		end
 	end
+	function Kalista:GetEnemyHeroes()
+		self.EnemyHeroes = {}
+		for i = 1, Game.HeroCount() do
+			local Hero = Game.Hero(i)
+			if Hero.isEnemy and Hero.isTargetable then
+				table.insert(self.EnemyHeroes, Hero)
+			end
+		end
+		return self.EnemyHeroes
+	end
 	
 	function Kalista:GetETarget()
 		self.KillableHeroes = {}
 		self.DamageHeroes = {}
-		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1200)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1200)) or self:GetEnemyHeroes()
 		local level = myHero:GetSpellData(_E).level
 		for i, hero in pairs(heroeslist) do
 			if self:GetSpears(hero) > 0 and myHero.pos:DistanceTo(hero.pos)<E.Range then 
@@ -1980,7 +1990,7 @@ if myHero.charName == "Sivir" then
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 	end
-
+	
 	function Sivir:IsReady(spellSlot)
 		return myHero:GetSpellData(spellSlot).currentCd == 0 and myHero:GetSpellData(spellSlot).level > 0
 	end
