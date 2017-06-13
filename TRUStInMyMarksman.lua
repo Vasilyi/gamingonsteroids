@@ -846,6 +846,7 @@ if myHero.charName == "Caitlyn" then
 	end
 	
 	
+	
 	--[[CastEQ]]
 	function Caitlyn:CastE(target)
 		if not _G.SDK and not _G.GOS then return end
@@ -857,8 +858,8 @@ if myHero.charName == "Caitlyn" then
 				self:CastCombo(newpos)
 				qtarget = newpos
 			end
-		elseif target:GetCollision(Q.Radius,Q.Speed,Q.Delay) == 0 then
-			castPos = target:GetPrediction(Q.Speed,Q.Delay)
+		elseif target:GetCollision(E.Radius,E.Speed,E.Delay) == 0 then
+			castPos = target:GetPrediction(E.Speed,E.Delay)
 			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
 			self:CastCombo(newpos)
 			qtarget = newpos

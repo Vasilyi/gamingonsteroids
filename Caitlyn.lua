@@ -285,8 +285,8 @@ function Caitlyn:CastE(target)
 			self:CastCombo(newpos)
 			qtarget = newpos
 		end
-	elseif target:GetCollision(Q.Radius,Q.Speed,Q.Delay) == 0 then
-		castPos = target:GetPrediction(Q.Speed,Q.Delay)
+	elseif target:GetCollision(E.Radius,E.Speed,E.Delay) == 0 then
+		castPos = target:GetPrediction(E.Speed,E.Delay)
 		local newpos = myHero.pos:Extended(castPos,math.random(100,300))
 		self:CastCombo(newpos)
 		qtarget = newpos
