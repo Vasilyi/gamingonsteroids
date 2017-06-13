@@ -860,8 +860,15 @@ end
 
 if myHero.charName == "Ezreal" then
 	class "Ezreal"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.6","TRUS","7.11"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.7","TRUS","7.11"
 	require "DamageLib"
+	
+	if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
+		require 'Eternal Prediction'
+		PrintChat("Eternal Prediction library loaded")
+	end
+	local EPrediction = {}
+	
 	function Ezreal:__init()
 		self:LoadSpells()
 		self:LoadMenu()
@@ -883,7 +890,11 @@ if myHero.charName == "Ezreal" then
 	local lastpick = 0
 	--[[Spells]]
 	function Ezreal:LoadSpells()
-		Q = {Range = 1190, width = nil, Delay = 0.25, Radius = 60, Speed = 2000, Collision = false, aoe = false, type = "linear"}
+		Q = {Range = 1190, width = 60, Delay = 0.25, Radius = 60, Speed = 2000, Collision = false, aoe = false, type = "linear"}
+		if TYPE_GENERIC then
+			local QSpell = Prediction:SetSpell({range = Q.range, speed = Q.speed, delay = Q.Delay, width = Q.width}, TYPE_LINE, true)
+			EPrediction[_Q] = QSpell
+		end
 	end
 	
 	function Ezreal:LoadMenu()
@@ -891,6 +902,9 @@ if myHero.charName == "Ezreal" then
 		self.Menu:MenuElement({id = "UseQ", name = "UseQ on champions", value = true})
 		self.Menu:MenuElement({id = "UseQLH", name = "[WIP] UseQ to lasthit", value = true})
 		self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
+		if TYPE_GENERIC then
+			self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
+		end
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 		
@@ -963,14 +977,22 @@ if myHero.charName == "Ezreal" then
 	
 	--[[CastQ]]
 	function Ezreal:CastQ(target)
-		if (not _G.SDK and not _G.GOS and not _G.EOW) then return end
+		if (not _G.SDK and not _G.GOS) then return end
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
-		
-		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and self.Menu.UseQ:Value() and target:GetCollision(Q.Radius,Q.Speed,Q.Delay) == 0 then
+		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and self.Menu.UseQ:Value() then
+			local castPos
+			if TYPE_GENERIC then
+				castPos = EPrediction[_Q]:GetPrediction(target, myHero.pos)
+				if castPos.hitChance >= self.Menu.minchance:Value() and EPrediction[_Q]:mCollision() == 0 then
+					local newpos = myHero.pos:Extended(castPos.castPos,math.random(100,300))
+					self:CastSpell(HK_Q, newpos)
+				end
+			elseif target:GetCollision(Q.Radius,Q.Speed,Q.Delay) == 0 then
+				castPos = target:GetPrediction(Q.Speed,Q.Delay)
+				local newpos = myHero.pos:Extended(castPos,math.random(100,300))
+				self:CastSpell(HK_Q, newpos)
+			end
 			
-			local castPos = target:GetPrediction(Q.Speed,Q.Delay)
-			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-			self:CastSpell(HK_Q, newpos)
 		end
 	end
 	function Ezreal:QLastHit()
