@@ -67,7 +67,7 @@ require "DamageLib"
 local barHeight = 8
 local barWidth = 103
 local barXOffset = 0
-local barYOffset = 5
+local barYOffset = 0
 
 JungleHpBarOffset = {
 	["SRU_Dragon_Water"] = {Width = 140, Height = 4, XOffset = -9, YOffset = -60},
@@ -160,19 +160,20 @@ function Kalista:LoadMenu()
 	self.Menu:MenuElement({type = MENU, id = "Draw", name = "Draw Settings"})
 	self.Menu.Draw:MenuElement({id = "DrawEDamage", name = "Draw number health after E", value = true})
 	self.Menu.Draw:MenuElement({id = "DrawEBarDamage", name = "On hpbar after E", value = true})
+	--self.Menu.Draw:MenuElement({id = "HPBarOffset", name = "Z offset for HPBar ", value = 0, min = -100, max = 100, tooltip = "change this if damage showed in wrong position"})
 	self.Menu.Draw:MenuElement({id = "DrawInPrecent", name = "Draw numbers in percent", value = true})
 	self.Menu.Draw:MenuElement({id = "DrawE", name = "Draw Killable with E", value = true})
 	self.Menu.Draw:MenuElement({id = "TextOffset", name = "Z offset for text ", value = 0, min = -100, max = 100})
 	self.Menu.Draw:MenuElement({id = "TextSize", name = "Font size ", value = 30, min = 2, max = 64})
 	self.Menu.Draw:MenuElement({id = "DrawColor", name = "Color for drawing", color = Draw.Color(0xBF3F3FFF)})
 	
-	
 	--[[Harass]]
 	self.Menu:MenuElement({type = MENU, id = "Harass", name = "Harass Settings"})
 	self.Menu.Harass:MenuElement({id = "harassUseQ", name = "Use Q", value = true})
 	self.Menu.Harass:MenuElement({id = "harassUseELasthit", name = "Use E Harass when lasthit", value = true})
+	self.Menu.Harass:MenuElement({id = "HarassMinEStacksLH", name = "Min E stacks (LastHit): ", value = 3, min = 0, max = 10})
 	self.Menu.Harass:MenuElement({id = "harassUseERange", name = "Use E when out of range", value = true})
-	self.Menu.Harass:MenuElement({id = "HarassMinEStacks", name = "Min E stacks: ", value = 3, min = 0, max = 10})
+	self.Menu.Harass:MenuElement({id = "HarassMinEStacks", name = "Min E stacks (Range): ", value = 3, min = 0, max = 10})
 	self.Menu.Harass:MenuElement({id = "harassMana", name = "Minimal mana percent:", value = 30, min = 0, max = 101, identifier = "%"})
 	
 	self.Menu:MenuElement({type = MENU, id = "SmiteMarker", name = "AutoE Jungle"})
@@ -415,7 +416,7 @@ function Kalista:UseERange()
 	if target then return end 
 	for i, hero in pairs(heroeslist) do
 		if self:GetSpears(hero) >= self.Menu.Harass.HarassMinEStacks:Value() then
-			if myHero.pos:DistanceTo(hero.pos)<1000 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25)) > 700 then
+			if myHero.pos:DistanceTo(hero.pos)<1000 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25)) > 900 then
 				Control.CastSpell(HK_E)
 			end
 		end
@@ -428,7 +429,7 @@ function Kalista:UseEOnLasthit()
 	local minionlist = {}
 	
 	for i, hero in pairs(heroeslist) do
-		if self:GetSpears(hero) >= self.Menu.Harass.HarassMinEStacks:Value() then
+		if self:GetSpears(hero) >= self.Menu.Harass.HarassMinEStacksLH:Value() then
 			if _G.SDK then
 				minionlist = _G.SDK.ObjectManager:GetEnemyMinions(E.Range)
 			elseif _G.GOS then
@@ -536,6 +537,7 @@ function Kalista:Draw()
 			if self.Menu.Draw.DrawEBarDamage:Value() then 
 				local barPos = hero.hero.hpBar
 				if barPos.onScreen then
+					--local barYOffset = self.Menu.Draw.HPBarOffset:Value()
 					local damage = hero.damage
 					local percentHealthAfterDamage = math.max(0, hero.hero.health - damage) / hero.hero.maxHealth
 					local xPosEnd = barPos.x + barXOffset + barWidth * hero.hero.health/hero.hero.maxHealth
