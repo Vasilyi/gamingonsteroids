@@ -1846,9 +1846,6 @@ if myHero.charName == "Kalista" then
 		if target then return end 
 		for i, hero in pairs(heroeslist) do
 			if self:GetSpears(hero) >= self.Menu.Harass.HarassMinEStacks:Value() then
-				if myHero.pos:DistanceTo(hero.pos)<1000 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25)) < 600 then
-					return
-				end
 				if myHero.pos:DistanceTo(hero.pos)<1000 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25)) > 700 then
 					Control.CastSpell(HK_E)
 				end
