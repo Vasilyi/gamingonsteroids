@@ -28,7 +28,7 @@ if myHero.charName == "Ashe" or myHero.charName == "Ezreal" or myHero.charName =
 			harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
 			canmove = _G.SDK.Orbwalker:CanMove()
 			canattack = _G.SDK.Orbwalker:CanAttack()
-			currenttarget = _G.SDK.Orbwalker:GetTarget()
+			currenttarget = _G.SDK.TargetSelector.SelectedTarget or _G.SDK.Orbwalker:GetTarget()
 		elseif _G.EOW then -- eternal orbwalker
 			combomodeactive = _G.EOW:Mode() == 1
 			harassactive = _G.EOW:Mode() == 2
