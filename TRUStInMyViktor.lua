@@ -1,6 +1,30 @@
 local Scriptname,Version,Author,LVersion = "TRUSt in my Viktor","v0.9","TRUS","7.6"
 
 class "Viktor"
+require "DamageLib"
+if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
+	require 'Eternal Prediction'
+	PrintChat("Eternal Prediction library loaded")
+end
+local EPrediction = {}
+
+local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
+function SetMovement(bool)
+	if _G.EOWLoaded then
+		EOW:SetMovements(bool)
+		EOW:SetAttacks(bool)
+	elseif _G.SDK then
+		_G.SDK.Orbwalker:SetMovement(bool)
+		_G.SDK.Orbwalker:SetAttack(bool)
+	else
+		GOS.BlockMovement = not bool
+		GOS.BlockAttack = not bool
+	end
+	if bool then
+		castSpell.state = 0
+	end
+end
+
 
 function Viktor:__init()
 	if myHero.charName ~= "Viktor" then return end
@@ -35,7 +59,7 @@ local InterruptSpellsList = {
 	["Ryze"] = { spell = _R}
 }
 
-local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
+
 local spellslist = {_Q,_W,_E,_R,SUMMONER_1,SUMMONER_2}
 lastcallback = {}
 
@@ -215,19 +239,11 @@ end
 function Viktor:GetSpellTarget(range)
 	if (_G.SDK) then
 		return _G.SDK.TargetSelector:GetTarget(range, _G.SDK.DAMAGE_TYPE_MAGICAL)
+	elseif (_G.EOW) then
+		return _G.EOW:GetTarget(range)
+	elseif (_G.GOS) then
+		return _G.EOW:GetTarget(range,"AP")
 	end
-	
-	local selected
-	
-	for i, _gameHero in ipairs(self:GetEnemyHeroes()) do
-		local health = _gameHero.health * (100 / self:CalcMagicalDamage(myHero,_gameHero, 100))
-		if self:IsValidTarget(_gameHero,range) and (not selected or health < value) then
-			selected = _gameHero
-			value = health
-		end
-		
-	end
-	return selected
 end
 
 function Viktor:GetETargets()
@@ -493,6 +509,7 @@ function Viktor:Combo()
 			_G.GOS.BlockAttack = false
 		end
 	end
+	
 	if UseQ and self:CanCast(_Q) then
 		local qTarget = self:GetSpellTarget(Q.Range)
 		if qTarget and qTarget.valid then
@@ -522,24 +539,40 @@ function Viktor:Combo()
 	
 	
 	if UseR and self:CanCast(_R) then
-		local Rtargets = self.Menu.RMenu.hitR:Value()
 		local rTarget = self:GetSpellTarget(R.Range)
 		if self:IsValidTarget(rTarget) then
-			local predictpos = rTarget:GetPrediction(R.Speed,R.Delay)
+			local Rtargets = self.Menu.RMenu.hitR:Value()
+			local RTicksAmount = self.Menu.RMenu.rTicks:Value()
+			local RTickDamage = getdmg("R",rTarget,myHero,2)*RTicksAmount
 			--local predictpos, amounts = self:GetCircularAOECastPosition(unit, delay, radius, range, speed)
-			local amount = self:EnemyInRange(rTarget, R.Radius)
-			
-			if Rtargets <= amount and myHero:GetSpellData(_R).name ~= "ViktorChaosStormGuide" then
-				self:CastSpell(HK_R,predictpos)
+			local castPos
+			local amount
+			if TYPE_GENERIC then
+				castPos = EPrediction[_R]:GetPrediction(rTarget, myHero.pos)
+				amount = self:EnemyInRange(castPos.castPos, R.Radius)
+			else
+				castPos = rTarget:GetPrediction(R.Speed,R.Delay)
+				amount = self:EnemyInRange(castPos.pos, R.Radius)
 			end
+			if (Rtargets <= amount or RTickDamage > rTarget.health) and myHero:GetSpellData(_R).name ~= "ViktorChaosStormGuide" then
+				if TYPE_GENERIC then
+					if castPos.castPos then
+						self:CastSpell(HK_R, castPos.castPos)
+					end
+				else
+					self:CastSpell(HK_R, castPos)
+				end
+			end
+			
 		end
 	end
 end
 
 function Viktor:EnemyInRange(source,radius)
 	local count = 0
+	if not source then return end
 	for i, target in ipairs(self:GetEnemyHeroes()) do
-		if target.pos:DistanceTo(source.pos) < radius then 
+		if target.pos:DistanceTo(source) < radius then 
 			count = count + 1
 		end
 	end
@@ -609,7 +642,7 @@ function Viktor:GetEnemyHeroes()
 	self.EnemyHeroes = {}
 	for i = 1, Game.HeroCount() do
 		local Hero = Game.Hero(i)
-		if Hero.isEnemy then
+		if Hero.isEnemy and Hero.valid and Hero.isTargetable then
 			table.insert(self.EnemyHeroes, Hero)
 		end
 	end
@@ -655,14 +688,7 @@ function delayload()
 	end
 end
 function EnableMovement()
-	--unblock movement
-	blockattack = false
-	blockmovement = false
-	if _G.GOS then
-		_G.GOS.BlockAttack = false
-		_G.GOS.BlockMovement = false
-	end
-	castSpell.state = 0
+	SetMovement(true)
 end
 
 function ReturnCursor(pos)
@@ -673,7 +699,7 @@ end
 function SecondPosE(pos)
 	Control.SetCursorPos(pos)
 	Control.KeyUp(HK_E)
-	Control.mouse_event(MOUSEEVENTF_LEFTUP)
+	DelayAction(ReturnCursor,0.05,{pos})
 end
 
 
@@ -688,27 +714,19 @@ end
 function Viktor:CastESpell(pos1, pos2)
 	local delay = self.Menu.delay:Value()
 	local ticker = GetTickCount()
-	if castSpell.state == 0 then
+	if castSpell.state == 0 and ticker > castSpell.casting then
+		--block movement
 		castSpell.state = 1
 		castSpell.mouse = mousePos
 		castSpell.tick = ticker
-		if ticker - castSpell.tick < Game.Latency() then
-			--block movement
-			blockattack = true
-			blockmovement = true
-			if _G.GOS then
-				_G.GOS.BlockAttack = true
-				_G.GOS.BlockMovement = true
-			end
-			Control.SetCursorPos(pos1)
-			Control.KeyDown(HK_E)
-			if not self.Menu.smartcast:Value() then
-				Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
-			end
-			DelayAction(SecondPosE,0.05,{pos2})
-			DelayAction(ReturnCursor,delay/1000+0.05,{castSpell.mouse})
-			castSpell.casting = ticker + delay
+		SetMovement(false)
+		Control.SetCursorPos(pos1)
+		Control.KeyDown(HK_E)
+		if not self.Menu.smartcast:Value() then
+			Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
 		end
+		DelayAction(SecondPosE,0.02,{pos2})
+		castSpell.casting = ticker + delay
 	end
 end
 
@@ -716,18 +734,12 @@ end
 function Viktor:CastSpell(spell,pos)
 	local delay = self.Menu.delay:Value()
 	local ticker = GetTickCount()
-	if castSpell.state == 0 then
+	if castSpell.state == 0 and ticker > castSpell.casting then
 		castSpell.state = 1
 		castSpell.mouse = mousePos
 		castSpell.tick = ticker
 		if ticker - castSpell.tick < Game.Latency() then
-			--block movement
-			blockattack = true
-			blockmovement = true
-			if _G.GOS then
-				_G.GOS.BlockAttack = true
-				_G.GOS.BlockMovement = true
-			end
+			SetMovement(false)
 			Control.SetCursorPos(pos)
 			Control.KeyDown(spell)
 			Control.KeyUp(spell)
@@ -766,8 +778,13 @@ end
 function Viktor:LoadSpells()
 	Q = {Range = 665}
 	W = {Range = 700, Delay = 0.5, Radius = 300, Speed = math.huge,aoe = true, type = "circular"}
-	E = {Range = 525, MaxRange = 1225, length = 700, width = 90, Delay = 0.25, Speed = 1050, type = "linear"}
+	E = {Range = 500, MaxRange = 1225, length = 700, width = 90, Delay = 0.25, Speed = 1050, type = "linear"}
 	R = {Range = 700, width = nil, Delay = 0.25, Radius = 300, Speed = 1000, Collision = false, aoe = false, type = "linear"}
+	
+	if TYPE_GENERIC then
+		local RSpell = Prediction:SetSpell({range = R.Range, speed = R.Speed, delay = R.Delay, width = R.Radius}, TYPE_CIRCULAR, true)
+		EPrediction[_R] = RSpell
+	end
 end
 --[[Menu Icons]]
 local Icons = {
@@ -867,7 +884,7 @@ function Viktor:LoadMenu()
 	self.Menu:MenuElement({type = MENU, id = "RMenu", name = "R config"})
 	self.Menu.RMenu:MenuElement({id = "AutoFollowR", name = "Auto Follow R [WIP]", value = true})
 	self.Menu.RMenu:MenuElement({id = "hitR", name = "Min R hits: ", value = 1, drop = {"1 target", "2 targets", "3 targets", "4 targets", "5 targets"}})
-	self.Menu.RMenu:MenuElement({id = "rTicks", name = "Ultimate ticks to count [WIP]", value = 2, min = 1, max = 14, step = 1, identifier = ""})
+	self.Menu.RMenu:MenuElement({id = "rTicks", name = "Ultimate ticks to count", value = 2, min = 1, max = 14, step = 1, identifier = ""})
 	
 	
 	--[[RSolo]]
