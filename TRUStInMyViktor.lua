@@ -7,6 +7,7 @@ if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
 	PrintChat("Eternal Prediction library loaded")
 end
 local EPrediction = {}
+DontAAPassive = false
 
 local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
 function SetMovement(bool)
@@ -28,15 +29,13 @@ end
 
 function Viktor:__init()
 	if myHero.charName ~= "Viktor" then return end
-	PrintChat(Scriptname.." "..Version.." - Loaded....")
 	self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
 	Callback.Add("Draw", function() self:Draw() end)
 	Callback.Add("WndMsg", function() self:OnWndMsg() end)
 	self:ProcessSpellsLoad()
-	DelayAction(delayload,5)
-	
+	self:OrbWalkerLoad()
 end
 
 local InterruptSpellsList = {
@@ -110,6 +109,20 @@ end
 
 
 function Viktor:Tick()
+	DontAAPassive = self.Menu.Combo.qAuto:Value()
+	if (_G.EOW) then
+		if DontAAPassive and not self:HasBuff(myHero,"viktorpowertransferreturn") and _G.EOW:Mode() == 1 then
+			_G.EOW:SetAttacks(false)
+		elseif (DontAAPassive and self:HasBuff(myHero,"viktorpowertransferreturn")) or _G.EOW:Mode() ~= 1 then
+			_G.EOW:SetAttacks(true)
+		end
+	elseif (not _G.SDK) then
+		if DontAAPassive and not self:HasBuff(myHero,"viktorpowertransferreturn") and _G.GOS:GetMode() == "Combo" then
+			_G.EOW:SetAttacks(false)
+		elseif (DontAAPassive and self:HasBuff(myHero,"viktorpowertransferreturn")) or _G.GOS:GetMode() ~= "Combo" then
+			_G.EOW:SetAttacks(true)
+		end
+	end
 	self:ProcessSpellCallback()
 	if 	self.Menu.Flee.FleeActive:Value() then
 		self:Flee()
@@ -494,21 +507,12 @@ function Viktor:WaveClear(jungle)
 		end
 	end
 end
-DontAAPassive = false
 
 function Viktor:Combo()
 	local UseQ = self.Menu.Combo.comboUseQ:Value()
 	local UseW = self.Menu.Combo.comboUseW:Value()
 	local UseE = self.Menu.Combo.comboUseE:Value()
 	local UseR = self.Menu.Combo.comboUseR:Value()
-	DontAAPassive = self.Menu.Combo.qAuto:Value()
-	if _G.GOS then
-		if DontAAPassive and not Viktor:HasBuff(myHero,"viktorpowertransferreturn") then
-			_G.GOS.BlockAttack = true
-		else
-			_G.GOS.BlockAttack = false
-		end
-	end
 	
 	if UseQ and self:CanCast(_Q) then
 		local qTarget = self:GetSpellTarget(Q.Range)
@@ -665,27 +669,20 @@ function Viktor:OnWndMsg(msg,key)
 	
 end
 
-function delayload()
+function Viktor:OrbWalkerLoad()
+	local orbwalkername = ""
 	if _G.SDK then
-		_G.SDK.Orbwalker:OnPreMovement(function(arg) 
-			if blockmovement then
-				arg.Process = false
-			end
-		end)
-		
 		_G.SDK.Orbwalker:OnPreAttack(function(arg) 
 			if arg.Target.type == "AIHeroClient" and DontAAPassive and not Viktor:HasBuff(myHero,"viktorpowertransferreturn") then
 				arg.Process = false
 			end
-			
-			if blockattack then
-				arg.Process = false
-			end
 		end)
-	else
-		PrintChat("This script support IC Orbwalker only")
-		
+	elseif _G.EOW then
+		orbwalkername = "EOW"	
+	elseif _G.GOS then
+		orbwalkername = "Noddy orbwalker"
 	end
+	PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 end
 function EnableMovement()
 	SetMovement(true)
