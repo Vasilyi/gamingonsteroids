@@ -298,9 +298,19 @@ function Viktor:CalcEPos(target)
 	local predictmaintarget
 	local tempdist = myHero.pos:DistanceTo(target.pos)
 	if tempdist > 525 then
-		predictmaintarget = target:GetPrediction(math.huge, E.Delay + (tempdist-525)/espeed)
+		if TYPE_GENERIC then
+			predictmaintarget = (EPrediction["EMax"]:GetPrediction(target, myHero.pos:Extended(target,525))).castPos
+		else
+			predictmaintarget = target:GetPrediction(math.huge, E.Delay + (tempdist-525)/espeed)
+		end
+		
 	else
-		predictmaintarget = target:GetPrediction(math.huge, E.Delay)
+		if TYPE_GENERIC then
+			predictmaintarget = (EPrediction[_E]:GetPrediction(target, myHero.pos)).castPos
+		else
+			predictmaintarget = target:GetPrediction(math.huge, E.Delay)
+		end
+		
 	end
 	if inRange then 
 		--prediction in range
@@ -315,18 +325,28 @@ function Viktor:CalcEPos(target)
 		--get next target
 		if #outertargets > 0 then
 			for i, outtarg in ipairs(outertargets) do
-				-- should be new predict source
-				local newpred = outtarg:GetPrediction(math.huge, E.Delay + outtarg.pos:DistanceTo(predictmaintarget)/E.Speed)
-				if newpred:DistanceTo(predictmaintarget) < E.length then
+				
+				local newpred
+				if TYPE_GENERIC then
+					newpred = (EPrediction["EMax"]:GetPrediction(outtarg, predictmaintarget)).castPos
+				else
+					newpred = outtarg:GetPrediction(math.huge, E.Delay + outtarg.pos:DistanceTo(predictmaintarget)/E.Speed)
+				end
+				if newpred and newpred:DistanceTo(predictmaintarget) < E.length then
 					table.insert(closetopredict, outtarg)
 				end
 			end
 		end
 		if #innertargets > 0 then
 			for i, inntarg in ipairs(innertargets) do
-				-- should be new predict source
-				local newpred = inntarg:GetPrediction(math.huge, E.Delay + inntarg.pos:DistanceTo(predictmaintarget)/E.Speed)
-				if newpred:DistanceTo(predictmaintarget) < E.length then
+				local newpred
+				if TYPE_GENERIC then
+					newpred = (EPrediction["EMax"]:GetPrediction(inntarg, predictmaintarget)).castPos
+				else
+					newpred = inntarg:GetPrediction(math.huge, E.Delay + inntarg.pos:DistanceTo(predictmaintarget)/E.Speed)
+				end
+				
+				if newpred and newpred:DistanceTo(predictmaintarget) < E.length then
 					table.insert(closetopredict, inntarg)
 				end
 			end
@@ -344,7 +364,12 @@ function Viktor:CalcEPos(target)
 			end
 		end
 		if closetopredictionhero then 
-			pos2 = closetopredictionhero:GetPrediction(espeed, E.Delay)
+			if TYPE_GENERIC then
+				pos2 = (EPrediction[_E]:GetPrediction(closetopredictionhero, myHero.pos)).castPos
+			else
+				pos2 = closetopredictionhero:GetPrediction(espeed, E.Delay)
+			end
+			
 		else
 			pos2 = target.pos
 		end
@@ -356,18 +381,27 @@ function Viktor:CalcEPos(target)
 		-- potential start target from position
 		if #innertargets > 0 then
 			for i, innertarg in ipairs(innertargets) do
-				-- should be new predict source
-				local newpred = innertarg:GetPrediction(math.huge, E.Delay)
-				if newpred:DistanceTo(predictmaintarget) < E.length and myHero.pos:DistanceTo(newpred)<E.Range then
+				local newpred
+				if TYPE_GENERIC then
+					newpred = (EPrediction[_E]:GetPrediction(innertarg, myHero.pos)).castPos
+				else
+					newpred = innertarg:GetPrediction(math.huge, E.Delay)
+				end
+				
+				if newpred and newpred:DistanceTo(predictmaintarget) < E.length and myHero.pos:DistanceTo(newpred)<E.Range then
 					table.insert(closetopredict, innertarg)
 				end
 			end
 			
 			
 			for i, innertarg in ipairs(outertargets) do
-				-- should be new predict source
-				local newpred = innertarg:GetPrediction(espeed, E.Delay)
-				if newpred:DistanceTo(predictmaintarget) < E.length and myHero.pos:DistanceTo(newpred)<E.Range then
+				local newpred
+				if TYPE_GENERIC then
+					newpred = (EPrediction[_E]:GetPrediction(innertarg, myHero.pos)).castPos
+				else
+					newpred = innertarg:GetPrediction(espeed, E.Delay)
+				end
+				if newpred and newpred:DistanceTo(predictmaintarget) < E.length and myHero.pos:DistanceTo(newpred)<E.Range then
 					table.insert(closetopredict, innertarg)
 				end
 			end
@@ -385,7 +419,12 @@ function Viktor:CalcEPos(target)
 				
 			end
 			if closetopredictionhero then 
-				pos2 = closetopredictionhero:GetPrediction(espeed, E.Delay)
+				if TYPE_GENERIC then
+					pos2 = (EPrediction[_E]:GetPrediction(closetopredictionhero, myHero.pos)).castPos
+				else
+					pos2 = closetopredictionhero:GetPrediction(espeed, E.Delay)
+				end
+				
 				return pos2,predictmaintarget
 			else
 				return startPoint,predictmaintarget
@@ -781,6 +820,10 @@ function Viktor:LoadSpells()
 	if TYPE_GENERIC then
 		local RSpell = Prediction:SetSpell({range = R.Range, speed = R.Speed, delay = R.Delay, width = R.Radius}, TYPE_CIRCULAR, true)
 		EPrediction[_R] = RSpell
+		local ESpell = Prediction:SetSpell({range = E.Range, speed = E.Speed, delay = E.Delay, width = E.width}, TYPE_LINE, true)
+		EPrediction[_E] = ESpell
+		local EMaxSpell = Prediction:SetSpell({range = E.Range, speed = E.Speed, delay = E.Delay, width = E.width}, TYPE_LINE, true)
+		EPrediction["EMax"] = EMaxSpell
 	end
 end
 --[[Menu Icons]]
