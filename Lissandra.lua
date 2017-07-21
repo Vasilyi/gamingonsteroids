@@ -5,7 +5,7 @@ if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
 	require 'Eternal Prediction'
 	PrintChat("Eternal Prediction library loaded")
 end
-
+require "DamageLib"
 local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
 function SetMovement(bool)
 	if _G.EOWLoaded then
@@ -150,7 +150,10 @@ function Lissandra:UserR()
 					self:CastSpell(HK_R, myHero.pos)
 				end
 			else
-				--if totaldamage > health then ulti
+				local TotalDamage = (self:CanCast(_E) and getdmg("E",RTarget,myHero) or 0) + (self:CanCast(_W) and getdmg("W",RTarget,myHero) or 0) and (self:CanCast(_Q) and getdmg("Q",RTarget,myHero) or 0) and (self:CanCast(_R) and getdmg("R",RTarget,myHero) or 0)
+				if totaldamage > RTarget.health then
+					self:CastSpell(HK_R, RTarget.pos)
+				end
 			end
 		end
 	end
