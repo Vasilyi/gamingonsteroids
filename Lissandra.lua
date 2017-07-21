@@ -27,6 +27,18 @@ class "Lissandra"
 local Scriptname,Version,Author,LVersion = "TRUSt in my Lissandra","v1.0","TRUS","7.14"
 local passive = true
 local lastbuff = 0
+
+
+function CurrentTarget(range)
+	if _G.SDK then -- ic orbwalker
+		return _G.SDK.TargetSelector:GetTarget(range, _G.SDK.DAMAGE_TYPE_MAGICAL);
+	elseif _G.EOW then -- eternal orbwalker
+		return _G.EOW:GetTarget(range)
+	else -- default orbwalker
+		return _G.GOS:GetTarget(range,"AP")
+	end
+end
+
 function Lissandra:__init()
 	
 	self:LoadSpells()
@@ -73,12 +85,18 @@ function Lissandra:LoadMenu()
 	self.Menu.ComboMode:MenuElement({id = "UseR", name = "UseR on enemy", value = true})
 	self.Menu.ComboMode:MenuElement({id = "UseRSelf", name = "Use self ult", value = true})
 	self.Menu.ComboMode:MenuElement({id = "UltCount", name = "Min enemys for SelfR", value = 2, min = 0, max = 5, step = 1, identifier = ""})
+	self.Menu.ComboMode:MenuElement({id = "comboActive", name = "Combo key", key = string.byte(" ")})
 	
 	self.Menu:MenuElement({id = "HarassMode", name = "Harass", type = MENU})
 	self.Menu.HarassMode:MenuElement({id = "UseQ", name = "UseQ", value = true})
 	self.Menu.HarassMode:MenuElement({id = "UseQCreeps", name = "Use Q through creeps", value = true})
 	self.Menu.HarassMode:MenuElement({id = "UseW", name = "UseW", value = true})
+	self.Menu.HarassMode:MenuElement({id = "harassActive", name = "Harass key", key = string.byte("C")})
 	
+	
+	if TYPE_GENERIC then
+		self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
+	end
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5,tooltip = "increase this one if spells is going completely wrong direction", identifier = ""})
 	
@@ -90,9 +108,13 @@ end
 
 
 function Lissandra:Tick()
-	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
-	
-	
+	if myHero.dead or (not _G.SDK and not _G.GOS and not _G.EOW) then return end
+	if self.Menu.HarassMode.harassActive:Value() then
+		self:Harass()
+	end
+	if self.Menu.ComboMode.comboActive:Value() then
+		self:Combo()
+	end
 end
 
 function EnableMovement()
@@ -136,14 +158,6 @@ function Lissandra:CastSpell(spell,pos)
 	end
 end
 
-
---[[CastQ]]
-function Lissandra:CastQ(target)
-	if target and self:CanCast(_Q) then
-		self:CastSpell(HK_Q, target.pos)
-	end
-end
-
 --[[CastQ]]
 function Lissandra:CastW(target)
 	if target and self:CanCast(_W) then
@@ -167,9 +181,24 @@ end
 
 
 function Lissandra:Harass()
-	local temptarget = self:FarQTarget()
-	if temptarget then
-		self:CastSpell(HK_Q,temptarget.pos)
+	if not self:CanCast(_Q) then 
+		return 
+	end 
+	if self.Menu.HarassMode.UseQCreeps:Value() then
+		self:FarQTarget()
+	end
+	local QTarget = CurrentTarget(725)
+	if self.Menu.HarassMode.UseQ:Value() and QTarget then
+		if TYPE_GENERIC then
+			local temppredclose = EPrediction["Q"]:GetPrediction(QTarget, myHero.pos)
+			if temppredclose and temppredclose.hitChance > self.Menu.minchance:Value() then
+				self:CastSpell(castbuttons[i],temppredclose.castPos)
+			end
+		else
+			castPos = target:GetPrediction(Q.Speed,Q.Delay)
+			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
+			self:CastSpell(HK_Q, newpos)
+		end
 	end
 end
 
@@ -177,7 +206,7 @@ end
 
 
 function Lissandra:FarQTarget()
-	local qtarget = (_G.SDK and _G.SDK.TargetSelector:GetTarget(825, _G.SDK.DAMAGE_TYPE_MAGICAL)) or (not _G.SDK and _G.GOS and _G.GOS:GetTarget(825,"AP"))
+	local qtarget = CurrentTarget(825)
 	if qtarget then
 		
 		if myHero.pos:DistanceTo(qtarget.pos)<725 then
