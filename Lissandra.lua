@@ -1,7 +1,10 @@
 if myHero.charName ~= "Lissandra" then return end
 require "2DGeometry"
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
-
+if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
+	require 'Eternal Prediction'
+	PrintChat("Eternal Prediction library loaded")
+end
 
 local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
 function SetMovement(bool)
@@ -42,13 +45,21 @@ function Lissandra:__init()
 	end
 	PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 end
-
+local EPrediction = {}
 --[[Spells]]
 function Lissandra:LoadSpells()
-	Q = {Range = 700, width = 75, Delay = 0.25, Speed = 2250}
+	Q = {Range = 725, width = 75, Delay = 0.25, Speed = 2250}
 	W = {Range = 440, width = nil, Delay = 0.25, Radius = 60, Speed = 2000, Collision = false, aoe = false, type = "linear"}
 	E = {Range = 1050, width = 110, Delay = 0.25, Speed = 850}
 	R = {Range = 550, width = 690, Delay = 0.25, Speed = 800}
+	
+	if TYPE_GENERIC then 
+		local QSpell = Prediction:SetSpell({range = Q.Range, speed = Q.Speed, delay = Q.Delay, width = Q.width}, TYPE_LINE, true)
+		EPrediction["Q"] = QSpell
+		local QSpell2 = Prediction:SetSpell({range = 825, speed = Q.Speed, delay = Q.Delay, width = Q.width}, TYPE_LINE, true)
+		EPrediction["Q2"] = QSpell2
+	end
+	
 end
 
 
@@ -67,7 +78,7 @@ function Lissandra:LoadMenu()
 	self.Menu.HarassMode:MenuElement({id = "UseQ", name = "UseQ", value = true})
 	self.Menu.HarassMode:MenuElement({id = "UseQCreeps", name = "Use Q through creeps", value = true})
 	self.Menu.HarassMode:MenuElement({id = "UseW", name = "UseW", value = true})
-
+	
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5,tooltip = "increase this one if spells is going completely wrong direction", identifier = ""})
 	
@@ -80,7 +91,7 @@ end
 
 function Lissandra:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
-
+	
 	
 end
 
@@ -166,61 +177,71 @@ end
 
 
 function Lissandra:FarQTarget()
-	local qtarget = (_G.SDK and _G.SDK.TargetSelector:GetTarget(900, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(900,"AD"))
+	local qtarget = (_G.SDK and _G.SDK.TargetSelector:GetTarget(825, _G.SDK.DAMAGE_TYPE_MAGICAL)) or (not _G.SDK and _G.GOS and _G.GOS:GetTarget(825,"AP"))
 	if qtarget then
 		
-		if myHero.pos:DistanceTo(qtarget.pos)<500 then
+		if myHero.pos:DistanceTo(qtarget.pos)<725 then
 			return qtarget
 		end
 		
-		
-		local qdelay = 0.4 - myHero.levelData.lvl*0.01
-		local pos = qtarget:GetPrediction(math.huge,qdelay)
-		if not pos then return false end 
-		local minionlist = {}
-		if _G.SDK then
-			minionlist = _G.SDK.ObjectManager:GetEnemyMinions(500)
-		elseif _G.GOS then
-			for i = 1, Game.MinionCount() do
-				local minion = Game.Minion(i)
-				if minion.valid and minion.isEnemy and minion.pos:DistanceTo(myHero.pos) < 500 then
-					table.insert(minionlist, minion)
+		if TYPE_GENERIC then
+			local temppredclose = EPrediction["Q"]:GetPrediction(temptarget, myHero.pos)
+			local temppredfar = EPrediction["Q2"]:GetPrediction(temptarget, myHero.pos)
+			if temppredclose and temppredclose.hitChance > self.Menu.minchance:Value() then
+				self:CastSpell(castbuttons[i],temppredclose.castPos)
+			end
+			
+			if temppredfar and temppredfar.castPos and EPrediction["Q2"]:mCollision() > 0 and temppredfar.hitChance > self.Menu.minchance:Value() then
+				self:CastSpell(HK_Q,temppredfar.castPos)
+			end
+		else
+			local pos = qtarget:GetPrediction(Q.Speed,Q.Delay)
+			if not pos then return false end 
+			local minionlist = {}
+			if _G.SDK then
+				minionlist = _G.SDK.ObjectManager:GetEnemyMinions(725)
+			elseif _G.GOS then
+				for i = 1, Game.MinionCount() do
+					local minion = Game.Minion(i)
+					if minion.valid and minion.isEnemy and minion.pos:DistanceTo(myHero.pos) < 725 then
+						table.insert(minionlist, minion)
+					end
+				end
+			end
+			V = Vector(pos) - Vector(myHero.pos)
+			
+			Vn = V:Normalized()
+			Distance = myHero.pos:DistanceTo(pos)
+			tx, ty, tz = Vn:Unpack()
+			TopX = pos.x - (tx * Distance)
+			TopY = pos.y - (ty * Distance)
+			TopZ = pos.z - (tz * Distance)
+			
+			Vr = V:Perpendicular():Normalized()
+			Radius = qtarget.boundingRadius or 65
+			tx, ty, tz = Vr:Unpack()
+			
+			LeftX = pos.x + (tx * Radius)
+			LeftY = pos.y + (ty * Radius)
+			LeftZ = pos.z + (tz * Radius)
+			RightX = pos.x - (tx * Radius)
+			RightY = pos.y - (ty * Radius)
+			RightZ = pos.z - (tz * Radius)
+			
+			Left = Point(LeftX, LeftY, LeftZ)
+			Right = Point(RightX, RightY, RightZ)
+			Top = Point(TopX, TopY, TopZ)
+			Poly = Polygon(Left, Right, Top)
+			
+			for i, minion in pairs(minionlist) do
+				toPoint = Point(minion.pos.x, minion.pos.y,minion.pos.z)
+				if Poly:__contains(toPoint) then
+					self:CastSpell(HK_Q,minion.pos)
 				end
 			end
 		end
-		V = Vector(pos) - Vector(myHero.pos)
-		
-		Vn = V:Normalized()
-		Distance = myHero.pos:DistanceTo(pos)
-		tx, ty, tz = Vn:Unpack()
-		TopX = pos.x - (tx * Distance)
-		TopY = pos.y - (ty * Distance)
-		TopZ = pos.z - (tz * Distance)
-		
-		Vr = V:Perpendicular():Normalized()
-		Radius = qtarget.boundingRadius or 65
-		tx, ty, tz = Vr:Unpack()
-		
-		LeftX = pos.x + (tx * Radius)
-		LeftY = pos.y + (ty * Radius)
-		LeftZ = pos.z + (tz * Radius)
-		RightX = pos.x - (tx * Radius)
-		RightY = pos.y - (ty * Radius)
-		RightZ = pos.z - (tz * Radius)
-		
-		Left = Point(LeftX, LeftY, LeftZ)
-		Right = Point(RightX, RightY, RightZ)
-		Top = Point(TopX, TopY, TopZ)
-		Poly = Polygon(Left, Right, Top)
-		
-		for i, minion in pairs(minionlist) do
-			toPoint = Point(minion.pos.x, minion.pos.y,minion.pos.z)
-			if Poly:__contains(toPoint) then
-				return minion
-			end
-		end
+		return false 
 	end
-	return false 
 end
 
 
