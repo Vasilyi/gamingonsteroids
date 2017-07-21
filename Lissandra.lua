@@ -61,7 +61,7 @@ local EPrediction = {}
 --[[Spells]]
 function Lissandra:LoadSpells()
 	Q = {Range = 725, width = 75, Delay = 0.25, Speed = 2250}
-	W = {Range = 440, width = nil, Delay = 0.25, Radius = 60, Speed = 2000, Collision = false, aoe = false, type = "linear"}
+	W = {Range = 440, width = nil, Delay = 0.25, Radius = 60, Speed = math.huge, Collision = false, aoe = false, type = "linear"}
 	E = {Range = 1050, width = 110, Delay = 0.25, Speed = 850}
 	R = {Range = 550, width = 690, Delay = 0.25, Speed = 800}
 	
@@ -81,11 +81,14 @@ function Lissandra:LoadMenu()
 	self.Menu:MenuElement({id = "ComboMode", name = "Combo", type = MENU})
 	self.Menu.ComboMode:MenuElement({id = "UseQ", name = "UseQ", value = true})
 	self.Menu.ComboMode:MenuElement({id = "UseW", name = "UseW", value = true})
-	self.Menu.ComboMode:MenuElement({id = "UseE", name = "UseE", value = true})
-	self.Menu.ComboMode:MenuElement({id = "UseR", name = "UseR on enemy", value = true})
-	self.Menu.ComboMode:MenuElement({id = "UseRSelf", name = "Use self ult", value = true})
-	self.Menu.ComboMode:MenuElement({id = "UltCount", name = "Min enemys for SelfR", value = 2, min = 0, max = 5, step = 1, identifier = ""})
+	self.Menu.ComboMode:MenuElement({id = "UseR", name = "UseR", value = true})
 	self.Menu.ComboMode:MenuElement({id = "comboActive", name = "Combo key", key = string.byte(" ")})
+	
+	self.Menu:MenuElement({id = "RMode", name = "R Usage", type = MENU})
+	self.Menu.RMode:MenuElement({id = "UseR", name = "Force R key", key = string.byte("G")})
+	self.Menu.RMode:MenuElement({id = "UseRSelf", name = "Use self ult", value = true})
+	self.Menu.RMode:MenuElement({id = "UltCount", name = "Min enemys for SelfR", value = 2, min = 0, max = 5, step = 1, identifier = ""})
+	
 	
 	self.Menu:MenuElement({id = "HarassMode", name = "Harass", type = MENU})
 	self.Menu.HarassMode:MenuElement({id = "UseQ", name = "UseQ", value = true})
@@ -115,6 +118,10 @@ function Lissandra:Tick()
 	if self.Menu.ComboMode.comboActive:Value() then
 		self:Combo()
 	end
+	
+	if (self.Menu.ComboMode.UseR:Value() and self.Menu.ComboMode.comboActive:Value()) or self.Menu.RMode.UseR:Value() then
+		self:UseR()
+	end
 end
 
 function EnableMovement()
@@ -131,6 +138,24 @@ function LeftClick(pos)
 	Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
 	Control.mouse_event(MOUSEEVENTF_LEFTUP)
 	DelayAction(ReturnCursor,0.05,{pos})
+end
+
+function Lissandra:UserR()
+	if self:CanCast(_R) then 
+		local RTarget = CurrentTarget(R.Range)
+		if RTarget then
+			if self.Menu.RMode.UseRSelf:Value() then
+				local countenemys = EnemyInRange(R.Range)
+				if countenemys > self.Menu.RMode.UltCount:Value() then
+					self:CastSpell(HK_R, myHero.pos)
+				end
+			else
+				--if totaldamage > health then ulti
+			end
+		end
+	end
+	
+	
 end
 
 function Lissandra:CastSpell(spell,pos)
@@ -158,13 +183,6 @@ function Lissandra:CastSpell(spell,pos)
 	end
 end
 
---[[CastQ]]
-function Lissandra:CastW(target)
-	if target and self:CanCast(_W) then
-		self:CastSpell(HK_W, target.pos)
-	end
-end
-
 
 function Lissandra:IsReady(spellSlot)
 	return myHero:GetSpellData(spellSlot).currentCd == 0 and myHero:GetSpellData(spellSlot).level > 0
@@ -178,27 +196,101 @@ function Lissandra:CanCast(spellSlot)
 	return self:IsReady(spellSlot) and self:CheckMana(spellSlot)
 end
 
+function Lissandra:Combo()
+	if self:CanCast(_Q) then 
+		local QTarget = CurrentTarget(725)
+		if self.Menu.ComboMode.UseQ:Value() and QTarget then
+			if TYPE_GENERIC then
+				local temppredclose = EPrediction["Q"]:GetPrediction(QTarget, myHero.pos)
+				if temppredclose and temppredclose.hitChance > self.Menu.minchance:Value() then
+					self:CastSpell(HK_Q,temppredclose.castPos)
+				end
+			else
+				castPos = target:GetPrediction(Q.Speed,Q.Delay)
+				local newpos = myHero.pos:Extended(castPos,math.random(100,300))
+				self:CastSpell(HK_Q, newpos)
+			end
+		end
+	end
+	
+	if self:CanCast(_W) then 
+		local WTarget = CurrentTarget(W.Range)
+		if self.Menu.ComboMode.UseW:Value() and WTarget then
+			if TYPE_GENERIC then
+				local temppred = EPrediction[_W]:GetPrediction(WTarget, myHero.pos)
+				if temppred and temppred.hitChance > self.Menu.minchance:Value() then
+					self:CastSpell(HK_W)
+				end
+			else
+				local castPos = target:GetPrediction(W.Speed,W.Delay)
+				if castPos then
+					self:CastSpell(HK_W)
+				end
+			end
+		end
+		
+	end
+end
+function Lissandra:GetEnemyHeroes()
+	self.EnemyHeroes = {}
+	for i = 1, Game.HeroCount() do
+		local Hero = Game.Hero(i)
+		if Hero.isEnemy then
+			table.insert(self.EnemyHeroes, Hero)
+		end
+	end
+	return self.EnemyHeroes
+end
+
+function Lissandra:EnemyInRange(range)
+	local count = 0
+	if not source then return end
+	for i, target in ipairs(self:GetEnemyHeroes()) do
+		if target.pos:DistanceTo(source) < radius then 
+			count = count + 1
+		end
+	end
+	return count
+end
 
 
 function Lissandra:Harass()
-	if not self:CanCast(_Q) then 
-		return 
-	end 
-	if self.Menu.HarassMode.UseQCreeps:Value() then
-		self:FarQTarget()
-	end
-	local QTarget = CurrentTarget(725)
-	if self.Menu.HarassMode.UseQ:Value() and QTarget then
-		if TYPE_GENERIC then
-			local temppredclose = EPrediction["Q"]:GetPrediction(QTarget, myHero.pos)
-			if temppredclose and temppredclose.hitChance > self.Menu.minchance:Value() then
-				self:CastSpell(castbuttons[i],temppredclose.castPos)
-			end
-		else
-			castPos = target:GetPrediction(Q.Speed,Q.Delay)
-			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-			self:CastSpell(HK_Q, newpos)
+	if self:CanCast(_Q) then 
+		
+		if self.Menu.HarassMode.UseQCreeps:Value() then
+			self:FarQTarget()
 		end
+		local QTarget = CurrentTarget(725)
+		if self.Menu.HarassMode.UseQ:Value() and QTarget then
+			if TYPE_GENERIC then
+				local temppredclose = EPrediction["Q"]:GetPrediction(QTarget, myHero.pos)
+				if temppredclose and temppredclose.hitChance > self.Menu.minchance:Value() then
+					self:CastSpell(HK_Q,temppredclose.castPos)
+				end
+			else
+				castPos = target:GetPrediction(Q.Speed,Q.Delay)
+				local newpos = myHero.pos:Extended(castPos,math.random(100,300))
+				self:CastSpell(HK_Q, newpos)
+			end
+		end
+	end
+	
+	if self:CanCast(_W) then 
+		local WTarget = CurrentTarget(W.Range)
+		if self.Menu.HarassMode.UseW:Value() and WTarget then
+			if TYPE_GENERIC then
+				local temppred = EPrediction[_W]:GetPrediction(WTarget, myHero.pos)
+				if temppred and temppred.hitChance > self.Menu.minchance:Value() then
+					self:CastSpell(HK_W)
+				end
+			else
+				local castPos = target:GetPrediction(W.Speed,W.Delay)
+				if castPos then
+					self:CastSpell(HK_W)
+				end
+			end
+		end
+		
 	end
 end
 
