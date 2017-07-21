@@ -7,6 +7,10 @@ if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
 end
 require "DamageLib"
 local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
+local barHeight = 8
+local barWidth = 103
+local barXOffset = 0
+local barYOffset = 0
 function SetMovement(bool)
 	if _G.EOWLoaded then
 		EOW:SetMovements(bool)
@@ -44,7 +48,7 @@ function Lissandra:__init()
 	self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
-	
+	Callback.Add("Draw", function() self:Draw() end)
 	local orbwalkername = ""
 	if _G.SDK then
 		orbwalkername = "IC'S orbwalker"		
@@ -85,6 +89,7 @@ function Lissandra:LoadMenu()
 	self.Menu.ComboMode:MenuElement({id = "UseW", name = "UseW", value = true})
 	self.Menu.ComboMode:MenuElement({id = "UseR", name = "UseR", value = true})
 	self.Menu.ComboMode:MenuElement({id = "comboActive", name = "Combo key", key = string.byte(" ")})
+	self.Menu.ComboMode:MenuElement({id = "DrawDamage", name = "Draw damage on HPbar", value = true})
 	
 	self.Menu:MenuElement({id = "RMode", name = "R Usage", type = MENU})
 	self.Menu.RMode:MenuElement({id = "UseR", name = "Force R key", key = string.byte("G")})
@@ -143,15 +148,39 @@ function LeftClick(pos)
 	Control.mouse_event(MOUSEEVENTF_LEFTUP)
 	DelayAction(ReturnCursor,0.05,{pos})
 end
-
+function Lissandra:Draw()
+	if self.Menu.ComboMode.DrawDamage:Value() then
+		for i, hero in pairs(self:GetEnemyHeroes()) do
+			local barPos = hero.hpBar
+			if not hero.dead and hero.pos2D.onScreen and barPos.onScreen and hero.visible then
+				--local barYOffset = self.Menu.Draw.HPBarOffset:Value()
+				local QDamage = (self:CanCast(_Q) and getdmg("Q",hero,myHero) or 0)
+				local WDamage = (self:CanCast(_W) and getdmg("W",hero,myHero) or 0)
+				local EDamage = (self:CanCast(_E) and getdmg("E",hero,myHero) or 0)
+				local RDamage = (self:CanCast(_R) and getdmg("R",hero,myHero) or 0)
+				local damage = QDamage + WDamage + EDamage + RDamage
+				if damage > hero.health then
+					Draw.Text("killable", 24, hero.pos2D.x, hero.pos2D.y,Draw.Color(0xFF00FF00))
+					
+				else
+					local percentHealthAfterDamage = math.max(0, hero.health - damage) / hero.maxHealth
+					local xPosEnd = barPos.x + barXOffset + barWidth * hero.health/hero.maxHealth
+					local xPosStart = barPos.x + barXOffset + percentHealthAfterDamage * 100
+					Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 10, Draw.Color(0xFF00FF00))
+				end
+			end
+		end	
+	end
+end
 function Lissandra:UseR()
 	if self:CanCast(_R) then 
 		local RTarget = CurrentTarget(R.Range)
 		if RTarget then
 			if self.Menu.RMode.UseRSelf:Value() then
 				local countenemys = self:EnemyInRange(R.Range) or 0
-				if countenemys > self.Menu.RMode.UltCount:Value() then
+				if countenemys >= self.Menu.RMode.UltCount:Value() and myHero.maxHealth * 50 * 0.01 < myHero.health then
 					self:CastSpell(HK_R, myHero.pos)
+					return
 				end
 			end
 			local QDamage = (self:CanCast(_Q) and getdmg("Q",RTarget,myHero) or 0)
@@ -255,9 +284,8 @@ end
 
 function Lissandra:EnemyInRange(range)
 	local count = 0
-	if not source then return end
 	for i, target in ipairs(self:GetEnemyHeroes()) do
-		if target.pos:DistanceTo(source) < radius then 
+		if target.pos:DistanceTo(myHero.pos) < range then 
 			count = count + 1
 		end
 	end
