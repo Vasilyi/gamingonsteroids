@@ -282,8 +282,8 @@ Champs = {
 	},
 	
 	["Urgot"] = {
-		[_Q] = {delay = 125, range = 1000, minionCollisionWidth = 60, speed = 1600},
-		[_E] = {delay = 250, range = 1100, minionCollisionWidth = 210, speed = 1500, ignorecol = true,circular = true}
+		[_Q] = {delay = 250, range = 800, minionCollisionWidth = 60, speed = 500,ignorecol = true,circular = true},
+		[_R] = {delay = 850, range = 1600, minionCollisionWidth = 80, speed = 2100,ignorecol = true}
 	},
 	
 	["Veigar"] = {
@@ -319,7 +319,7 @@ Champs = {
 local CollSpell = {}
 local EPrediction = {}
 function IHateSkillshots:__init()
-	--PrintChat(myHero.charName.." : ".." Speed: "..myHero:GetSpellData(_Q).speed.." Range: "..myHero:GetSpellData(_Q).range.." Width: "..myHero:GetSpellData(_Q).width)
+	--PrintChat(myHero.charName.." : ".." Speed: "..myHero:GetSpellData(_Q).speed.." Range: "..myHero:GetSpellData(_Q).range.." Width: "..myHero:GetSpellData(_Q).width.." minSpeed: " .. myHero:GetSpellData(_Q).minSpeed)
 	if Champs[myHero.charName] == nil then
 		PrintChat "Hero didnt have skillshots, IHateSkillshots unloaded"
 		return
@@ -391,10 +391,14 @@ function IHateSkillshots:LoadMenu()
 		self.Menu.Draw:MenuElement({id = "color"..str[i], name = "Color for "..str[i], color = Draw.Color(0xBF3F3FFF)})
 		self.Menu.Skillshots:MenuElement({id = str[i], name = "Use"..str[i], key = keybindings[i]})
 	end
-	self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
+	if TYPE_GENERIC then
+		self.Menu:MenuElement({id = "EternalUse", name = "Use eternal prediction", value = true})
+		self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
+	end
 	if _G.Collision then
 		self.Menu:MenuElement({id = "addcollision", name = "Additional collision size", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	end
+	
 	
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
@@ -448,10 +452,11 @@ end
 
 function IHateSkillshots:IsValidTarget(unit, range, checkTeam, from)
 	local range = range == nil and math.huge or range
-	if unit == nil or not unit.valid or not unit.visible or unit.dead or not unit.isTargetable --[[or self:IsImmune(unit)]] or (checkTeam and unit.isAlly) then
-	return false
-end
-return unit.pos:DistanceTo(from and from or myHero.pos) < range
+	local from = from or myHero.pos
+	if unit == nil or not unit.valid or not unit.visible or unit.dead or not unit.isTargetable or (checkTeam and unit.isAlly) then
+		return false
+	end
+	return unit.pos:DistanceTo(from) < range
 end
 
 function IHateSkillshots:CheckMana(spellSlot)
@@ -525,15 +530,15 @@ function IHateSkillshots:CastSpell(spell,pos)
 end
 
 function IHateSkillshots:Tick()
-	
 	for i, spell in pairs(Champs[myHero.charName]) do
 		if self.Menu.Skillshots[str[i]]:Value() and self:CanCast(i) then
 			local temptarget = self:GetTarget(spell.range)
 			if temptarget == nil then return end
 			local temppred
 			local collisionc = spell.ignorecol and 0 or spell.minionCollisionWidth
-			if TYPE_GENERIC then
+			if TYPE_GENERIC and self.Menu.EternalUse:Value() then
 				temppred = EPrediction[i]:GetPrediction(temptarget, myHero.pos)
+				
 				if collisionc > 0 then
 					if EPrediction[i]:mCollision() > 0 then
 						return
@@ -555,7 +560,7 @@ function IHateSkillshots:Tick()
 						return 
 					end
 				end
-				if spell.circular or myHero.charName == "Urgot" then 
+				if spell.circular then 
 					self:CastSpell(castbuttons[i],temppred)
 				else
 					local newpos = myHero.pos:Extended(temppred,math.random(100,300))

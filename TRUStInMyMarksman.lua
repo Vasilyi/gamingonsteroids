@@ -66,7 +66,7 @@ end
 
 if myHero.charName == "Ashe" then
 	class "Ashe"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","7.11"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","7.15"
 	function Ashe:GetBuffs(unit)
 		self.T = {}
 		for i = 0, unit.buffCount do
@@ -349,7 +349,7 @@ end
 
 if myHero.charName == "Lucian" then
 	class "Lucian"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.4","TRUS","7.11"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.4","TRUS","7.15"
 	local passive = true
 	local lastbuff = 0
 	function Lucian:__init()
@@ -636,7 +636,7 @@ end
 
 if myHero.charName == "Caitlyn" then
 	class "Caitlyn"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.6","TRUS","7.11"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.6","TRUS","7.15"
 	require "DamageLib"
 	local qtarget
 	if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
@@ -1264,7 +1264,7 @@ end
 
 if myHero.charName == "KogMaw" then
 	class "KogMaw"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.1","TRUS","7.11"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.1","TRUS","7.15"
 	function KogMaw:__init()
 		self:LoadSpells()
 		self:LoadMenu()
@@ -1486,7 +1486,7 @@ if myHero.charName == "KogMaw" then
 end
 
 if myHero.charName == "Kalista" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.10","TRUS","7.11"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.10","TRUS","7.15"
 	class "Kalista"
 	require "DamageLib"
 	
@@ -1986,7 +1986,7 @@ end
 
 
 if myHero.charName == "Sivir" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Sivir","v1.0","TRUS","7.10"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Sivir","v1.0","TRUS","7.15"
 	class "Sivir"
 	
 	function Sivir:__init()
@@ -2052,7 +2052,7 @@ end
 
 if myHero.charName == "Corki" then
 	class "Corki"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.0","TRUS","7.12"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.0","TRUS","7.15"
 	
 	if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
 		require 'Eternal Prediction'
