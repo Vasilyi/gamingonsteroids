@@ -1,5 +1,5 @@
 class "IHateSkillshots"
-local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.3","TRUS","7.11"
+local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.4","TRUS","7.15"
 if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
 	require 'Eternal Prediction'
 	PrintChat("Eternal Prediction library loaded")
