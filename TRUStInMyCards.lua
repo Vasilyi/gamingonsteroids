@@ -86,23 +86,22 @@ end
 function TwistedFate:Tick()
 	if myHero.dead then return end
 	local WName = myHero:GetSpellData(_W).name
+	local WStatus = myHero:GetSpellData(_W).toggleState
 	if (self:CanCast(_W)) and WName == "PickACard" and GetTickCount() > lastpick + 500 then
 		ToSelect = "NONE"
 		if self.Menu.CardPicker.GoldCard:Value() then
 			--PrintChat("gold")
 			ToSelect = "GOLD"
-			lastpick = GetTickCount()
 		elseif self.Menu.CardPicker.RedCard:Value() then
 			--PrintChat("red")
 			ToSelect = "RED"
-			lastpick = GetTickCount()
 		elseif self.Menu.CardPicker.BlueCard:Value() then
 			--PrintChat("blue")
 			ToSelect = "BLUE"
-			lastpick = GetTickCount()
 		end
 		if ToSelect ~= "NONE" then
 			Control.CastSpell(HK_W)
+			lastpick = GetTickCount()
 		end
 	end
 	
@@ -126,13 +125,13 @@ function TwistedFate:Tick()
 			self:CastQ()
 		end
 	end
-	
-	
+	if (WStatus == 2) then
+		ToSelect = "NONE"
+	end
 	if ((ToSelect == "GOLD" or self.Menu.CardPicker.GoldCard:Value()) and WName == "GoldCardLock")
 	or ((ToSelect == "RED" or self.Menu.CardPicker.RedCard:Value()) and WName == "RedCardLock") 
 	or ((ToSelect == "BLUE" or self.Menu.CardPicker.BlueCard:Value()) and WName == "BlueCardLock") then
 		Control.CastSpell(HK_W)
-		ToSelect = "NONE"
 	end
 	
 end
