@@ -1,5 +1,5 @@
 if myHero.charName ~= "TwistedFate" then return end
-local Scriptname,Version,Author,LVersion = "TRUSt in my Cards","v1.0","TRUS","7.10"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Cards","v1.1","TRUS","7.15"
 
 class "TwistedFate"
 
