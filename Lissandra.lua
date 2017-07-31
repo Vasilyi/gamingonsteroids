@@ -94,6 +94,7 @@ function Lissandra:LoadMenu()
 	self.Menu:MenuElement({id = "RMode", name = "R Usage", type = MENU})
 	self.Menu.RMode:MenuElement({id = "UseR", name = "Force R key", key = string.byte("G")})
 	self.Menu.RMode:MenuElement({id = "UseRSelf", name = "Use self ult", value = true})
+	self.Menu.RMode:MenuElement({id = "SelfUltHP", name = "Max HP for SelfR", value = 50, min = 0, max = 100, step = 1, identifier = "%"})
 	self.Menu.RMode:MenuElement({id = "UltCount", name = "Min enemys for SelfR", value = 2, min = 0, max = 5, step = 1, identifier = ""})
 	
 	
@@ -178,7 +179,7 @@ function Lissandra:UseR()
 		if RTarget then
 			if self.Menu.RMode.UseRSelf:Value() then
 				local countenemys = self:EnemyInRange(R.Range) or 0
-				if countenemys >= self.Menu.RMode.UltCount:Value() and myHero.maxHealth * 50 * 0.01 < myHero.health then
+				if countenemys >= self.Menu.RMode.UltCount:Value() and myHero.maxHealth * self.Menu.RMode.SelfUltHP:Value() * 0.01 >= myHero.health then
 					self:CastSpell(HK_R, myHero.pos)
 					return
 				end
