@@ -1,4 +1,4 @@
-local Scriptname,Version,Author,LVersion = "TRUSt in my Viktor","v0.9","TRUS","7.6"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Viktor","v1.0","TRUS","7.15"
 
 class "Viktor"
 require "DamageLib"
@@ -62,8 +62,6 @@ local InterruptSpellsList = {
 local spellslist = {_Q,_W,_E,_R,SUMMONER_1,SUMMONER_2}
 lastcallback = {}
 
-blockattack = false
-blockmovement = false
 function ReturnState(champion,spell)
 	lastcallback[champion.charName..spell.name] = false
 end
@@ -646,6 +644,7 @@ end
 
 function Viktor:Draw()
 	if myHero.dead then return end
+
 	if self.Menu.Draw.DrawQ:Value() then
 		Draw.Circle(myHero.pos, Q.Range, 3, self.Menu.Draw.QRangeC:Value())
 	end
@@ -732,13 +731,6 @@ function ReturnCursor(pos)
 	DelayAction(EnableMovement,0.1)
 end
 
-function SecondPosE(pos)
-	Control.SetCursorPos(pos)
-	Control.KeyUp(HK_E)
-	DelayAction(ReturnCursor,0.05,{pos})
-end
-
-
 function LeftClick(pos)
 	Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
 	Control.mouse_event(MOUSEEVENTF_LEFTUP)
@@ -746,10 +738,21 @@ function LeftClick(pos)
 end
 
 
+local smartcast
+function SecondPosE(pos)
+	Control.SetCursorPos(pos)
+	Control.KeyUp(HK_E)
+	if not smartcast then
+		Control.mouse_event(MOUSEEVENTF_LEFTUP)
+	end
+	DelayAction(ReturnCursor,0.05,{pos})
+	
+end
 
 function Viktor:CastESpell(pos1, pos2)
 	local delay = self.Menu.delay:Value()
 	local ticker = GetTickCount()
+	smartcast = self.Menu.smartcast:Value()
 	if castSpell.state == 0 and ticker > castSpell.casting then
 		--block movement
 		castSpell.state = 1
@@ -758,10 +761,10 @@ function Viktor:CastESpell(pos1, pos2)
 		SetMovement(false)
 		Control.SetCursorPos(pos1)
 		Control.KeyDown(HK_E)
-		if not self.Menu.smartcast:Value() then
+		if not smartcast then
 			Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
 		end
-		DelayAction(SecondPosE,0.02,{pos2})
+		DelayAction(SecondPosE,delay/1000,{pos2})
 		castSpell.casting = ticker + delay
 	end
 end
