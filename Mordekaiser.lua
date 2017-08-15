@@ -324,7 +324,7 @@ end
 function Mordekaiser:CastR()
 	local ERangeTarget = CurrentTarget(E.Range) 
 	local RRangeTarget = CurrentTarget(R.Range) 
-	local RTarget = (self.Menu.RMode["RU"..ERangeTarget.charName]:Value() and ERangeTarget) or (self.Menu.RMode["RU"..RRangeTarget.charName]:Value() and RRangeTarget)
+	local RTarget = (ERangeTarget and self.Menu.RMode["RU"..ERangeTarget.charName]:Value() and ERangeTarget) or (RRangeTarget and self.Menu.RMode["RU"..RRangeTarget.charName]:Value() and RRangeTarget)
 	if RTarget then
 		local WDamage = (self:CanCast(_W) and getdmg("W",RTarget,myHero) or 0)
 		local EDamage = (self:CanCast(_E) and getdmg("E",RTarget,myHero) or 0)
