@@ -91,10 +91,6 @@ function Mordekaiser:LoadSpells()
 	W = {Range = 750}
 	E = {Range = 650, width = 45, Delay = 0.5, Speed = 1500}
 	R = {Range = 850}
-	if TYPE_GENERIC then 
-		local ESpell = Prediction:SetSpell({range = E.Range, speed = E.Speed, delay = E.Delay, width = E.width}, TYPE_LINE, true)
-		EPrediction["W"] = WSpell
-	end
 end
 
 
@@ -104,6 +100,7 @@ function Mordekaiser:LoadMenu()
 	self.Menu:MenuElement({id = "ComboMode", name = "Combo", type = MENU})
 	self.Menu.ComboMode:MenuElement({id = "UseQ", name = "UseQ", value = true})
 	self.Menu.ComboMode:MenuElement({id = "UseW", name = "UseW", value = true})
+	self.Menu.ComboMode:MenuElement({id = "UseE", name = "UseE", value = true})
 	self.Menu.ComboMode:MenuElement({id = "UseR", name = "UseR", value = true})
 	self.Menu.ComboMode:MenuElement({id = "comboActive", name = "Combo key", key = string.byte(" ")})
 	self.Menu.ComboMode:MenuElement({id = "DrawDamage", name = "Draw damage on HPbar", value = true})
@@ -130,10 +127,10 @@ function Mordekaiser:LoadMenu()
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 end
 
-function Mordekaiser:GetBuffs()
+function Mordekaiser:GetAllBuffs(target)
 	self.T = {}
-	for i = 0, myHero.buffCount do
-		local Buff = myHero:GetBuff(i)
+	for i = 0, target.buffCount do
+		local Buff = target:GetBuff(i)
 		if Buff.count > 0 then
 			table.insert(self.T, Buff)
 		end
@@ -141,9 +138,20 @@ function Mordekaiser:GetBuffs()
 	return self.T
 end
 
-function Mordekaiser:HasBuff(buffname)
-	for K, Buff in pairs(self:GetBuffs()) do
-		if string.find(Buff.name:lower(), buffname:lower()) then
+function Mordekaiser:HasWBuff(target)
+	for K, Buff in pairs(self:GetAllBuffs(target)) do
+		if Buff and Buff.duration > 0 and string.find(Buff.name:lower(), "mordekaisercreepingdeath") then
+			return true
+		end
+	end
+	return false
+end
+
+
+function Mordekaiser:HasQBuff()
+	for i = 0, myHero.buffCount do
+		local Buff = myHero:GetBuff(i)
+		if Buff and Buff.duration > 0 and string.find(Buff.name:lower(), "mordekaisermaceofspades") then
 			return true
 		end
 	end
@@ -151,47 +159,51 @@ function Mordekaiser:HasBuff(buffname)
 end
 local WTarget
 
+
+function Mordekaiser:GetHealAmount()
+	local healcount = 0 
+	local healcount2 = 0
+	for i, healtarget in pairs(_G.SDK.ObjectManager:GetEnemyMinions(2000)) do
+		
+	end
+end
+
+
 function Mordekaiser:GetWTarget()
-	for i = 1, Game.MissileCount() do
-		local missile = Game.Missile(i);
-		if missile and missile.valid and missile.missileData and missile.missileData.owner == myHero.handle then 
-			for i, WTarget in pairs(_G.SDK.ObjectManager:GetAllyMinions(2000)) do
-				if WTarget.handle == missile.missileData.target then
-					return WTarget
-				end
-			end
-			for i, WTarget in pairs(_G.SDK.ObjectManager:GetAllyHeroes(2000)) do
-				if WTarget.handle == missile.missileData.target then
-					return WTarget
-				end
-			end
+	for i, wTarget in pairs(_G.SDK.ObjectManager:GetAllyMinions(2000)) do
+		if self:HasWBuff(wTarget) then
+			return wTarget
 		end
 	end
-	return nil
+	for i, wTarget in pairs(_G.SDK.ObjectManager:GetAllyHeroes(2000)) do
+		if not wTarget.isMe and self:HasWBuff(wTarget) then
+			return wTarget
+		end
+	end
 end
 
 function Mordekaiser:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS and not _G.EOW) then return end
 	local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
-	--PrintChat(myHero:GetSpellData(_W).name)
-	if myHero:GetSpellData(_W).currentCd > 3 then 
+	if WTarget and (myHero:GetSpellData(_W).currentCd > 3 or myHero.dead or not WTarget.valid) then 
 		WTarget = nil 
 	end
 	if self:CanCast(_W) and not WTarget then 
-		--PrintChat("KEK")
 		WTarget = self:GetWTarget()
 	end
-	if myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name then
-		--PrintChat(myHero.activeSpell.name)
-	end
 	
-	if ((combomodeactive and self.Menu.ComboMode.UseQ:Value()) or (harassactive and self.Menu.HarassMode.UseQ:Value())) and self:CanCast(_Q) and canmove and not canattack and not self:HasBuff("mordekaisermaceofspades") then
+	if ((combomodeactive and self.Menu.ComboMode.UseQ:Value()) or (harassactive and self.Menu.HarassMode.UseQ:Value())) and self:CanCast(_Q) and canmove and not canattack and not self:HasQBuff() then
 		Control.CastSpell(HK_Q)
 	end
 	
 	if ((combomodeactive and self.Menu.ComboMode.UseW:Value()) or (harassactive and self.Menu.HarassMode.UseW:Value())) and self:CanCast(_W) then
-		--self:CastW()
+		self:CastW()
 	end
+	
+	if ((combomodeactive and self.Menu.ComboMode.UseE:Value()) or (harassactive and self.Menu.HarassMode.UseE:Value())) and self:CanCast(_E) then
+		self:CastE()
+	end
+	
 end
 
 function EnableMovement()
@@ -212,8 +224,7 @@ end
 function Mordekaiser:Draw()
 	
 	if WTarget then
-		Draw.Circle(WTarget.pos, 125, 3, Draw.Color(0xBFBF3FFF))
-		
+		Draw.Circle(WTarget.pos, 250, 3, Draw.Color(0xBFBF3FFF))
 	end
 	
 	if self.Menu.ComboMode.DrawDamage:Value() then
@@ -239,30 +250,30 @@ function Mordekaiser:Draw()
 		end	
 	end
 end
-function Mordekaiser:UseR()
-	if self:CanCast(_R) then 
-		local RTarget = CurrentTarget(R.Range)
-		if RTarget then
-			if self.Menu.RMode.UseRSelf:Value() then
-				local countenemys = self:EnemyInRange(R.Range) or 0
-				if countenemys >= self.Menu.RMode.UltCount:Value() and myHero.maxHealth * self.Menu.RMode.SelfUltHP:Value() * 0.01 >= myHero.health then
-					self:CastSpell(HK_R, myHero.pos)
-					return
-				end
-			end
-			local QDamage = (self:CanCast(_Q) and getdmg("Q",RTarget,myHero) or 0)
-			local WDamage = (self:CanCast(_W) and getdmg("W",RTarget,myHero) or 0)
-			local EDamage = (self:CanCast(_E) and getdmg("E",RTarget,myHero) or 0)
-			local RDamage = (self:CanCast(_R) and getdmg("R",RTarget,myHero) or 0)
-			local TotalDamage = QDamage + WDamage + EDamage + RDamage
-			if TotalDamage > RTarget.health and ((QDamage + WDamage) < RTarget.health) then
-				self:CastSpell(HK_R, RTarget.pos)
-			end
-			
+
+
+
+function Mordekaiser:CastW()
+	if WTarget then
+		
+	else
+		
+	end
+end
+
+function Mordekaiser:CastE()
+	local ETarget = CurrentTarget(E.Range)
+	if ETarget then
+		local castpos = ETarget:GetPrediction(E.Speed,E.Delay)
+		if myHero.pos:DistanceTo(castpos) < E.Range then
+			castpos = myHero.pos:Extended(castpos,math.random(100,400))
+			self:CastSpell(HK_E,castpos)
 		end
 	end
-	
-	
+end
+
+function Mordekaiser:CastR()
+	local RTarget = CurrentTarget(E.Range) or CurrentTarget(R.Range)
 end
 
 function Mordekaiser:CastSpell(spell,pos)
