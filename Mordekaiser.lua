@@ -170,16 +170,22 @@ end
 
 
 function Mordekaiser:GetWTarget()
+	local isMe = false
 	for i, wTarget in pairs(_G.SDK.ObjectManager:GetAllyMinions(2000)) do
 		if self:HasWBuff(wTarget) then
 			return wTarget
 		end
 	end
 	for i, wTarget in pairs(_G.SDK.ObjectManager:GetAllyHeroes(2000)) do
-		if not wTarget.isMe and self:HasWBuff(wTarget) then
-			return wTarget
+		if self:HasWBuff(wTarget) then
+			if not wTarget.isMe then
+				return wTarget
+			else
+				isMe = true
+			end
 		end
 	end
+	return isMe and myHero or nil
 end
 
 function Mordekaiser:Tick()
@@ -251,13 +257,51 @@ function Mordekaiser:Draw()
 	end
 end
 
+function Mordekaiser:FindClosestTarget(target)
+	for i, wTarget in pairs(_G.SDK.ObjectManager:GetAllyMinions(2000)) do
+		if wTarget.pos:DistanceTo(target.pos) < 250 then
+			return wTarget
+		end
+	end
+	for i, wTarget in pairs(_G.SDK.ObjectManager:GetAllyHeroes(2000)) do
+		if wTarget.pos:DistanceTo(target.pos) < 250 then
+			return wTarget
+		end
+	end
+	return nil 
+end
 
+function Mordekaiser:CountEnemys(target)
+	local countminions = 0
+	local countheroes = 0
+	for i, wTarget in pairs(_G.SDK.ObjectManager:GetEnemyMinions(2000)) do
+		if wTarget.pos:DistanceTo(target.pos) < 250 then
+			countminions = countminions + 1
+		end
+	end
+	for i, wTarget in pairs(_G.SDK.ObjectManager:GetEnemyHeroes(2000)) do
+		if wTarget.pos:DistanceTo(target.pos) < 250 then
+			countheroes = countheroes + 1
+		end
+	end
+	return countminions, countheroes
+end
 
 function Mordekaiser:CastW()
+	local wEnemy = CurrentTarget(E.Range) or CurrentTarget(1000)
 	if WTarget then
-		
-	else
-		
+		local countminions, countheroes = self:CountEnemys(WTarget)
+		if countheroes > 0 then 
+			Control.CastSpell(HK_W)
+		end
+		if myHero.maxHealth * 0.7 >= myHero.health and countminions > 2 then
+			Control.CastSpell(HK_W)
+		end
+	elseif wEnemy then
+		local casttarget = self:FindClosestTarget(wEnemy)
+		if casttarget then
+			self:CastSpell(HK_W,casttarget.pos)
+		end
 	end
 end
 
