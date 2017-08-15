@@ -110,7 +110,7 @@ function Mordekaiser:LoadMenu()
 	
 	self.Menu:MenuElement({id = "RMode", name = "R Usage", type = MENU})
 	self.Menu.RMode:MenuElement({id = "UseR", name = "Force R key", key = string.byte("G")})
-
+	
 	
 	self.Menu:MenuElement({id = "HarassMode", name = "Harass", type = MENU})
 	self.Menu.HarassMode:MenuElement({id = "UseQ", name = "UseQ", value = true})
@@ -130,18 +130,67 @@ function Mordekaiser:LoadMenu()
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 end
 
+function Mordekaiser:GetBuffs()
+	self.T = {}
+	for i = 0, myHero.buffCount do
+		local Buff = myHero:GetBuff(i)
+		if Buff.count > 0 then
+			table.insert(self.T, Buff)
+		end
+	end
+	return self.T
+end
 
+function Mordekaiser:HasBuff(buffname)
+	for K, Buff in pairs(self:GetBuffs()) do
+		if string.find(Buff.name:lower(), buffname:lower()) then
+			return true
+		end
+	end
+	return false
+end
+local WTarget
+
+function Mordekaiser:GetWTarget()
+	for i = 1, Game.MissileCount() do
+		local missile = Game.Missile(i);
+		if missile and missile.valid and missile.missileData and missile.missileData.owner == myHero.handle then 
+			for i, WTarget in pairs(_G.SDK.ObjectManager:GetAllyMinions(2000)) do
+				if WTarget.handle == missile.missileData.target then
+					return WTarget
+				end
+			end
+			for i, WTarget in pairs(_G.SDK.ObjectManager:GetAllyHeroes(2000)) do
+				if WTarget.handle == missile.missileData.target then
+					return WTarget
+				end
+			end
+		end
+	end
+	return nil
+end
 
 function Mordekaiser:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS and not _G.EOW) then return end
 	local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
-
-	if ((combomodeactive and self.Menu.ComboMode.UseQ:Value()) or (harassactive and self.Menu.HarassMode.UseQ:Value())) and self:CanCast(_Q) and canmove and not canattack then
+	--PrintChat(myHero:GetSpellData(_W).name)
+	if myHero:GetSpellData(_W).currentCd > 3 then 
+		WTarget = nil 
+	end
+	if self:CanCast(_W) and not WTarget then 
+		--PrintChat("KEK")
+		WTarget = self:GetWTarget()
+	end
+	if myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name then
+		--PrintChat(myHero.activeSpell.name)
+	end
+	
+	if ((combomodeactive and self.Menu.ComboMode.UseQ:Value()) or (harassactive and self.Menu.HarassMode.UseQ:Value())) and self:CanCast(_Q) and canmove and not canattack and not self:HasBuff("mordekaisermaceofspades") then
 		Control.CastSpell(HK_Q)
 	end
 	
 	if ((combomodeactive and self.Menu.ComboMode.UseW:Value()) or (harassactive and self.Menu.HarassMode.UseW:Value())) and self:CanCast(_W) then
-		self:CastW()
+		--self:CastW()
 	end
 end
 
@@ -161,6 +210,12 @@ function LeftClick(pos)
 	DelayAction(ReturnCursor,0.05,{pos})
 end
 function Mordekaiser:Draw()
+	
+	if WTarget then
+		Draw.Circle(WTarget.pos, 125, 3, Draw.Color(0xBFBF3FFF))
+		
+	end
+	
 	if self.Menu.ComboMode.DrawDamage:Value() then
 		for i, hero in pairs(self:GetEnemyHeroes()) do
 			local barPos = hero.hpBar
@@ -240,12 +295,8 @@ function Mordekaiser:IsReady(spellSlot)
 	return myHero:GetSpellData(spellSlot).currentCd == 0 and myHero:GetSpellData(spellSlot).level > 0
 end
 
-function Mordekaiser:CheckMana(spellSlot)
-	return myHero:GetSpellData(spellSlot).mana < myHero.mana
-end
-
 function Mordekaiser:CanCast(spellSlot)
-	return self:IsReady(spellSlot) and self:CheckMana(spellSlot)
+	return self:IsReady(spellSlot)
 end
 
 
