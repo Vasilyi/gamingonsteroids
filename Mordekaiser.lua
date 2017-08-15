@@ -106,6 +106,10 @@ function Mordekaiser:LoadMenu()
 	self.Menu.ComboMode:MenuElement({id = "DrawDamage", name = "Draw damage on HPbar", value = true})
 	
 	self.Menu:MenuElement({id = "RMode", name = "R Usage", type = MENU})
+	for i, hero in pairs(self:GetEnemyHeroes()) do
+		self.Menu.RMode:MenuElement({id = "RU"..hero.charName, name = "Use R on: "..hero.charName, value = true})
+	end
+	
 	self.Menu.RMode:MenuElement({id = "UseR", name = "Force R key", key = string.byte("G")})
 	
 	
@@ -210,6 +214,10 @@ function Mordekaiser:Tick()
 		self:CastE()
 	end
 	
+	if ((combomodeactive and self.Menu.ComboMode.UseR:Value()) or (self.Menu.RMode.UseR:Value())) and self:CanCast(_R) then
+		self:CastR()
+	end
+	
 end
 
 function EnableMovement()
@@ -275,12 +283,12 @@ function Mordekaiser:CountEnemys(target)
 	local countminions = 0
 	local countheroes = 0
 	for i, wTarget in pairs(_G.SDK.ObjectManager:GetEnemyMinions(2000)) do
-		if wTarget.pos:DistanceTo(target.pos) < 250 then
+		if wTarget.pos:DistanceTo(target.pos) < 250 or wTarget.pos:DistanceTo(myHero.pos) < 250 then
 			countminions = countminions + 1
 		end
 	end
 	for i, wTarget in pairs(_G.SDK.ObjectManager:GetEnemyHeroes(2000)) do
-		if wTarget.pos:DistanceTo(target.pos) < 250 then
+		if wTarget.pos:DistanceTo(target.pos) < 250 or wTarget.pos:DistanceTo(myHero.pos) < 250 then
 			countheroes = countheroes + 1
 		end
 	end
@@ -317,7 +325,18 @@ function Mordekaiser:CastE()
 end
 
 function Mordekaiser:CastR()
-	local RTarget = CurrentTarget(E.Range) or CurrentTarget(R.Range)
+	local ERangeTarget = CurrentTarget(E.Range) 
+	local RRangeTarget = CurrentTarget(R.Range) 
+	local RTarget = (self.Menu.RMode["RU"..ERangeTarget.charName]:Value() and ERangeTarget) or (self.Menu.RMode["RU"..RRangeTarget.charName]:Value() and RRangeTarget)
+	if RTarget then
+		local WDamage = (self:CanCast(_W) and getdmg("W",RTarget,myHero) or 0)
+		local EDamage = (self:CanCast(_E) and getdmg("E",RTarget,myHero) or 0)
+		local RDamage = (self:CanCast(_R) and getdmg("R",RTarget,myHero) or 0)
+		local damage = WDamage + EDamage + RDamage
+		if damage > RTarget.health then
+			self:CastSpell(HK_R,RTarget)
+		end
+	end
 end
 
 function Mordekaiser:CastSpell(spell,pos)
