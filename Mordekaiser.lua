@@ -1,10 +1,7 @@
 if myHero.charName ~= "Mordekaiser" then return end
 require "2DGeometry"
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
-if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
-	require 'Eternal Prediction'
-	PrintChat("Eternal Prediction library loaded")
-end
+
 require "DamageLib"
 local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
 local barHeight = 8
@@ -383,16 +380,6 @@ function Mordekaiser:GetEnemyHeroes()
 		end
 	end
 	return self.EnemyHeroes
-end
-
-function Mordekaiser:EnemyInRange(range)
-	local count = 0
-	for i, target in ipairs(self:GetEnemyHeroes()) do
-		if target.pos:DistanceTo(myHero.pos) < range then 
-			count = count + 1
-		end
-	end
-	return count
 end
 
 function OnLoad()
