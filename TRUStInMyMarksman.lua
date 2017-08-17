@@ -886,7 +886,7 @@ end
 
 if myHero.charName == "Ezreal" then
 	class "Ezreal"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.7","TRUS","7.11"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.8","TRUS","7.16"
 	require "DamageLib"
 	
 	if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
@@ -1004,6 +1004,7 @@ if myHero.charName == "Ezreal" then
 	--[[CastQ]]
 	function Ezreal:CastQ(target)
 		if (not _G.SDK and not _G.GOS) then return end
+		if (myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name == "EzrealArcaneShift") then return end 
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
 		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and self.Menu.UseQ:Value() then
 			local castPos
