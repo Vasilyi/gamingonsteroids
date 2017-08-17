@@ -66,7 +66,7 @@ end
 
 if myHero.charName == "Ashe" then
 	class "Ashe"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","7.15"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","7.16"
 	function Ashe:GetBuffs(unit)
 		self.T = {}
 		for i = 0, unit.buffCount do
@@ -1072,7 +1072,7 @@ if myHero.charName == "Ezreal" then
 end
 
 if myHero.charName == "Twitch" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.4","TRUS","7.11"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.4","TRUS","7.16"
 	class "Twitch"
 	require "DamageLib"
 	local qtarget
@@ -1265,7 +1265,7 @@ end
 
 if myHero.charName == "KogMaw" then
 	class "KogMaw"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.1","TRUS","7.15"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.1","TRUS","7.16"
 	function KogMaw:__init()
 		self:LoadSpells()
 		self:LoadMenu()
@@ -1487,7 +1487,7 @@ if myHero.charName == "KogMaw" then
 end
 
 if myHero.charName == "Kalista" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.10","TRUS","7.15"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.10","TRUS","7.16"
 	class "Kalista"
 	require "DamageLib"
 	
