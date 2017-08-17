@@ -60,10 +60,10 @@ function UseBotrk()
 	end
 end
 
-local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.10","TRUS","7.11"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.11","TRUS","7.16"
 class "Kalista"
 require "DamageLib"
-
+local chainedally = nil
 local barHeight = 8
 local barWidth = 103
 local barXOffset = 0
@@ -156,6 +156,11 @@ function Kalista:LoadMenu()
 	self.Menu.Combo:MenuElement({id = "qMinMana", name = "Minimal mana for Q:", value = 30, min = 0, max = 101, identifier = "%"})
 	self.Menu.Combo:MenuElement({id = "comboUseE", name = "Use E", value = true})
 	
+	--[[UseR]]
+	self.Menu:MenuElement({type = MENU, id = "RLogic", name = "AutoR Settings"})
+	self.Menu.RLogic:MenuElement({id = "Active", name = "Active", value = true})
+	self.Menu.RLogic:MenuElement({id = "RMaxHealth", name = "Health for AutoR:", value = 30, min = 0, max = 100, identifier = "%"})
+	
 	--[[Draw]]
 	self.Menu:MenuElement({type = MENU, id = "Draw", name = "Draw Settings"})
 	self.Menu.Draw:MenuElement({id = "DrawEDamage", name = "Draw number health after E", value = true})
@@ -212,8 +217,23 @@ function Kalista:LoadMenu()
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 end
 
+
+function Kalista:ChainedAlly()
+	for i = 1, Game.HeroCount() do
+		local hero = Game.Hero(i)
+		if self:HasBuff(hero,"kalistacoopstrikeally") then
+			chainedally = hero
+		end
+	end	
+end
+
+
+
 function Kalista:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
+	
+	if not chainedally then self:ChainedAlly() end 
+	
 	local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
 	local HarassMinMana = self.Menu.Harass.harassMana:Value()
 	local QMinMana = self.Menu.Combo.qMinMana:Value()
@@ -240,6 +260,12 @@ function Kalista:Tick()
 	if (harassactive or combomodeactive) and self:CanCast(_E) and not canattack then
 		if self.Menu.Harass.harassUseERange:Value() then 
 			self:UseERange()
+		end
+	end
+	
+	if self.Menu.RLogic.Active:Value() and chainedally then
+		if chainedally.health/chainedally.maxHealth <= self.Menu.RLogic.RMaxHealth:Value()/100 and self:EnemyInRange(chainedally.pos,500) > 0 then
+			Control.CastSpell(HK_R)
 		end
 	end
 	
@@ -456,6 +482,19 @@ function Kalista:UseEOnLasthit()
 		end
 	end
 end
+
+function Kalista:EnemyInRange(source,radius)
+	local count = 0
+	if not source then return end
+	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1700)) or self:GetEnemyHeroes()
+	for i, target in ipairs(heroeslist) do
+		if target.pos:DistanceTo(source) < radius then 
+			count = count + 1
+		end
+	end
+	return count
+end
+
 function Kalista:GetEnemyHeroes()
 	self.EnemyHeroes = {}
 	for i = 1, Game.HeroCount() do
