@@ -231,7 +231,6 @@ end
 
 function Kalista:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
-	
 	if not chainedally then self:ChainedAlly() end 
 	
 	local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
