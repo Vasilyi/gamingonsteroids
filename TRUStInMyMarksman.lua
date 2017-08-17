@@ -1689,7 +1689,7 @@ if myHero.charName == "Kalista" then
 			end
 		end
 		
-		if self.Menu.RLogic.Active:Value() and chainedally then
+		if self.Menu.RLogic.Active:Value() and chainedally and self:CanCast(_R) then
 			if chainedally.health/chainedally.maxHealth <= self.Menu.RLogic.RMaxHealth:Value()/100 and self:EnemyInRange(chainedally.pos,500) > 0 then
 				Control.CastSpell(HK_R)
 			end
