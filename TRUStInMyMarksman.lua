@@ -692,6 +692,7 @@ if myHero.charName == "Caitlyn" then
 		self.Menu:MenuElement({id = "DrawColor", name = "Color for Killable circle", color = Draw.Color(0xBF3F3FFF)})
 		
 		if TYPE_GENERIC then
+			self.Menu:MenuElement({id = "EternalUse", name = "Use eternal prediction", value = true})
 			self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
 		end
 		
@@ -851,7 +852,7 @@ if myHero.charName == "Caitlyn" then
 	function Caitlyn:CastE(target)
 		if not _G.SDK and not _G.GOS then return end
 		local castpos
-		if TYPE_GENERIC then
+		if TYPE_GENERIC and self.Menu.EternalUse:Value() then
 			castPos = EPrediction[_E]:GetPrediction(target, myHero.pos)
 			if castPos.hitChance >= self.Menu.minchance:Value() and EPrediction[_E]:mCollision() == 0 then
 				local newpos = myHero.pos:Extended(castPos.castPos,math.random(100,300))
@@ -929,6 +930,7 @@ if myHero.charName == "Ezreal" then
 		self.Menu:MenuElement({id = "UseQLH", name = "[WIP] UseQ to lasthit", value = true})
 		self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 		if TYPE_GENERIC then
+			self.Menu:MenuElement({id = "EternalUse", name = "Use eternal prediction", value = true})
 			self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
 		end
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
@@ -1008,7 +1010,7 @@ if myHero.charName == "Ezreal" then
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
 		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and self.Menu.UseQ:Value() then
 			local castPos
-			if TYPE_GENERIC then
+			if TYPE_GENERIC and self.Menu.EternalUse:Value() then
 				castPos = EPrediction[_Q]:GetPrediction(target, myHero.pos)
 				if castPos.hitChance >= self.Menu.minchance:Value() and EPrediction[_Q]:mCollision() == 0 then
 					local newpos = myHero.pos:Extended(castPos.castPos,math.random(100,300))
@@ -2176,6 +2178,7 @@ if myHero.charName == "Corki" then
 		self.Menu.Harass:MenuElement({id = "harassMana", name = "Minimal mana percent:", value = 30, min = 0, max = 101, identifier = "%"})
 		
 		if TYPE_GENERIC then
+			self.Menu:MenuElement({id = "EternalUse", name = "Use eternal prediction", value = true})
 			self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
 		end
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
@@ -2278,7 +2281,7 @@ if myHero.charName == "Corki" then
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_MAGICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AP"))
 		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and ((combo and self.Menu.Combo.comboUseQ:Value()) or (combo == false and self.Menu.Harass.harassUseQ:Value())) then
 			local castpos
-			if TYPE_GENERIC then
+			if TYPE_GENERIC and self.Menu.EternalUse:Value() then
 				castPos = EPrediction["Q"]:GetPrediction(target, myHero.pos)
 				if castPos.hitChance >= self.Menu.minchance:Value() then
 					self:CastSpell(HK_Q, castPos.castPos)
@@ -2311,7 +2314,7 @@ if myHero.charName == "Corki" then
 		and ((combo == false and currentultstacks > self.Menu.Harass.HarassMaxStacks:Value()) or (combo and currentultstacks > self.Menu.Combo.MaxStacks:Value()))
 		then
 			local ulttype = self:HasBig() and "R2" or "R"
-			if TYPE_GENERIC then
+			if TYPE_GENERIC and self.Menu.EternalUse:Value() then
 				castPos = EPrediction[ulttype]:GetPrediction(target, myHero.pos)
 				if castPos.hitChance >= self.Menu.minchance:Value() and EPrediction[ulttype]:mCollision() == 0 then
 					local newpos = myHero.pos:Extended(castPos.castPos,math.random(100,300))

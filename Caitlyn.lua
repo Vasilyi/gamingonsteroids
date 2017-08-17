@@ -120,6 +120,7 @@ function Caitlyn:LoadMenu()
 	self.Menu:MenuElement({id = "DrawColor", name = "Color for Killable circle", color = Draw.Color(0xBF3F3FFF)})
 	
 	if TYPE_GENERIC then
+		self.Menu:MenuElement({id = "EternalUse", name = "Use eternal prediction", value = true})
 		self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
 	end
 	
@@ -278,7 +279,7 @@ end
 function Caitlyn:CastE(target)
 	if not _G.SDK and not _G.GOS then return end
 	local castpos
-	if TYPE_GENERIC then
+	if TYPE_GENERIC and self.Menu.EternalUse:Value() then
 		castPos = EPrediction[_E]:GetPrediction(target, myHero.pos)
 		if castPos.hitChance >= self.Menu.minchance:Value() and EPrediction[_E]:mCollision() == 0 then
 			local newpos = myHero.pos:Extended(castPos.castPos,math.random(100,300))

@@ -104,6 +104,7 @@ function Ezreal:LoadMenu()
 	self.Menu:MenuElement({id = "UseQLH", name = "[WIP] UseQ to lasthit", value = true})
 	self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 	if TYPE_GENERIC then
+		self.Menu:MenuElement({id = "EternalUse", name = "Use eternal prediction", value = true})
 		self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
 	end
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
@@ -179,11 +180,11 @@ end
 --[[CastQ]]
 function Ezreal:CastQ(target)
 	if (not _G.SDK and not _G.GOS) then return end
-	if (myHero.activeSpell and  myHero.activeSpell.valid and myHero.activeSpell.name == "EzrealArcaneShift") then return end 
+	if (myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name == "EzrealArcaneShift") then return end 
 	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
 	if target and target.type == "AIHeroClient" and self:CanCast(_Q) and self.Menu.UseQ:Value() then
 		local castPos
-		if TYPE_GENERIC then
+		if TYPE_GENERIC and self.Menu.EternalUse:Value() then
 			castPos = EPrediction[_Q]:GetPrediction(target, myHero.pos)
 			if castPos.hitChance >= self.Menu.minchance:Value() and EPrediction[_Q]:mCollision() == 0 then
 				local newpos = myHero.pos:Extended(castPos.castPos,math.random(100,300))

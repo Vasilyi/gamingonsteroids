@@ -146,6 +146,7 @@ function Corki:LoadMenu()
 	self.Menu.Harass:MenuElement({id = "harassMana", name = "Minimal mana percent:", value = 30, min = 0, max = 101, identifier = "%"})
 	
 	if TYPE_GENERIC then
+		self.Menu:MenuElement({id = "EternalUse", name = "Use eternal prediction", value = true})
 		self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
 	end
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
@@ -248,7 +249,7 @@ function Corki:CastQ(target, combo)
 	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_MAGICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AP"))
 	if target and target.type == "AIHeroClient" and self:CanCast(_Q) and ((combo and self.Menu.Combo.comboUseQ:Value()) or (combo == false and self.Menu.Harass.harassUseQ:Value())) then
 		local castpos
-		if TYPE_GENERIC then
+		if TYPE_GENERIC and self.Menu.EternalUse:Value() then
 			castPos = EPrediction["Q"]:GetPrediction(target, myHero.pos)
 			if castPos.hitChance >= self.Menu.minchance:Value() then
 				self:CastSpell(HK_Q, castPos.castPos)
@@ -281,7 +282,7 @@ function Corki:CastR(target,combo)
 	and ((combo == false and currentultstacks > self.Menu.Harass.HarassMaxStacks:Value()) or (combo and currentultstacks > self.Menu.Combo.MaxStacks:Value()))
 	then
 		local ulttype = self:HasBig() and "R2" or "R"
-		if TYPE_GENERIC then
+		if TYPE_GENERIC and self.Menu.EternalUse:Value() then
 			castPos = EPrediction[ulttype]:GetPrediction(target, myHero.pos)
 			if castPos.hitChance >= self.Menu.minchance:Value() and EPrediction[ulttype]:mCollision() == 0 then
 				local newpos = myHero.pos:Extended(castPos.castPos,math.random(100,300))
