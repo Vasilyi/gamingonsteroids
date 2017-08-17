@@ -739,13 +739,13 @@ end
 
 
 local smartcast
-function SecondPosE(pos)
+function SecondPosE(pos,originalpos)
 	Control.SetCursorPos(pos)
 	Control.KeyUp(HK_E)
 	if not smartcast then
 		Control.mouse_event(MOUSEEVENTF_LEFTUP)
 	end
-	DelayAction(ReturnCursor,0.05,{pos})
+	DelayAction(ReturnCursor,0.05,{originalpos})
 	
 end
 
@@ -764,7 +764,7 @@ function Viktor:CastESpell(pos1, pos2)
 		if not smartcast then
 			Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
 		end
-		DelayAction(SecondPosE,delay/1000,{pos2})
+		DelayAction(SecondPosE,delay/1000,{pos2,castSpell.mouse})
 		castSpell.casting = ticker + delay
 	end
 end
