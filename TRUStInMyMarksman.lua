@@ -1181,10 +1181,10 @@ if myHero.charName == "Twitch" then
 		for i = 1, Game.ObjectCount() do
 			local object = Game.Object(i)		
 			if object then
-				for i, hero in pairs(heroeslist) do
-					if object.pos:DistanceTo(hero.pos)<200 and object ~= hero then 
-						local stacksamount = Twitch:GetStacks(object.name)
-						if stacksamount > 0 then
+				local stacksamount = Twitch:GetStacks(object.name)
+				if stacksamount > 0 then
+					for i, hero in pairs(heroeslist) do
+						if object.pos:DistanceTo(hero.pos)<200 and object ~= hero then 	
 							stacks[hero.charName] = object
 						end
 					end
