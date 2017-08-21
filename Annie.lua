@@ -261,10 +261,10 @@ function Annie:Burst()
 	if not targetR then return end 
 	if targetR and self:Ready(_R) and not self:TibbersAlive() then
 		local predpos = targetR:GetPrediction(R.speed,R.delay)
-		if predpos and myHero.pos:DistanceTo(predpos) > 600 then
+		if predpos and myHero.pos:DistanceTo(predpos) > 600 and myHero.pos:DistanceTo(predpos) < 850 then
 			predpos = myHero.pos:Extended(predpos,600)
 		end
-		if predpos then
+		if predpos and myHero.pos:DistanceTo(predpos) < 850 then
 			self:CastSpell(HK_R,predpos)
 		end
 		
@@ -295,10 +295,10 @@ function Annie:Combo()
 	if not targetR then return end 
 	if targetR and self.Menu.Ripper.Combo.R:Value() and self:Ready(_R) and not self:TibbersAlive() then
 		local predpos = targetR:GetPrediction(R.speed,R.delay)
-		if predpos and myHero.pos:DistanceTo(predpos) > 600 then
+		if predpos and myHero.pos:DistanceTo(predpos) > 600 and myHero.pos:DistanceTo(predpos) < 850 then
 			predpos = myHero.pos:Extended(predpos,600)
 		end
-		if predpos and self:EnemiesAround(predpos, 250) >= self.Menu.Ripper.Combo.ER:Value() then
+		if predpos and self:EnemiesAround(predpos, 250) >= self.Menu.Ripper.Combo.ER:Value() and myHero.pos:DistanceTo(predpos) < 600 then
 			if (not self.Menu.Ripper.Combo.RS:Value() 
 			or self:StunIsUp()) and ((self:GetDamage(targetR,true,true,true,true) > targetR.health and self:GetDamage(targetR,true,true,false,true) < targetR.health) or (self:StunIsUp() and self:GetDamage(targetR,true,true,true,false) > targetR.health and self:GetDamage(targetR,true,true,false,true) < targetR.health)) then
 				self:CastSpell(HK_R,predpos)
