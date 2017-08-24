@@ -147,8 +147,8 @@ end
 stacks = {}
 function recheckparticle()
 	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
-	for i = 1, Game.ObjectCount() do
-		local object = Game.Object(i)		
+	for i = 1, Game.ParticleCount() do
+		local object = Game.Particle(i)		
 		if object then
 			local stacksamount = Twitch:GetStacks(object.name)
 			if stacksamount > 0 then
