@@ -1074,7 +1074,7 @@ if myHero.charName == "Ezreal" then
 end
 
 if myHero.charName == "Twitch" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.4","TRUS","7.16"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.5","TRUS","7.17"
 	class "Twitch"
 	require "DamageLib"
 	local qtarget

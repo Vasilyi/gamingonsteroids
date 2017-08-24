@@ -43,7 +43,7 @@ function UseBotrk()
 		end
 	end
 end
-local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.4","TRUS","7.11"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.5","TRUS","7.17"
 class "Twitch"
 require "DamageLib"
 local qtarget
