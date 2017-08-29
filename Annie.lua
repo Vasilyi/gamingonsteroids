@@ -264,7 +264,7 @@ function Annie:Burst()
 		if predpos and myHero.pos:DistanceTo(predpos) > 600 and myHero.pos:DistanceTo(predpos) < 850 then
 			predpos = myHero.pos:Extended(predpos,600)
 		end
-		if predpos and myHero.pos:DistanceTo(predpos) < 850 then
+		if predpos and myHero.pos:DistanceTo(predpos) <= 600 then
 			self:CastSpell(HK_R,predpos)
 		end
 		
@@ -606,4 +606,6 @@ function Annie:Draw()
 	if self.Menu.Ripper.Drawings.R:Value() then Draw.Circle(myHero.pos, R.range, self.Menu.Ripper.Drawings.Width:Value(), self.Menu.Ripper.Drawings.Color:Value())
 	end
 end
+function OnLoad()
 Annie()
+end
