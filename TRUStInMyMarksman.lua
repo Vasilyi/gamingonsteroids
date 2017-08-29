@@ -1204,10 +1204,12 @@ if myHero.charName == "Twitch" then
 			if stacks[hero.charName] and self:GetStacks(stacks[hero.charName].name) > 0 then 
 				local EDamage = (self:GetStacks(stacks[hero.charName].name) * (({15, 20, 25, 30, 35})[level] + 0.2 * myHero.ap + 0.25 * myHero.bonusDamage)) + ({20, 35, 50, 65, 80})[level]
 				local tmpdmg = CalcPhysicalDamage(myHero, hero, EDamage)
-				if hero.health and tmpdmg and tmpdmg > hero.health and myHero.pos:DistanceTo(hero.pos)<1200 then
-					table.insert(self.KillableHeroes, hero)
-				else
-					table.insert(self.DamageHeroes, {hero = hero, damage = EDamage})
+				if hero.health and tmpdmg then 
+					if tmpdmg > hero.health and myHero.pos:DistanceTo(hero.pos)<1200 then
+						table.insert(self.KillableHeroes, hero)
+					else
+						table.insert(self.DamageHeroes, {hero = hero, damage = tmpdmg})
+					end
 				end
 			end
 		end
