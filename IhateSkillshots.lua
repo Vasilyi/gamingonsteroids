@@ -243,7 +243,7 @@ Champs = {
 	},
 	
 	["Soraka"] = {
-		[_Q] = {delay = 500, range = 950, minionCollisionWidth = 300, speed = 1750,ignorecol = true}
+		[_Q] = {delay = 500, range = 950, minionCollisionWidth = 300, speed = 1750,ignorecol = true,circular = true}
 	},
 	
 	
