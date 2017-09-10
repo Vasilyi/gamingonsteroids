@@ -1,5 +1,5 @@
 class "IHateSkillshots"
-local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.4","TRUS","7.15"
+local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.5","TRUS","7.17"
 if FileExist(COMMON_PATH .. "TPred.lua") then
 	require 'TPred'
 	PrintChat("TPred library loaded")
@@ -401,6 +401,9 @@ function IHateSkillshots:LoadMenu()
 	if _G.Collision then
 		self.Menu:MenuElement({id = "addcollision", name = "Additional collision size", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	end
+	if (TPred) then
+		self.Menu:MenuElement({id = "TPredDraw", name = "Draw TPred position", value = true})
+	end
 	
 	
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
@@ -541,14 +544,12 @@ function IHateSkillshots:Tick()
 			local collisionc = spell.ignorecol and 0 or spell.minionCollisionWidth
 			
 			if (TPred) then
-			local castpos,HitChance, pos = TPred:GetBestCastPosition(temptarget, spell.delay/1000, spell.minionCollisionWidth/2, spell.range,spell.speed, myHero.pos,not spell.ignorecol, spell.circular and "circular" or "line")
-			if (HitChance > 0 ) then
-			self:CastSpell(castbuttons[i],castpos)
-			end
-		
+				local castpos,HitChance, pos = TPred:GetBestCastPosition(temptarget, spell.delay/1000, spell.minionCollisionWidth/2, spell.range,spell.speed, myHero.pos,not spell.ignorecol, spell.circular and "circular" or "line")
+				if (HitChance > 0 ) then
+					self:CastSpell(castbuttons[i],castpos)
+				end
 			elseif TYPE_GENERIC and self.Menu.EternalUse:Value() then
 				temppred = EPrediction[i]:GetPrediction(temptarget, myHero.pos)
-				
 				if collisionc > 0 then
 					if EPrediction[i]:mCollision() > 0 then
 						return
@@ -597,11 +598,11 @@ function IHateSkillshots:Draw()
 			local temppred
 			local collisionc = spell.ignorecol and 0 or spell.minionCollisionWidth
 			
-				if (TPred) then
+			if (TPred and self.Menu.TPredDraw:Value()) then
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(temptarget, spell.delay/1000, spell.minionCollisionWidth/2, spell.range,spell.speed, myHero.pos,not spell.ignorecol, spell.circular and "circular" or "line")
-					Draw.Circle(castpos, 60, 3, self.Menu.Draw["color"..str[i]]:Value())
-					
-				end
+				Draw.Circle(castpos, 60, 3, self.Menu.Draw["color"..str[i]]:Value())
+				
+			end
 		end
 	end
 	
