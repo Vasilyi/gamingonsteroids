@@ -3,6 +3,7 @@ API:
 TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, collision, spelltype)
 Delay 	  -- in seconds
 Collision -- is boolean
+From      -- Vector3
 Spelltypes:
 	"line"
 	"circular"
@@ -256,7 +257,7 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 	assert(unit, "TPred: Target can't be nil")
 	
 	range = range and range - 4 or math.huge
-	radius = radius == 0 and 1 or (radius + unit.boundingRadius) - 4
+	radius = radius == 0 and 1 or radius - 4
 	speed = speed and speed or math.huge
 
 	if from.networkID and from.networkID == myHero.networkID then

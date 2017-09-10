@@ -61,10 +61,13 @@ function UseBotrk()
 end
 
 class "Ezreal"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.8","TRUS","7.16"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.9","TRUS","7.17"
 require "DamageLib"
 
-if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
+if FileExist(COMMON_PATH .. "TPred.lua") then
+	require 'TPred'
+	PrintChat("TPred library loaded")
+elseif FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
 	require 'Eternal Prediction'
 	PrintChat("Eternal Prediction library loaded")
 end
@@ -91,9 +94,9 @@ end
 local lastpick = 0
 --[[Spells]]
 function Ezreal:LoadSpells()
-	Q = {Range = 1190, width = 60, Delay = 0.25, Radius = 60, Speed = 2000, Collision = false, aoe = false, type = "linear"}
+	Q = {Range = 1150, Width = 60, Delay = 0.25, Speed = 2000, Collision = false, aoe = false, type = "line"}
 	if TYPE_GENERIC then
-		local QSpell = Prediction:SetSpell({range = Q.range, speed = Q.speed, delay = Q.Delay, width = Q.width}, TYPE_LINE, true)
+		local QSpell = Prediction:SetSpell({range = Q.Range, speed = Q.Speed, delay = Q.Delay, width = Q.Width}, TYPE_LINE, true)
 		EPrediction[_Q] = QSpell
 	end
 end
@@ -184,7 +187,13 @@ function Ezreal:CastQ(target)
 	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
 	if target and target.type == "AIHeroClient" and self:CanCast(_Q) and self.Menu.UseQ:Value() then
 		local castPos
-		if TYPE_GENERIC and self.Menu.EternalUse:Value() then
+		if (TPred) then
+			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,true, "line")
+			if (HitChance > 0 ) then
+				local newpos = myHero.pos:Extended(castpos,math.random(100,300))
+				self:CastSpell(HK_Q, newpos)
+			end
+		elseif (TYPE_GENERIC and self.Menu.EternalUse:Value()) then
 			castPos = EPrediction[_Q]:GetPrediction(target, myHero.pos)
 			if castPos.hitChance >= self.Menu.minchance:Value() and EPrediction[_Q]:mCollision() == 0 then
 				local newpos = myHero.pos:Extended(castPos.castPos,math.random(100,300))
