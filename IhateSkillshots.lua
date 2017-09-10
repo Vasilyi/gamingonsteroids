@@ -1,6 +1,9 @@
 class "IHateSkillshots"
 local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.4","TRUS","7.15"
-if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
+if FileExist(COMMON_PATH .. "TPred.lua") then
+	require 'TPred'
+	PrintChat("TPred library loaded")
+elseif FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
 	require 'Eternal Prediction'
 	PrintChat("Eternal Prediction library loaded")
 elseif FileExist(COMMON_PATH .. "Collision.lua") then
@@ -11,25 +14,25 @@ end
 
 Champs = {
 	["Aatrox"] = {
-		[_Q] = { speed = 2000, delay = 0.6, range = 650, minionCollisionWidth = 250,circular = true, ignorecol = true},
-		[_E] = { speed = 1250, delay = 0.25, range = 1075, minionCollisionWidth = 35, ignorecol = true}
+		[_Q] = { speed = 2000, delay = 600, range = 650, minionCollisionWidth = 250,circular = true, ignorecol = true},
+		[_E] = { speed = 1250, delay = 250, range = 1075, minionCollisionWidth = 35, ignorecol = true}
 	},
 	
 	["Ahri"] = {
-		[_Q] = { speed = 2500, delay = 0.25, range = 1000, minionCollisionWidth = 100, ignorecol = true},
-		[_E] = { speed = 1550, delay = 0.25, range = 1000, minionCollisionWidth = 80}
+		[_Q] = { speed = 2500, delay = 250, range = 1000, minionCollisionWidth = 100, ignorecol = true},
+		[_E] = { speed = 1550, delay = 250, range = 1000, minionCollisionWidth = 80}
 	},
 	
 	["Amumu"] = {
-		[_Q] = { speed = 2000, delay = 0.250, range = 1100, minionCollisionWidth = 90}
+		[_Q] = { speed = 2000, delay = 250, range = 1100, minionCollisionWidth = 90}
 	},
 	
 	["Anivia"] = {
-		[_Q] = { speed = 850, delay = 0.250, range = 1100, minionCollisionWidth = 110, ignorecol = true}
+		[_Q] = { speed = 850, delay = 250, range = 1100, minionCollisionWidth = 110, ignorecol = true}
 	},
 	
 	["Bard"] = {
-		[_Q] = { speed = 1600, delay = 0.250, range = 950, minionCollisionWidth = 60}
+		[_Q] = { speed = 1600, delay = 250, range = 950, minionCollisionWidth = 60}
 	},
 	
 	["Blitzcrank"] = {
@@ -48,7 +51,7 @@ Champs = {
 	
 	["Caitlyn"] = {
 		[_Q] = {delay = 625, range = 1300, minionCollisionWidth = 90, speed = 2200, ignorecol = true},
-		[_W] = { delay = 0.6, range = 800, minionCollisionWidth = 80, ignorecol = true,circular = true},
+		[_W] = { delay = 600, range = 800, minionCollisionWidth = 80, ignorecol = true,circular = true},
 		[_E] = {delay = 125, range = 1000, minionCollisionWidth = 70, speed = 1600}
 	},
 	
@@ -536,7 +539,14 @@ function IHateSkillshots:Tick()
 			if temptarget == nil then return end
 			local temppred
 			local collisionc = spell.ignorecol and 0 or spell.minionCollisionWidth
-			if TYPE_GENERIC and self.Menu.EternalUse:Value() then
+			
+			if (TPred) then
+			local castpos,HitChance, pos = TPred:GetBestCastPosition(temptarget, spell.delay/1000, spell.minionCollisionWidth/2, spell.range,spell.speed, myHero.pos,not spell.ignorecol, spell.circular and "circular" or "line")
+			if (HitChance > 0 ) then
+			self:CastSpell(castbuttons[i],castpos)
+			end
+		
+			elseif TYPE_GENERIC and self.Menu.EternalUse:Value() then
 				temppred = EPrediction[i]:GetPrediction(temptarget, myHero.pos)
 				
 				if collisionc > 0 then
@@ -579,6 +589,22 @@ function IHateSkillshots:Draw()
 			Draw.Circle(myHero.pos, spell.range, 3, self.Menu.Draw["color"..str[i]]:Value())
 		end
 	end
+	
+	for i, spell in pairs(Champs[myHero.charName]) do
+		if self:CanCast(i) then
+			local temptarget = self:GetTarget(spell.range)
+			if temptarget == nil then return end
+			local temppred
+			local collisionc = spell.ignorecol and 0 or spell.minionCollisionWidth
+			
+				if (TPred) then
+				local castpos,HitChance, pos = TPred:GetBestCastPosition(temptarget, spell.delay/1000, spell.minionCollisionWidth/2, spell.range,spell.speed, myHero.pos,not spell.ignorecol, spell.circular and "circular" or "line")
+					Draw.Circle(castpos, 60, 3, self.Menu.Draw["color"..str[i]]:Value())
+					
+				end
+		end
+	end
+	
 end
 function OnLoad()
 	IHateSkillshots()
