@@ -216,6 +216,9 @@ function TPred:CheckCol(unit, minion, Position, delay, radius, range, speed, fro
 end
 
 function TPred:CheckMinionCollision(unit, Position, delay, radius, range, speed, from)
+	if (not _G.SDK) then
+		return false
+	end
 	Position = Vector(Position)
 	from = from and Vector(from) or myHero.pos
 	local result = false
