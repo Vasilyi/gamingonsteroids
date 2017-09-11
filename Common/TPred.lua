@@ -99,7 +99,6 @@ function TPred:GetCurrentWayPoints(object)
 end
 function GetDistanceSqr(p1, p2)
 	assert(p1, "GetDistance: invalid argument: cannot calculate distance to "..type(p1))
-	
 	return (p1.x - p2.x) ^ 2 + ((p1.z or p1.y) - (p2.z or p2.y)) ^ 2
 end
 
@@ -115,6 +114,25 @@ function TPred:GetWaypointsLength(Waypoints)
 	return result
 end
 
+function TPred:CanMove(unit, delay)
+	for i = 0, unit.buffCount do
+		local buff = unit:GetBuff(i);
+		if buff.count > 0 and buff.duration>=delay then
+			if (buff.type == 5 or buff.type == 8 or buff.type == 21 or buff.type == 22 or buff.type == 24 or buff.type == 11) then
+				return false -- block everything
+			end
+		end
+	end
+	return true
+end
+
+function TPred:IsImmobile(unit, delay, radius, speed, from, spelltype)
+local ExtraDelay = speed == math.huge and  0 or (GetDistance(from, unit.pos) / speed)
+		if (self:CanMove(unit, delay + ExtraDelay) == false) then
+			return true
+		end
+		return false
+end
 function TPred:CalculateTargetPosition(unit, delay, radius, speed, from, spelltype)
 	local Waypoints = {}
 	local Position, CastPosition = Vector(unit.pos), Vector(unit.pos)
@@ -122,12 +140,13 @@ function TPred:CalculateTargetPosition(unit, delay, radius, speed, from, spellty
 	
 	Waypoints = self:GetCurrentWayPoints(unit)
 	local Waypointslength = self:GetWaypointsLength(Waypoints)
+	local movementspeed = unit.pathing.isDashing and unit.pathing.dashSpeed or unit.ms
 	if #Waypoints == 1 then
 		Position, CastPosition = Vector(Waypoints[1].x, Waypoints[1].y, Waypoints[1].z), Vector(Waypoints[1].x, Waypoints[1].y, Waypoints[1].z)
 		return Position, CastPosition
-	elseif (Waypointslength - delay * unit.ms + radius) >= 0 then
+	elseif (Waypointslength - delay * movementspeed + radius) >= 0 then
 		local tA = 0
-		Waypoints = self:CutWaypoints(Waypoints, delay * unit.ms - radius)
+		Waypoints = self:CutWaypoints(Waypoints, delay * movementspeed - radius)
 		
 		if speed ~= math.huge then
 			for i = 1, #Waypoints - 1 do
@@ -136,8 +155,8 @@ function TPred:CalculateTargetPosition(unit, delay, radius, speed, from, spellty
 					B = Vector(B) + radius * Vector(B - A):Normalized()
 				end
 
-				local t1, p1, t2, p2, D = self:VectorMovementCollision(A, B, unit.ms, Vector(from.x,from.y,from.z), speed)
-				local tB = tA + D / unit.ms
+				local t1, p1, t2, p2, D = self:VectorMovementCollision(A, B, movementspeed, Vector(from.x,from.y,from.z), speed)
+				local tB = tA + D / movementspeed
 				t1, t2 = (t1 and tA <= t1 and t1 <= (tB - tA)) and t1 or nil, (t2 and tA <= t2 and t2 <= (tB - tA)) and t2 or nil
 				t = t1 and t2 and math.min(t1, t2) or t1 or t2
 				if t then
@@ -152,8 +171,8 @@ function TPred:CalculateTargetPosition(unit, delay, radius, speed, from, spellty
 		end
 		
 		if t then
-			if (self:GetWaypointsLength(Waypoints) - t * unit.ms - radius) >= 0 then
-				Waypoints = self:CutWaypoints(Waypoints, radius + t * unit.ms)
+			if (self:GetWaypointsLength(Waypoints) - t * movementspeed - radius) >= 0 then
+				Waypoints = self:CutWaypoints(Waypoints, radius + t * movementspeed)
 				Position = Vector(Waypoints[1].x, Waypoints[1].y, Waypoints[1].z)
 			else
 				Position = CastPosition
@@ -253,6 +272,19 @@ function TPred:CheckMinionCollision(unit, Position, delay, radius, range, speed,
 	return false
 end
 
+function TPred:isSlowed(unit, delay, speed, from)
+		for i = 0, unit.buffCount do
+		local buff = unit:GetBuff(i);
+		if buff.count > 0 and buff.duration>=(delay + GetDistance(unit.pos, from) / speed) then
+			if (buff.type == 10) then
+				return true
+			end
+		end
+	end
+	return false
+end
+
+
 function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, collision, spelltype)
 	assert(unit, "TPred: Target can't be nil")
 	
@@ -261,7 +293,7 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 	speed = speed and speed or math.huge
 
 	if from.networkID and from.networkID == myHero.networkID then
-		from = Vector(myHero)
+		from = Vector(myHero.pos)
 	end
 	local IsFromMyHero = GetDistanceSqr(from, myHero.pos) < 50*50 and true or false
 	
@@ -269,7 +301,23 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 
 	local Position, CastPosition = self:CalculateTargetPosition(unit, delay, radius, speed, from, spelltype)
 	local HitChance = 1
-
+	if (self:IsImmobile(unit, delay, radius, speed, from, spelltype)) then
+		HitChance = 5
+	end
+	Waypoints = self:GetCurrentWayPoints(unit)
+	if (#Waypoints == 1) then
+		HitChance = 2
+	end
+	if self:isSlowed(unit, delay, speed, from) then
+		HitChance = 2
+	end
+	
+	if GetDistance(myHero.pos, unit.pos) < 250 then
+		HitChance = 2
+		Position, CastPosition = self:CalculateTargetPosition(unit, delay*0.5, radius, speed*2, from, spelltype)
+		Position = CastPosition
+	end
+	
 	--[[Out of range]]
 	if IsFromMyHero then
 		if (spelltype == "line" and GetDistanceSqr(from, Position) >= range * range) then
@@ -283,8 +331,10 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 		end
 	end
 	radius = radius - unit.boundingRadius + 4	
+	
+
 	if collision and HitChance > 0 then
-		if collision and self:CheckMinionCollision(unit, unit, delay, radius, range, speed, from) then
+		if collision and self:CheckMinionCollision(unit, unit.pos, delay, radius, range, speed, from) then
 			HitChance = -1
 		elseif self:CheckMinionCollision(unit, Position, delay, radius, range, speed, from) then
 			HitChance = -1
@@ -292,6 +342,6 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 			HitChance = -1
 		end
 	end
-
+	
 	return CastPosition, HitChance, Position
 end

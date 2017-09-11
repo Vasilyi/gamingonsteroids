@@ -403,6 +403,7 @@ function IHateSkillshots:LoadMenu()
 	end
 	if (TPred) then
 		self.Menu:MenuElement({id = "TPredDraw", name = "Draw TPred position", value = true})
+		self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 1, min = 0, max = 5, step = 1, identifier = ""})
 	end
 	
 	
@@ -545,7 +546,10 @@ function IHateSkillshots:Tick()
 			
 			if (TPred) then
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(temptarget, spell.delay/1000, spell.minionCollisionWidth/2, spell.range,spell.speed, myHero.pos,not spell.ignorecol, spell.circular and "circular" or "line")
-				if (HitChance > 0 ) then
+				if (HitChance >= self.Menu.minchance:Value()) then
+					if (not spell.circular) then
+						castpos = myHero.pos:Extended(castpos,math.random(100,300))
+					end
 					self:CastSpell(castbuttons[i],castpos)
 				end
 			elseif TYPE_GENERIC and self.Menu.EternalUse:Value() then
