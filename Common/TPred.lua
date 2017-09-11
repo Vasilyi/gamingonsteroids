@@ -13,13 +13,11 @@ CastPosition = Prediction position according to spell radius/width
 Position = Just target position after prediction
 HitChance:
 	5 - Unit cant move and its 99.9% skillshot land
-	2 - Unit is close or doing some action on place (like attacking/casting etc/not moving)
+	2 - Unit is close || doing some action on place (like attacking/casting etc/not moving) || just changed move direction
 	0 - Predicted position is out of range
    -1 - Didnt pass collision check
 	1 - All other cases
 ]]
-
-
 
 class "TPred"
 
@@ -136,11 +134,11 @@ function TPred:CanMove(unit, delay)
 end
 
 function TPred:IsImmobile(unit, delay, radius, speed, from, spelltype)
-local ExtraDelay = speed == math.huge and  0 or (GetDistance(from, unit.pos) / speed)
-		if (self:CanMove(unit, delay + ExtraDelay) == false) then
-			return true
-		end
-		return false
+	local ExtraDelay = speed == math.huge and 0 or (GetDistance(from, unit.pos) / speed)
+	if (self:CanMove(unit, delay + ExtraDelay) == false) then
+		return true
+	end
+	return false
 end
 function TPred:CalculateTargetPosition(unit, delay, radius, speed, from, spelltype)
 	local Waypoints = {}
@@ -163,7 +161,7 @@ function TPred:CalculateTargetPosition(unit, delay, radius, speed, from, spellty
 				if i == #Waypoints - 1 then
 					B = Vector(B) + radius * Vector(B - A):Normalized()
 				end
-
+				
 				local t1, p1, t2, p2, D = self:VectorMovementCollision(A, B, movementspeed, Vector(from.x,from.y,from.z), speed)
 				local tB = tA + D / movementspeed
 				t1, t2 = (t1 and tA <= t1 and t1 <= (tB - tA)) and t1 or nil, (t2 and tA <= t2 and t2 <= (tB - tA)) and t2 or nil
@@ -282,7 +280,7 @@ function TPred:CheckMinionCollision(unit, Position, delay, radius, range, speed,
 end
 
 function TPred:isSlowed(unit, delay, speed, from)
-		for i = 0, unit.buffCount do
+	for i = 0, unit.buffCount do
 		local buff = unit:GetBuff(i);
 		if buff.count > 0 and buff.duration>=(delay + GetDistance(unit.pos, from) / speed) then
 			if (buff.type == 10) then
@@ -300,14 +298,14 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 	range = range and range - 4 or math.huge
 	radius = radius == 0 and 1 or radius - 4
 	speed = speed and speed or math.huge
-
+	
 	if from.networkID and from.networkID == myHero.networkID then
 		from = Vector(myHero.pos)
 	end
 	local IsFromMyHero = GetDistanceSqr(from, myHero.pos) < 50*50 and true or false
 	
 	delay = delay + (0.07 + Game.Latency() / 2000)
-
+	
 	local Position, CastPosition = self:CalculateTargetPosition(unit, delay, radius, speed, from, spelltype)
 	local HitChance = 1
 	if (self:IsImmobile(unit, delay, radius, speed, from, spelltype)) then
@@ -318,6 +316,9 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 		HitChance = 2
 	end
 	if self:isSlowed(unit, delay, speed, from) then
+		HitChance = 2
+	end
+	if (unit.pathing.pathIndex == 1 and GetDistance(unit.pos,unit.pathing.startPos) < 50) then
 		HitChance = 2
 	end
 	
@@ -341,7 +342,7 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 	end
 	radius = radius - unit.boundingRadius + 4	
 	
-
+	
 	if collision and HitChance > 0 then
 		if collision and self:CheckMinionCollision(unit, unit.pos, delay, radius, range, speed, from) then
 			HitChance = -1
