@@ -1,5 +1,5 @@
 if myHero.charName ~= "TwistedFate" then return end
-local Scriptname,Version,Author,LVersion = "TRUSt in my Cards","v1.1","TRUS","7.17"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Cards","v1.2","TRUS","7.17"
 
 class "TwistedFate"
 
@@ -68,6 +68,7 @@ function TwistedFate:LoadMenu()
 	
 	self.Menu:MenuElement({id = "AutoW", name = "Autopick goldcard on ult", value = true})
 	self.Menu:MenuElement({id = "AutoQ", name = "AutoQ on immobile", value = true})
+	self.Menu:MenuElement({id = "AutoQSelf", name = "AutoQ on Goldcard", value = true})
 	
 	--[[Draw]]
 	self.Menu:MenuElement({type = MENU, id = "Draw", name = "Drawing Settings"})
@@ -115,7 +116,7 @@ function TwistedFate:Tick()
 	end
 	
 	if self:CanCast(_Q) then 
-		if self.Menu.AutoQ:Value() then
+		if self.Menu.AutoQ:Value() or self.Menu.AutoQSelf:Value() then
 			local immobiletarget = self:GetImmobileTarget()
 			if immobiletarget and self:IsValidTarget(immobiletarget,Q.Range) then
 				self:CastQ(immobiletarget)
@@ -240,7 +241,7 @@ end
 function TwistedFate:Stunned(enemy)
 	for i = 0, enemy.buffCount do
 		local buff = enemy:GetBuff(i);
-		if (buff.type == 5 or buff.type == 11 or buff.type == 24) and buff.duration > 0.5 then
+		if (buff.type == 5 or buff.type == 11 or buff.type == 24) and buff.duration > 0.5 and (not self.Menu.AutoQSelf:Value() or buff.sourcenID == myHero.networkID) then
 			return true
 		end
 	end
