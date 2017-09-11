@@ -2104,12 +2104,14 @@ end
 
 if myHero.charName == "Corki" then
 	class "Corki"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.0","TRUS","7.15"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.1","TRUS","7.17"
 	
-	if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
+	if FileExist(COMMON_PATH .. "TPred.lua") then
+		require 'TPred'
+	elseif FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
 		require 'Eternal Prediction'
-		PrintChat("Eternal Prediction library loaded")
 	end
+	
 	local EPrediction = {}
 	
 	function Corki:__init()
@@ -2196,7 +2198,7 @@ if myHero.charName == "Corki" then
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 		
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
-		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. "" .. (TPred and " TPred" or "")})
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 	end
 	
@@ -2292,7 +2294,12 @@ if myHero.charName == "Corki" then
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_MAGICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AP"))
 		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and ((combo and self.Menu.Combo.comboUseQ:Value()) or (combo == false and self.Menu.Harass.harassUseQ:Value())) then
 			local castpos
-			if TYPE_GENERIC and self.Menu.EternalUse:Value() then
+			if (TPred) then
+				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,false, "circular")
+				if (HitChance > 0) then
+					self:CastSpell(HK_Q, castpos)
+				end
+			elseif TYPE_GENERIC and self.Menu.EternalUse:Value() then
 				castPos = EPrediction["Q"]:GetPrediction(target, myHero.pos)
 				if castPos.hitChance >= self.Menu.minchance:Value() then
 					self:CastSpell(HK_Q, castPos.castPos)
@@ -2325,7 +2332,19 @@ if myHero.charName == "Corki" then
 		and ((combo == false and currentultstacks > self.Menu.Harass.HarassMaxStacks:Value()) or (combo and currentultstacks > self.Menu.Combo.MaxStacks:Value()))
 		then
 			local ulttype = self:HasBig() and "R2" or "R"
-			if TYPE_GENERIC and self.Menu.EternalUse:Value() then
+			if (TPred) then
+				if (ulttype == "R2") then
+					local castpos,HitChance, pos = TPred:GetBestCastPosition(target, R2.Delay, R2.Width, R2.Range,R2.Speed,myHero.pos,true, "line")
+					if (HitChance > 0) then
+						self:CastSpell(HK_R, castpos)
+					end
+				else
+					local castpos,HitChance, pos = TPred:GetBestCastPosition(target, R.Delay, R.Width, R.Range,R.Speed,myHero.pos,true, "line")
+					if (HitChance > 0) then
+						self:CastSpell(HK_R, castpos)
+					end
+				end
+			elseif TYPE_GENERIC and self.Menu.EternalUse:Value() then
 				castPos = EPrediction[ulttype]:GetPrediction(target, myHero.pos)
 				if castPos.hitChance >= self.Menu.minchance:Value() and EPrediction[ulttype]:mCollision() == 0 then
 					local newpos = myHero.pos:Extended(castPos.castPos,math.random(100,300))

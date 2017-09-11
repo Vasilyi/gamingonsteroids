@@ -8,6 +8,15 @@ Spelltypes:
 	"line"
 	"circular"
 
+return CastPosition, HitChance, Position
+CastPosition = Prediction position according to spell radius/width
+Position = Just target position after prediction
+HitChance:
+	5 - Unit cant move and its 99.9% skillshot land
+	2 - Unit is close or doing some action on place (like attacking/casting etc/not moving)
+	0 - Predicted position is out of range
+   -1 - Didnt pass collision check
+	1 - All other cases
 ]]
 
 
