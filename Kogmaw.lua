@@ -61,7 +61,12 @@ function UseBotrk()
 end
 
 class "KogMaw"
-local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.1","TRUS","7.11"
+local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.2","TRUS","7.18"
+
+if FileExist(COMMON_PATH .. "TPred.lua") then
+	require 'TPred'
+end
+
 function KogMaw:__init()
 	self:LoadSpells()
 	self:LoadMenu()
@@ -104,9 +109,9 @@ end
 
 --[[Spells]]
 function KogMaw:LoadSpells()
-	Q = {Range = 1175, width = 70, Delay = 0.25, Speed = 1650}
-	E = {Range = 1280, width = 120, Delay = 0.5, Speed = 1350}
-	R = {Range = 1200, Delay = 1.2, Radius = 120, Speed = math.huge}
+	Q = {Range = 1175, Width = 70, Delay = 0.25, Speed = 1650}
+	E = {Range = 1280, Width = 120, Delay = 0.5, Speed = 1350}
+	R = {Range = 1200, Delay = 1.2, Width = 120, Speed = math.huge}
 end
 
 function KogMaw:LoadMenu()
@@ -229,10 +234,19 @@ end
 function KogMaw:CastQ(target, combo)
 	if (not _G.SDK and not _G.GOS and not _G.EOW) then return end
 	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AP"))
-	if target and target.type == "AIHeroClient" and self:CanCast(_Q) and ((combo and self.Menu.Combo.comboUseQ:Value()) or (combo == false and self.Menu.Harass.harassUseQ:Value())) and target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0 then
-		local castPos = target:GetPrediction(Q.Speed,Q.Delay)
-		local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-		self:CastSpell(HK_Q, newpos)
+	if target and target.type == "AIHeroClient" and self:CanCast(_Q) and ((combo and self.Menu.Combo.comboUseQ:Value()) or (combo == false and self.Menu.Harass.harassUseQ:Value())) then
+		
+		if (TPred) then
+			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,false)
+			if (HitChance > 0) then
+				local newpos = myHero.pos:Extended(castpos,math.random(100,300))
+				self:CastSpell(HK_Q, newpos)
+			end
+		elseif (target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0) then
+			local castPos = target:GetPrediction(Q.Speed,Q.Delay)
+			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
+			self:CastSpell(HK_Q, newpos)
+		end
 	end
 end
 
@@ -242,9 +256,19 @@ function KogMaw:CastE(target,combo)
 	if (not _G.SDK and not _G.GOS and not _G.EOW) then return end
 	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(E.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(E.Range,"AP"))
 	if target and target.type == "AIHeroClient" and self:CanCast(_E) and ((combo and self.Menu.Combo.comboUseE:Value()) or (combo == false and self.Menu.Harass.harassUseE:Value())) then
-		local castPos = target:GetPrediction(E.Speed,E.Delay)
-		local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-		self:CastSpell(HK_E, newpos)
+		
+		if (TPred) then
+			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, E.Delay, E.Width, E.Range,E.Speed,myHero.pos,false)
+			if (HitChance > 0) then
+				local newpos = myHero.pos:Extended(castpos,math.random(100,300))
+				self:CastSpell(HK_E, newpos)
+			end
+		else
+			
+			local castPos = target:GetPrediction(E.Speed,E.Delay)
+			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
+			self:CastSpell(HK_E, newpos)
+		end
 	end
 end
 
@@ -258,8 +282,17 @@ function KogMaw:CastR(target,combo)
 	and ((combo and self.Menu.Combo.comboUseR:Value()) or (combo == false and self.Menu.Harass.harassUseR:Value())) 
 	and ((combo == false and currentultstacks < self.Menu.Harass.HarassMaxStacks:Value()) or (currentultstacks < self.Menu.Combo.MaxStacks:Value()))
 	then
-		local castPos = target:GetPrediction(R.Speed,R.Delay)
-		self:CastSpell(HK_R, castPos)
+		if (TPred) then
+			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, R.Delay, R.Width, RRange,R.Speed,myHero.pos,false, "circular")
+			if (HitChance > 0) then
+				self:CastSpell(HK_R, castpos)
+			end
+		else
+			local castPos = target:GetPrediction(R.Speed,R.Delay)
+			if (castPos.onScreen) then
+				self:CastSpell(HK_R, castPos)
+			end
+		end
 	end
 end
 
