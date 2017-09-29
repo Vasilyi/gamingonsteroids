@@ -61,7 +61,7 @@ function UseBotrk()
 end
 
 class "KogMaw"
-local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.2","TRUS","7.18"
+local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.3","TRUS","7.19"
 
 if FileExist(COMMON_PATH .. "TPred.lua") then
 	require 'TPred'
@@ -133,7 +133,9 @@ function KogMaw:LoadMenu()
 	self.Menu.Harass:MenuElement({id = "harassUseR", name = "Use R", value = true})
 	self.Menu.Harass:MenuElement({id = "HarassMaxStacks", name = "Max R stacks: ", value = 3, min = 0, max = 10})
 	
-	
+	if (TPred) then
+		self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 1, min = 0, max = 5, step = 1, identifier = ""})
+	end
 	
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
@@ -238,7 +240,7 @@ function KogMaw:CastQ(target, combo)
 		
 		if (TPred) then
 			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,false)
-			if (HitChance > 0) then
+			if (HitChance >= self.Menu.minchance:Value()) then
 				local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 				self:CastSpell(HK_Q, newpos)
 			end
@@ -259,7 +261,7 @@ function KogMaw:CastE(target,combo)
 		
 		if (TPred) then
 			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, E.Delay, E.Width, E.Range,E.Speed,myHero.pos,false)
-			if (HitChance > 0) then
+			if (HitChance >= self.Menu.minchance:Value()) then
 				local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 				self:CastSpell(HK_E, newpos)
 			end
@@ -284,7 +286,7 @@ function KogMaw:CastR(target,combo)
 	then
 		if (TPred) then
 			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, R.Delay, R.Width, RRange,R.Speed,myHero.pos,false, "circular")
-			if (HitChance > 0) then
+			if (HitChance >= self.Menu.minchance:Value()) then
 				self:CastSpell(HK_R, castpos)
 			end
 		else

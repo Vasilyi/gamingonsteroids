@@ -61,7 +61,7 @@ function UseBotrk()
 end
 
 class "Ezreal"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.9","TRUS","7.17"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.10","TRUS","7.19"
 require "DamageLib"
 
 if FileExist(COMMON_PATH .. "TPred.lua") then
@@ -110,6 +110,10 @@ function Ezreal:LoadMenu()
 		self.Menu:MenuElement({id = "EternalUse", name = "Use eternal prediction", value = true})
 		self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
 	end
+	if (TPred) then
+		self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 1, min = 0, max = 5, step = 1, identifier = ""})
+	end
+	
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	
@@ -189,7 +193,7 @@ function Ezreal:CastQ(target)
 		local castPos
 		if (TPred) then
 			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,true, "line")
-			if (HitChance > 0 ) then
+			if (HitChance >= self.Menu.minchance:Value()) then
 				local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 				self:CastSpell(HK_Q, newpos)
 			end
@@ -199,7 +203,7 @@ function Ezreal:CastQ(target)
 				local newpos = myHero.pos:Extended(castPos.castPos,math.random(100,300))
 				self:CastSpell(HK_Q, newpos)
 			end
-		elseif target:GetCollision(Q.Radius,Q.Speed,Q.Delay) == 0 then
+		elseif target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0  then
 			castPos = target:GetPrediction(Q.Speed,Q.Delay)
 			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
 			self:CastSpell(HK_Q, newpos)

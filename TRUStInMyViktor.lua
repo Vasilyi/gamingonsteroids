@@ -1,4 +1,4 @@
-local Scriptname,Version,Author,LVersion = "TRUSt in my Viktor","v1.0","TRUS","7.15"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Viktor","v1.0","TRUS","7.19"
 
 class "Viktor"
 require "DamageLib"
