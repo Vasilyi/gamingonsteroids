@@ -143,7 +143,7 @@ function Kled:Tick()
 	local farmactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LASTHIT]) or (_G.EOW and _G.EOW:Mode() == 3) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Lasthit") 
 	local laneclear = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LANECLEAR]) or (_G.EOW and _G.EOW:Mode() == 4) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Clear") 
 	local mounted = self:IsKled()
-	
+
 	if combomodeactive then
 		
 		if self.Menu.Items.UseBotrk:Value() then
@@ -268,7 +268,8 @@ function Kled:UseQDM(target)
 		local castPos
 		local Qlvl = myHero:GetSpellData(_Q).level
 		local tempdmg = ({30, 45, 60, 75, 90})[Qlvl] + 0.8* myHero.bonusDamage
-		if myHero.pos:DistanceTo(target.pos) < 250 and CalcPhysicalDamage(myHero,target,tempdmg) < target.health and myHero.mana < 85 then return end 
+		local runningaway = (myHero.pos:DistanceTo(target.posTo) - myHero.pos:DistanceTo(target.pos)) > 10
+		if runningaway and CalcPhysicalDamage(myHero,target,tempdmg) < target.health and myHero.mana < 75 then return end 
 		if (TPred) then
 			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,true, "line")
 			if (HitChance >= self.Menu.minchance:Value()) then
