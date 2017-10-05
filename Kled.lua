@@ -74,6 +74,7 @@ class "Kled"
 local Scriptname,Version,Author,LVersion = "TRUSt in my Kled","v1.0","TRUS","7.19"
 require "2DGeometry"
 require "MapPositionGOS"	
+require "DamageLib"
 if FileExist(COMMON_PATH .. "TPred.lua") then
 	require 'TPred'
 	PrintChat("TPred library loaded")
@@ -142,15 +143,15 @@ function Kled:Tick()
 	local farmactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LASTHIT]) or (_G.EOW and _G.EOW:Mode() == 3) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Lasthit") 
 	local laneclear = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LANECLEAR]) or (_G.EOW and _G.EOW:Mode() == 4) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Clear") 
 	local mounted = self:IsKled()
-
-	if combomodeactive then
 	
-	if self.Menu.Items.UseBotrk:Value() then
-		UseBotrk()
-	end
-	if self.Menu.Items.UseTiamat:Value() and not canattack then
-		UseTiamat()
-	end 
+	if combomodeactive then
+		
+		if self.Menu.Items.UseBotrk:Value() then
+			UseBotrk()
+		end
+		if self.Menu.Items.UseTiamat:Value() and not canattack then
+			UseTiamat()
+		end 
 		if (self:CanCast(_Q)) then
 			if not mounted and self.Menu.ComboMode.UseQDismounted:Value() and (not canattack or not currenttarget) then 
 				self:UseQDM(currenttarget)
@@ -265,6 +266,9 @@ function Kled:UseQDM(target)
 	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
 	if target and target.type == "AIHeroClient" then
 		local castPos
+		local Qlvl = myHero:GetSpellData(_Q).level
+		local tempdmg = ({30, 45, 60, 75, 90})[Qlvl] + 0.8* myHero.bonusDamage
+		if myHero.pos:DistanceTo(target.pos) < 250 and CalcPhysicalDamage(myHero,target,tempdmg) < target.health and myHero.mana < 85 then return end 
 		if (TPred) then
 			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,true, "line")
 			if (HitChance >= self.Menu.minchance:Value()) then
