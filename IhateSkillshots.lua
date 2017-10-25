@@ -285,7 +285,7 @@ Champs = {
 	},
 	
 	["Urgot"] = {
-		[_Q] = {delay = 250, range = 800, minionCollisionWidth = 60, speed = 500,ignorecol = true,circular = true},
+		[_Q] = {delay = 500, range = 800, minionCollisionWidth = 60, speed = 2000,ignorecol = true,circular = true},
 		[_R] = {delay = 850, range = 1600, minionCollisionWidth = 80, speed = 2100,ignorecol = true}
 	},
 	
@@ -322,7 +322,7 @@ Champs = {
 local CollSpell = {}
 local EPrediction = {}
 function IHateSkillshots:__init()
-	--PrintChat(myHero.charName.." : ".." Speed: "..myHero:GetSpellData(_Q).speed.." Range: "..myHero:GetSpellData(_Q).range.." Width: "..myHero:GetSpellData(_Q).width.." minSpeed: " .. myHero:GetSpellData(_Q).minSpeed)
+	--PrintChat(myHero.charName.." : ".." Speed: "..myHero:GetSpellData(_Q).speed.." Range: "..myHero:GetSpellData(_Q).range.." Width: "..myHero:GetSpellData(_Q).width.." minSpeed: " .. myHero:GetSpellData(_Q).minSpeed .. " acceleration ".. myHero:GetSpellData(_Q).acceleration)
 	if Champs[myHero.charName] == nil then
 		PrintChat "Hero didnt have skillshots, IHateSkillshots unloaded"
 		return
