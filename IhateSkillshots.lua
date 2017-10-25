@@ -286,7 +286,7 @@ Champs = {
 	
 	["Urgot"] = {
 		[_Q] = {delay = 500, range = 800, minionCollisionWidth = 60, speed = 2000,ignorecol = true,circular = true},
-		[_R] = {delay = 850, range = 1600, minionCollisionWidth = 80, speed = 2100,ignorecol = true}
+		[_R] = {delay = 850, range = 1600, minionCollisionWidth = 80, speed = 3200,ignorecol = true}
 	},
 	
 	["Veigar"] = {
