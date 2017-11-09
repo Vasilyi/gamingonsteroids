@@ -318,7 +318,7 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 	if self:isSlowed(unit, delay, speed, from) then
 		HitChance = 2
 	end
-	if (unit.pathing.pathIndex == 1 and GetDistance(unit.pos,unit.pathing.startPos) < 50) then
+	if (unit.activeSpell and unit.activeSpell.valid) then
 		HitChance = 2
 	end
 	
@@ -326,6 +326,9 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 		HitChance = 2
 		Position, CastPosition = self:CalculateTargetPosition(unit, delay*0.5, radius, speed*2, from, spelltype)
 		Position = CastPosition
+	end
+	if Vector(from):AngleBetween(Vector(unit.pos), Vector(CastPosition)) > 60 then
+		HitChance = 1
 	end
 	
 	--[[Out of range]]
@@ -341,8 +344,7 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 		end
 	end
 	radius = radius - unit.boundingRadius + 4	
-	
-	
+
 	if collision and HitChance > 0 then
 		if collision and self:CheckMinionCollision(unit, unit.pos, delay, radius, range, speed, from) then
 			HitChance = -1
@@ -352,6 +354,6 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 			HitChance = -1
 		end
 	end
-	
+
 	return CastPosition, HitChance, Position
 end

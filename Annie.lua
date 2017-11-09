@@ -1,4 +1,6 @@
+if myHero.charName ~= "Annie" then return end
 class "Annie"
+require "DamageLib"
 local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
 local barHeight = 8
 local barWidth = 103
@@ -184,7 +186,6 @@ function Annie:Tick()
 	end
 	self:Misc()
 	--self:AutoPilot()
-	self:KS()
 end
 
 function Annie:GetValidEnemy(range)
@@ -261,7 +262,7 @@ function Annie:Burst()
 	if not targetR then return end 
 	if targetR and self:Ready(_R) and not self:TibbersAlive() then
 		local predpos = targetR:GetPrediction(R.speed,R.delay)
-		if predpos and myHero.pos:DistanceTo(predpos) > 600 and myHero.pos:DistanceTo(predpos) < 850 then
+		if predpos and myHero.pos:DistanceTo(predpos) > 600 and myHero.pos:DistanceTo(predpos) < 800 then
 			predpos = myHero.pos:Extended(predpos,600)
 		end
 		if predpos and myHero.pos:DistanceTo(predpos) <= 600 then
@@ -499,34 +500,6 @@ end
 function GetPercentHP(unit)
 	if type(unit) ~= "userdata" then error("{GetPercentHP}: bad argument #1 (userdata expected, got "..type(unit)..")") end
 	return 100*unit.health/unit.maxHealth
-end
-
-function Annie:KS()
-	if self:GetValidEnemy(625) == false then return end
-	if (not _G.SDK and not _G.GOS and not _G.EOWLoaded) then return end
-	local target = (_G.SDK and _G.SDK.TargetSelector:GetTarget(625, _G.SDK.DAMAGE_TYPE_MAGICAL)) or (_G.GOS and _G.GOS:GetTarget(625,"AP")) or ( _G.EOWLoaded and EOW:GetTarget())
-	
-	if self:IsValidTarget(target,625) and myHero.pos:DistanceTo(target.pos) < 625 and self.Menu.Ripper.KS.Q:Value() and self:Ready(_Q) then
-		local level = myHero:GetSpellData(_Q).level
-		local Qdamage = CalcMagicalDamage(myHero, target, (({80, 115, 150, 185, 220})[level] + 0.8 * myHero.ap))
-		if Qdamage >= self:HpPred(target,1) + target.hpRegen * 2 then
-			self:CastSpell(HK_Q,target)
-		end
-	end
-	if self:IsValidTarget(target,600) and myHero.pos:DistanceTo(target.pos) < 600 and self.Menu.Ripper.KS.W:Value() and self:Ready(_W) then
-		local level = myHero:GetSpellData(_W).level
-		local Wdamage = CalcMagicalDamage(myHero, target, (({70, 115, 160, 205, 250})[level] + 0.85 * myHero.ap))
-		if 	Wdamage >= self:HpPred(target,1) + target.hpRegen * 2 then
-			self:CastSpell(HK_W,target:GetPrediction(W.speed,W.delay))
-		end
-	end
-	if self:IsValidTarget(target,600) and myHero.pos:DistanceTo(target.pos) < 600 and self.Menu.Ripper.KS.R:Value() and self:TibbersCanBeCast() then
-		local level = myHero:GetSpellData(_R).level
-		local Rdamage = CalcMagicalDamage(myHero, target, (({150, 275, 400})[level] + 0.65 * myHero.ap))
-		if 	Rdamage >= self:HpPred(target,1) + target.hpRegen * 2 and not self:TibbersAlive() then
-			self:CastSpell(HK_R,target:GetPrediction(R.speed,R.delay))
-		end
-	end
 end
 
 function Annie:IsChannelling(unit)
