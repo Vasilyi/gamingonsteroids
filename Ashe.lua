@@ -64,7 +64,7 @@ function UseBotrk()
 end
 
 class "Ashe"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","7.11"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","7.22"
 function Ashe:GetBuffs(unit)
 	self.T = {}
 	for i = 0, unit.buffCount do
@@ -251,13 +251,13 @@ function Ashe:Tick()
 	end
 	
 	if combomodeactive and self.Menu.UseWCombo:Value() and canmove and not canattack then
-		self:CastW()
+		self:CastW(currenttarget)
 	end
 	if combomodeactive and self:QBuff() and self.Menu.UseQCombo:Value() and (not self.Menu.UseQAfterAA:Value()) and currenttarget and canmove and not canattack then
 		self:CastQ()
 	end
 	if harassactive and self.Menu.UseWHarass:Value() and ((canmove and not canattack) or not currenttarget) then
-		self:CastW()
+		self:CastW(currenttarget)
 	end
 end
 
@@ -306,7 +306,7 @@ end
 
 
 function Ashe:CastW(target)
-	local target = (_G.SDK and _G.SDK.TargetSelector:GetTarget(W.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(W.Range,"AD"))
+	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(W.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(W.Range,"AD"))
 	if target and self:CanCast(_W) and target:GetCollision(W.Radius,W.Speed,W.Delay) == 0 then
 		local getposition = self:GetWPos(target)
 		if getposition then

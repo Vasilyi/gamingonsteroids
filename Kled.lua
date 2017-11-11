@@ -71,7 +71,7 @@ function UseTiamat()
 end
 
 class "Kled"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Kled","v1.0","TRUS","7.19"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Kled","v1.0","TRUS","7.22"
 require "2DGeometry"
 require "MapPositionGOS"	
 require "DamageLib"

@@ -66,7 +66,7 @@ end
 
 if myHero.charName == "Ashe" then
 	class "Ashe"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","7.16"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","7.22"
 	function Ashe:GetBuffs(unit)
 		self.T = {}
 		for i = 0, unit.buffCount do
@@ -349,7 +349,7 @@ end
 
 if myHero.charName == "Lucian" then
 	class "Lucian"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.4","TRUS","7.15"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.4","TRUS","7.22"
 	local passive = true
 	local lastbuff = 0
 	function Lucian:__init()
@@ -636,7 +636,7 @@ end
 
 if myHero.charName == "Caitlyn" then
 	class "Caitlyn"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.6","TRUS","7.15"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.6","TRUS","7.22"
 	require "DamageLib"
 	local qtarget
 	if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
@@ -887,7 +887,7 @@ end
 
 if myHero.charName == "Ezreal" then
 	class "Ezreal"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.10","TRUS","7.19"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.10","TRUS","7.22"
 	require "DamageLib"
 	
 	if FileExist(COMMON_PATH .. "TPred.lua") then
@@ -1087,7 +1087,7 @@ if myHero.charName == "Ezreal" then
 end
 
 if myHero.charName == "Twitch" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.5","TRUS","7.19"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.5","TRUS","7.22"
 	class "Twitch"
 	require "DamageLib"
 	local qtarget
@@ -1282,7 +1282,7 @@ end
 
 if myHero.charName == "KogMaw" then
 	class "KogMaw"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.3","TRUS","7.19"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.3","TRUS","7.22"
 	
 	if FileExist(COMMON_PATH .. "TPred.lua") then
 		require 'TPred'
@@ -1539,7 +1539,7 @@ if myHero.charName == "KogMaw" then
 end
 
 if myHero.charName == "Kalista" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.11","TRUS","7.19"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.11","TRUS","7.22"
 	class "Kalista"
 	require "DamageLib"
 	local chainedally = nil
@@ -2077,7 +2077,7 @@ end
 
 
 if myHero.charName == "Sivir" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Sivir","v1.0","TRUS","7.15"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Sivir","v1.0","TRUS","7.22"
 	class "Sivir"
 	
 	function Sivir:__init()
@@ -2143,7 +2143,7 @@ end
 
 if myHero.charName == "Corki" then
 	class "Corki"
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.1","TRUS","7.17"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.1","TRUS","7.22"
 	
 	if FileExist(COMMON_PATH .. "TPred.lua") then
 		require 'TPred'

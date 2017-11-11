@@ -1,5 +1,5 @@
 class "IHateCC"
-local Scriptname,Version,Author,LVersion = "IHateCC","v1.0","TRUS","7.10"
+local Scriptname,Version,Author,LVersion = "IHateCC","v1.0","TRUS","7.22"
 local function GrabSummSpell(summName)
   local retval = 0;
   local spellName = myHero:GetSpellData(SUMMONER_1).name;
@@ -14,26 +14,6 @@ local function GrabSummSpell(summName)
   return retval
 end
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6, [_W] = HK_W, [_R] = HK_R }
-
-
-local delayedActions, delayedActionsExecuter = {}, nil
-function DelayAction(func, delay, args) --delay in seconds
-    if not delayedActionsExecuter then
-        function delayedActionsExecuter()
-            for t, funcs in pairs(delayedActions) do
-                if t <= os.clock() then
-                    for _, f in ipairs(funcs) do f.func(table.unpack(f.args or {})) end
-                    delayedActions[t] = nil
-                end
-            end
-        end
-		Callback.Add("Tick", function() delayedActionsExecuter() end)
-    end
-    local t = os.clock() + (delay or 0)
-    if delayedActions[t] then table.insert(delayedActions[t], { func = func, args = args })
-    else delayedActions[t] = { { func = func, args = args } }
-    end
-end
 
 
 function IHateCC:__init()

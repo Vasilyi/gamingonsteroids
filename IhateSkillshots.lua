@@ -1,5 +1,5 @@
 class "IHateSkillshots"
-local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.5","TRUS","7.17"
+local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.5","TRUS","7.22"
 if FileExist(COMMON_PATH .. "TPred.lua") then
 	require 'TPred'
 	PrintChat("TPred library loaded")

@@ -20,7 +20,7 @@ function SetMovement(bool)
 end
 
 class "Karthus"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Karthus","v1.0","TRUS","7.17"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Karthus","v1.0","TRUS","7.22"
 
 if FileExist(COMMON_PATH .. "TPred.lua") then
 	require 'TPred'

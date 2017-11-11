@@ -61,7 +61,7 @@ function UseBotrk()
 end
 
 class "KogMaw"
-local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.3","TRUS","7.19"
+local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.3","TRUS","7.22"
 
 if FileExist(COMMON_PATH .. "TPred.lua") then
 	require 'TPred'

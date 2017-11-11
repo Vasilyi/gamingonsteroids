@@ -28,7 +28,7 @@ function SetMovement(bool)
 end
 
 class "Lissandra"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Lissandra","v1.0","TRUS","7.14"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Lissandra","v1.0","TRUS","7.22"
 local passive = true
 local lastbuff = 0
 

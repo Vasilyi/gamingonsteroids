@@ -61,7 +61,7 @@ function UseBotrk()
 	end
 end
 class "Lucian"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.4","TRUS","7.11"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.4","TRUS","7.22"
 local passive = true
 local lastbuff = 0
 function Lucian:__init()
@@ -74,7 +74,6 @@ function Lucian:__init()
 	if _G.SDK then
 		orbwalkername = "IC'S orbwalker"		
 		_G.SDK.Orbwalker:OnPostAttack(function() 
-			passive = false 
 			--PrintChat("passive removed")
 			local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 			if combomodeactive and _G.SDK.Orbwalker:CanMove() and Game.Timer() > lastbuff - 3.5 then 
@@ -87,7 +86,6 @@ function Lucian:__init()
 	elseif _G.EOW then
 		orbwalkername = "EOW"	
 		_G.EOW:AddCallback(_G.EOW.AfterAttack, function() 
-			passive = false 
 			local combomodeactive = _G.EOW:Mode() == 1
 			local canmove = _G.EOW:CanMove()
 			if combomodeactive and canmove and Game.Timer() > lastbuff - 3.5 then 
@@ -100,7 +98,6 @@ function Lucian:__init()
 	elseif _G.GOS then
 		orbwalkername = "Noddy orbwalker"
 		_G.GOS:OnAttackComplete(function() 
-			passive = false 
 			local combomodeactive = _G.GOS:GetMode() == "Combo"
 			local canmove = _G.GOS:CanMove()
 			if combomodeactive and canmove and Game.Timer() > lastbuff - 3.5 then 
@@ -168,6 +165,8 @@ function Lucian:Tick()
 		lastbuff = buffcheck
 		--PrintChat("Passive added : "..Game.Timer().." : "..lastbuff)
 		passive = true
+	elseif not buffcheck then
+	passive = false
 	end
 	local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
 	if combomodeactive and self.Menu.UseBOTRK:Value() then

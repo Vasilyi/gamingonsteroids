@@ -61,7 +61,7 @@ function UseBotrk()
 end
 
 class "Corki"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.1","TRUS","7.17"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.1","TRUS","7.22"
 
 if FileExist(COMMON_PATH .. "TPred.lua") then
 	require 'TPred'

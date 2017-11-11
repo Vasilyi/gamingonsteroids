@@ -60,7 +60,7 @@ function UseBotrk()
 	end
 end
 
-local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.11","TRUS","7.19"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.11","TRUS","7.22"
 class "Kalista"
 require "DamageLib"
 local chainedally = nil

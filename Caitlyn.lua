@@ -64,7 +64,7 @@ function UseBotrk()
 end
 
 class "Caitlyn"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.6","TRUS","7.11"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.6","TRUS","7.22"
 require "DamageLib"
 local qtarget
 if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
