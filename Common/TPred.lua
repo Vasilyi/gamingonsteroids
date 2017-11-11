@@ -1,9 +1,9 @@
 --[[
 API:
 TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, collision, spelltype)
-Delay 	  -- in seconds
-Collision -- is boolean
-From      -- Vector3
+	Delay 	 -- in seconds
+	Collision -- is boolean
+	From -- Vector3
 Spelltypes:
 	"line"
 	"circular"
@@ -15,7 +15,7 @@ HitChance:
 	5 - Unit cant move and its 99.9% skillshot land
 	2 - Unit is close || doing some action on place (like attacking/casting etc/not moving) || just changed move direction
 	0 - Predicted position is out of range
-   -1 - Didnt pass collision check
+	-1 - Didnt pass collision check
 	1 - All other cases
 ]]
 
@@ -213,7 +213,7 @@ function TPred:CheckCol(unit, minion, Position, delay, radius, range, speed, fro
 	if unit.networkID == minion.networkID then 
 		return false
 	end
-	--[[Check first if the minion is going to be dead when skillshots reaches his position]]
+	
 	if minion.type ~= myHero.type and _G.SDK.HealthPrediction:GetPrediction(minion, delay + GetDistance(from, minion.pos) / speed - Game.Latency()/1000) < 0 then
 		return false
 	end
@@ -251,31 +251,20 @@ function TPred:CheckMinionCollision(unit, Position, delay, radius, range, speed,
 	local result = false
 	for i, minion in ipairs(_G.SDK.ObjectManager:GetEnemyMinions(range)) do
 		if self:CheckCol(unit, minion, Position, delay, radius, range, speed, from, draw) then
-			if not draw then
-				return true
-			else
-				result = true
-			end
+			return true
 		end
 	end
 	for i, minion in ipairs(_G.SDK.ObjectManager:GetMonsters(range)) do
 		if self:CheckCol(unit, minion, Position, delay, radius, range, speed, from, draw) then
-			if not draw then
-				return true
-			else
-				result = true
-			end
+			return true
 		end
 	end
 	for i, minion in ipairs(_G.SDK.ObjectManager:GetOtherEnemyMinions(range)) do
 		if minion.team ~= myHero.team and self:CheckCol(unit, minion, Position, delay, radius, range, speed, from, draw) then
-			if not draw then
-				return true
-			else
-				result = true
-			end
+			return true
 		end
 	end
+	
 	return false
 end
 
@@ -343,8 +332,8 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 			HitChance = 0
 		end
 	end
-	radius = radius - unit.boundingRadius + 4	
-
+	radius = radius*2
+	
 	if collision and HitChance > 0 then
 		if collision and self:CheckMinionCollision(unit, unit.pos, delay, radius, range, speed, from) then
 			HitChance = -1
@@ -354,6 +343,6 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 			HitChance = -1
 		end
 	end
-
+	
 	return CastPosition, HitChance, Position
 end
