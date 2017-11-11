@@ -2,11 +2,6 @@ class "TargetSpell"
 local Scriptname,Version,Author,LVersion = "Simple TargetSpell","v1.0","TRUS","7.22"
 
 function TargetSpell:__init()
-	if Champs[myHero.charName] == nil then
-		PrintChat "Hero didnt have TargetSpells, TargetSpell unloaded"
-		return
-	end
-	
 	Champs = {
 		["Alistar"] = { slot = _W, range = myHero:GetSpellData(_W).range},
 		["Anivia"] = { slot = _E, range = myHero:GetSpellData(_E).range},
@@ -32,6 +27,10 @@ function TargetSpell:__init()
 		["Warwick"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
 		["Yasuo"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
 	}
+	if Champs[myHero.charName] == nil then
+		PrintChat "Hero didnt have TargetSpells, TargetSpell unloaded"
+		return
+	end
 	
 	PrintChat("TargetSpell loaded for "..myHero.charName)
 	self:LoadMenu()
