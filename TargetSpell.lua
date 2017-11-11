@@ -21,6 +21,7 @@ function TargetSpell:__init()
 		["KhaZix"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
 		["LeBlanc"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
 		["Malzahar"] = { slot = _E, range = myHero:GetSpellData(_E).range},
+		["Malphite"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
 		["Nunu"] = { slot = _E, range = myHero:GetSpellData(_E).range},
 		["Olaf"] = { slot = _E, range = myHero:GetSpellData(_E).range},
 		["Pantheon"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
@@ -48,12 +49,12 @@ function TargetSpell:LoadMenu()
 	--[[Skills list]]
 	self.Menu:MenuElement({id = "TargetSpells", name = "KeyBinds", type = MENU})
 	self.Menu:MenuElement({id = "Draw", name = "Drawing", type = MENU})
-	for i, spell in pairs(Champs[myHero.charName]) do
-		self.Menu.Draw:MenuElement({id = str[i], name = "Draw range"..str[i], value = true})
-		self.Menu.Draw:MenuElement({id = "color"..str[i], name = "Color for "..str[i], color = Draw.Color(0xBF3F3FFF)})
-		self.Menu.TargetSpells:MenuElement({id = str[i], name = "Use"..str[i], key = keybindings[i]})
-		self.Menu.TargetSpells:MenuElement({id = strauto[i], name = "Auto"..str[i], key = castbuttons[i], toggle = true})
-	end
+	local tempspell = Champs[myHero.charName]
+	self.Menu.Draw:MenuElement({id = str[tempspell.slot], name = "Draw range"..str[tempspell.slot], value = true})
+	self.Menu.Draw:MenuElement({id = "color"..str[tempspell.slot], name = "Color for "..str[tempspell.slot], color = Draw.Color(0xBF3F3FFF)})
+	self.Menu.TargetSpells:MenuElement({id = str[tempspell.slot], name = "Use"..str[tempspell.slot], key = keybindings[tempspell.slot]})
+	self.Menu.TargetSpells:MenuElement({id = strauto[tempspell.slot], name = "Auto"..str[tempspell.slot], key = 0x0, toggle = true})
+	
 	
 	
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
@@ -186,23 +187,23 @@ function TargetSpell:CastSpell(spell,pos)
 end
 
 function TargetSpell:Tick()
-	for i, spell in pairs(Champs[myHero.charName]) do
-		if (self.Menu.TargetSpells[str[i]]:Value() or self.Menu.TargetSpells[strauto[i]]:Value()) and self:CanCast(i) then
-			local temptarget = self:GetTarget(spell.range)
-			if temptarget then
-				self:CastSpell(castbuttons[i],temptarget)
-			end
+	local tempspell = Champs[myHero.charName]
+	if (self.Menu.TargetSpells[str[tempspell.slot]]:Value() or self.Menu.TargetSpells[strauto[tempspell.slot]]:Value()) and self:CanCast(tempspell.slot) then
+		local temptarget = self:GetTarget(tempspell.range)
+		if temptarget then
+			self:CastSpell(castbuttons[tempspell.slot],temptarget)
 		end
 	end
+	
 end
 
 function TargetSpell:Draw()
 	if myHero.dead then return end
-	for i, spell in pairs(Champs[myHero.charName]) do
-		if self.Menu.Draw[str[i]]:Value() then
-			Draw.Circle(myHero.pos, spell.range, 3, self.Menu.Draw["color"..str[i]]:Value())
-		end
+	local tempspell = Champs[myHero.charName]
+	if self.Menu.Draw[str[tempspell.slot]]:Value() then
+		Draw.Circle(myHero.pos, tempspell.range, 3, self.Menu.Draw["color"..str[tempspell.slot]]:Value())
 	end
+	
 end
 function OnLoad()
 	TargetSpell()
