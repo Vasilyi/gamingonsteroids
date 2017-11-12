@@ -186,6 +186,7 @@ function TargetSpell:CastSpell(spell,pos)
 end
 
 function TargetSpell:Tick()
+if myHero.dead then return end 
 	local tempspell = Champs[myHero.charName]
 	if (self.Menu.TargetSpells[str[tempspell.slot]]:Value() or self.Menu.TargetSpells[strauto[tempspell.slot]]:Value()) and self:CanCast(tempspell.slot) then
 		local temptarget = self:GetTarget(tempspell.range)
