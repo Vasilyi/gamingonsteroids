@@ -1642,7 +1642,8 @@ if myHero.charName == "Kalista" then
 		
 		--[[LastHit]]
 		self.Menu:MenuElement({type = MENU, id = "AutLastHit", name = "LastHit E settings"})
-		self.Menu.AutLastHit:MenuElement({id = "Active", name = "Active", value = true})
+		self.Menu.AutLastHit:MenuElement({id = "Active", name = "Always active", value = true})
+		self.Menu.AutLastHit:MenuElement({id = "keyActive", name = "Activation key", key = string.byte(" ")})
 		self.Menu.AutLastHit:MenuElement({id = "MinTargets", name = "Min creeps:", value = 1, min = 0, max = 5})
 		
 		--[[Draw]]
@@ -1740,7 +1741,7 @@ if myHero.charName == "Kalista" then
 			if self.Menu.Harass.harassUseELasthit:Value() then
 				self:UseEOnLasthit()
 			end
-			if self.Menu.AutLastHit.Active:Value() then
+			if self.Menu.AutLastHit.Active:Value() or self.Menu.keyActive.Active:Value() then
 				self:LastHitCreeps()
 			end
 		end
