@@ -1539,7 +1539,7 @@ if myHero.charName == "KogMaw" then
 end
 
 if myHero.charName == "Kalista" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.11","TRUS","7.22"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.12","TRUS","7.22"
 	class "Kalista"
 	require "DamageLib"
 	local chainedally = nil
@@ -1640,6 +1640,11 @@ if myHero.charName == "Kalista" then
 		self.Menu.RLogic:MenuElement({id = "Active", name = "Active", value = true})
 		self.Menu.RLogic:MenuElement({id = "RMaxHealth", name = "Health for AutoR:", value = 30, min = 0, max = 100, identifier = "%"})
 		
+		--[[LastHit]]
+		self.Menu:MenuElement({type = MENU, id = "AutLastHit", name = "LastHit E settings"})
+		self.Menu.AutLastHit:MenuElement({id = "Active", name = "Active", value = true})
+		self.Menu.AutLastHit:MenuElement({id = "MinTargets", name = "Min creeps:", value = 1, min = 0, max = 5})
+		
 		--[[Draw]]
 		self.Menu:MenuElement({type = MENU, id = "Draw", name = "Draw Settings"})
 		self.Menu.Draw:MenuElement({id = "DrawEDamage", name = "Draw number health after E", value = true})
@@ -1731,15 +1736,20 @@ if myHero.charName == "Kalista" then
 		if self.Menu.AlwaysKS:Value() then
 			self:CastE(false,combomodeactive or false)
 		end
-		
-		if self.Menu.Harass.harassUseELasthit:Value() then
-			self:UseEOnLasthit()
+		if self:CanCast(_E) then 
+			if self.Menu.Harass.harassUseELasthit:Value() then
+				self:UseEOnLasthit()
+			end
+			if self.Menu.AutLastHit.Active:Value() then
+				self:LastHitCreeps()
+			end
 		end
 		if (harassactive or combomodeactive) and self:CanCast(_E) and not canattack then
 			if self.Menu.Harass.harassUseERange:Value() then 
 				self:UseERange()
 			end
 		end
+		
 		
 		if self.Menu.RLogic.Active:Value() and chainedally and self:CanCast(_R) then
 			if chainedally.health/chainedally.maxHealth <= self.Menu.RLogic.RMaxHealth:Value()/100 and self:EnemyInRange(chainedally.pos,500) > 0 then
@@ -1809,7 +1819,34 @@ if myHero.charName == "Kalista" then
 		Sru_Crab = "MarkCrab",
 	}
 	
-	
+	function Kalista:LastHitCreeps()
+		local minionlist = {}
+		local lhcount = 0
+		if _G.SDK then
+			minionlist = _G.SDK.ObjectManager:GetEnemyMinions(E.Range)
+			for i, minion in pairs(minionlist) do
+				if minion.valid and minion.isEnemy and self:GetSpears(minion) > 0 then 
+					local EDamage = getdmg("E",minion,myHero) 
+					if EDamage > minion.health then
+						lhcount = lhcount + 1
+					end
+				end
+			end
+		elseif _G.GOS then
+			for i = 1, Game.MinionCount() do
+				local minion = Game.Minion(i)
+				if minion.valid and minion.isEnemy and self:GetSpears(minion) > 0 then 
+					local EDamage = getdmg("E",minion,myHero) 
+					if EDamage > minion.health then
+						lhcount = lhcount + 1
+					end
+				end
+			end
+		end
+		if lhcount >= self.Menu.AutLastHit.MinTargets:Value() then
+			Control.CastSpell(HK_E)
+		end
+	end
 	function Kalista:DrawDamageMinion(type, minion, damage)
 		if not type or not self.Menu.SmiteDamage[type] then
 			return
