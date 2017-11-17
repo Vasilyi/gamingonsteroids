@@ -143,7 +143,7 @@ if myHero.alive == false then return end
 						if SmiteMenu.AutoSmiter.Enabled:Value() then
 							if mySmiteSlot > 0 then
 								if SData.level > 0 then
-									if (SData.ammo > 0) then
+									if (SData.ammo > 0 and SData.currentCd == 0) then
 										if minion.distance <= (500+myHero.boundingRadius+minion.boundingRadius) then
 											AutoSmiteMinion(SmiteTable[minionName], minion);
 										end
@@ -160,7 +160,7 @@ if myHero.alive == false then return end
 			local SData = myHero:GetSpellData(mySmiteSlot);
 			if SData.name == SmiteNames[3] then
 				if SData.level > 0 then
-					if (SData.ammo > 0) then
+					if (SData.ammo > 0 and SData.currentCd == 0) then
 						for i = 1, Game.HeroCount() do
 							hero = Game.Hero(i);
 							if hero and hero.valid and hero.visible and hero.isEnemy and (hero.distance <= (500+myHero.boundingRadius+hero.boundingRadius)) and (hero.health <= smiteDmg) then
