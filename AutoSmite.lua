@@ -90,6 +90,9 @@ function OnLoad()
 	if mySmiteSlot == 0 then
 		mySmiteSlot = GetSmite(SUMMONER_2);
 	end
+	if myHero.charName == "Nunu" then
+		nunuslot = _Q
+	end
 end
 
 local function DrawSmiteableMinion(type,minion)
@@ -117,26 +120,35 @@ local function AutoSmiteMinion(type,minion)
 		end
 	end
 end
+function IsReady(spellSlot)
+	return myHero:GetSpellData(spellSlot).mana < myHero.mana and myHero:GetSpellData(spellSlot).currentCd == 0 and myHero:GetSpellData(spellSlot).level > 0
+end
 
+function GetNunuQDamage()
+	return myHero:GetSpellData(_Q).level*160+180
+end
 
 function OnDraw()
-if myHero.alive == false then return end
+	if myHero.alive == false then return end
 	if SmiteMenu.Enabled:Value() and (mySmiteSlot > 0) then
 		if SmiteMenu.AutoSmiter.DrawSTS:Value() then
 			local myKey = SmiteMenu.AutoSmiter.Enabled:Key();
 			if SmiteMenu.AutoSmiter.Enabled:Value() then
 				if myKey > 0 then Draw.Text("AutoSmite Enabled ".."["..string.char(SmiteMenu.AutoSmiter.Enabled:Key()).."]",18,myHero.pos2D.x-70,myHero.pos2D.y+70,Draw.Color(255, 30, 230, 30)) end;
-				else
+			else
 				if myKey > 0 then Draw.Text("AutoSmite Disabled ".."["..string.char(SmiteMenu.AutoSmiter.Enabled:Key()).."]",18,myHero.pos2D.x-70,myHero.pos2D.y+70,Draw.Color(255, 230, 30, 30)) end;
-				end
 			end
+		end
 		if SmiteMenu.SmiteMarker.Enabled:Value() or SmiteMenu.AutoSmiter.Enabled:Value() then 
 			local SData = myHero:GetSpellData(mySmiteSlot);
 			for i = 1, Game.MinionCount() do
 				minion = Game.Minion(i);
 				if minion and minion.valid and (minion.team == 300) and minion.visible then
+					local minionName = minion.charName
+					if nunuslot and SmiteMenu.AutoSmiter.Enabled:Value() and myHero.pos:DistanceTo(minion.pos) <= 300 and SmiteMenu.AutoSmiter[SmiteTable[minionName]] and IsReady(_Q) and minion.health <= GetNunuQDamage() then
+						Control.CastSpell(HK_Q,minion)
+					end
 					if minion.health <= SmiteDamage[myHero.levelData.lvl] then
-						local minionName = minion.charName;
 						if SmiteMenu.SmiteMarker.Enabled:Value() then
 							DrawSmiteableMinion(MarkTable[minionName], minion);
 						end
@@ -177,6 +189,5 @@ if myHero.alive == false then return end
 		end
 	end
 end
-
 
 --PrintChat("Smite manager by Feretorix loaded.")
