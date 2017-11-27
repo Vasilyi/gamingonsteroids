@@ -2749,40 +2749,40 @@ function __Orbwalker:__init()
 	};
 	
 	self.AutoAttackResets = {
-		["Blitzcrank"] = { Slot = _E },
+		["Blitzcrank"] = { Slot = _E, toggle = true  },
 		["Camille"] = { Slot = _Q },
-		["Darius"] = { Slot = _W },
-		["DrMundo"] = { Slot = _E },
+		["Darius"] = { Slot = _W, toggle = true  },
+		["DrMundo"] = { Slot = _E, toggle = true  },
 		["Elise"] = { Slot = _W, Name = "EliseSpiderW"},
 		["Fiora"] = { Slot = _E },
-		["Garen"] = { Slot = _Q },
+		["Garen"] = { Slot = _Q , toggle = true },
 		["Graves"] = { Slot = _E },
-		["Kassadin"] = { Slot = _W },
+		["Kassadin"] = { Slot = _W, toggle = true  },
 		["Illaoi"] = { Slot = _W },
-		["Jax"] = { Slot = _W },
+		["Jax"] = { Slot = _W, toggle = true  },
 		["Jayce"] = { Slot = _W, Name = "JayceHyperCharge"},
 		["Katarina"] = { Slot = _E },
 		["Kindred"] = { Slot = _Q },
-		["Leona"] = { Slot = _Q },
+		["Leona"] = { Slot = _Q, toggle = true  },
 		["Lucian"] = { Slot = _E },
 		["MasterYi"] = { Slot = _W },
-		["Mordekaiser"] = { Slot = _Q },
+		["Mordekaiser"] = { Slot = _Q, toggle = true },
 		["Nautilus"] = { Slot = _W },
-		["Nidalee"] = { Slot = _Q, Name = "Takedown" },
-		["Nasus"] = { Slot = _Q },
+		["Nidalee"] = { Slot = _Q, Name = "Takedown", toggle = true },
+		["Nasus"] = { Slot = _Q, toggle = true  },
 		["RekSai"] = { Slot = _Q, Name = "RekSaiQ" },
-		["Renekton"] = { Slot = _W },
-		["Rengar"] = { Slot = _Q },
+		["Renekton"] = { Slot = _W, toggle = true  },
+		["Rengar"] = { Slot = _Q, toggle = true  },
 		["Riven"] = { Slot = _Q },
 		["Sejuani"] = { Slot = _W },
-		["Sivir"] = { Slot = _W },
-		["Trundle"] = { Slot = _Q },
-		["Vayne"] = { Slot = _Q },
-		["Vi"] = { Slot = _E },
-		["Volibear"] = { Slot = _Q },
-		["MonkeyKing"] = { Slot = _Q },
-		["XinZhao"] = { Slot = _Q },
-		["Yorick"] = { Slot = _Q },
+		["Sivir"] = { Slot = _W, toggle = true  },
+		["Trundle"] = { Slot = _Q, toggle = true  },
+		["Vayne"] = { Slot = _Q, toggle = true  },
+		["Vi"] = { Slot = _E, toggle = true  },
+		["Volibear"] = { Slot = _Q, toggle = true  },
+		["MonkeyKing"] = { Slot = _Q, toggle = true  },
+		["XinZhao"] = { Slot = _Q, toggle = true  },
+		["Yorick"] = { Slot = _Q, toggle = true  },
 	};
 	
 	self.TargetByType = {
@@ -2952,7 +2952,7 @@ function __Orbwalker:OnUpdate()
 	if AutoAttackReset ~= nil then
 		local spellData = Utilities:GetSpellDataFromSlot(myHero, AutoAttackReset.Slot);
 		local castTime = spellData.castTime;
-		if castTime > self.AutoAttackResetCastTime then
+		if castTime ~= self.AutoAttackResetCastTime and (not AutoAttackReset.toggle or spellData.currentCd < 0.5) then
 			if self.AutoAttackResetCastTime > 0 then
 				local name = AutoAttackReset["Name"];
 				if name == nil or name == spellData.name then
