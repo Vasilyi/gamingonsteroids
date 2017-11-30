@@ -25,9 +25,7 @@ local Scriptname,Version,Author,LVersion = "TRUSt in my Chogath","v1.0","TRUS","
 if FileExist(COMMON_PATH .. "TPred.lua") then
 	require 'TPred'
 end
-if FileExist(COMMON_PATH .. "DamageLib.lua") then
-	require 'DamageLib'
-end
+
 function Chogath:__init()
 	self:LoadSpells()
 	self:LoadMenu()
@@ -366,7 +364,7 @@ function Chogath:Draw()
 			local offset = self.Menu.DrawMenu.RMenu.TextOffset:Value()
 			local fontsize = self.Menu.DrawMenu.RMenu.TextSize:Value()
 			for i, target in ipairs(self:GetEnemyHeroes()) do
-				local RDamage = getdmg("R",target,myHero)
+				local RDamage = GetRDMG()
 				if self.Menu.DrawMenu.RMenu.DrawOnEnemy:Value() then
 					if RDamage < target.health then
 						Draw.Text(math.floor(target.health - RDamage), fontsize, target.pos2D.x, target.pos2D.y+offset,self.Menu.DrawMenu.RMenu.DrawColor:Value())
