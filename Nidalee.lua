@@ -121,8 +121,9 @@ function Nidalee:Tick()
 	if combomodeactive then
 		if formed and self:CanCast(_W) and self.Menu.ComboMode.UseWCat:Value() then 
 			self:UseWCat(currenttarget)
-		end
-		if (self:CanCast(_Q)) then
+		elseif self:CanCast(_E) and formed and self.Menu.ComboMode.UseECat:Value() and currenttarget then
+			self:UseECat(currenttarget)
+		elseif (self:CanCast(_Q)) then
 			if not formed and self.Menu.ComboMode.UseQ:Value() and (not canattack or not currenttarget) then 
 				self:UseQ(currenttarget)
 			end
@@ -130,25 +131,15 @@ function Nidalee:Tick()
 				self:UseQCat(currenttarget)
 			end
 		end
-		if (self:CanCast(_E)) then
-			if formed and self.Menu.ComboMode.UseECat:Value() and currenttarget then
-				self:UseECat(currenttarget)
-			end
-		end
+		
 	end
 	if harassactive then
-		if (formed and self:CanCast(_E)) then
-			if self.Menu.HarassMode.UseECat:Value() and currenttarget then
-				self:UseECat(currenttarget)
-			end
-		end
-		if (self:CanCast(_Q)) then
-			if not formed and self.Menu.HarassMode.UseQ:Value() then 
-				self:UseQ(currenttarget)
-			end
-			if formed and self.Menu.HarassMode.UseQCat:Value() and currenttarget then 
-				self:UseCat(currenttarget)
-			end
+		if (formed and self:CanCast(_E) and self.Menu.HarassMode.UseECat:Value() and currenttarget) then
+			self:UseECat(currenttarget)
+		elseif (self:CanCast(_Q) and not formed and self.Menu.HarassMode.UseQ:Value()) then 
+			self:UseQ(currenttarget)
+		elseif formed and self.Menu.HarassMode.UseQCat:Value() and currenttarget then 
+			self:UseCat(currenttarget)
 		end
 	end
 end
@@ -289,7 +280,6 @@ end
 function Nidalee:CanCast(spellSlot)
 	return self:IsReady(spellSlot)
 end
-
 
 function OnLoad()
 	Nidalee()
