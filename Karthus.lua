@@ -111,7 +111,7 @@ function Karthus:Tick()
 		if self.Menu.Combo.comboUseW:Value() then
 			self:CastW()
 		end
-		if self.Menu.Combo.comboUseQ:Value() then
+		if self.Menu.Combo.comboUseE:Value() then
 			self:CastE()
 		end
 	elseif ((harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana) and self.Menu.Harass.harassUseQ:Value()) then

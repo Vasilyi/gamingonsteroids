@@ -1286,7 +1286,7 @@ local canattack,canmove = true,true
 			if (buff.type == 5 or buff.type == 8 or buff.type == 21 or buff.type == 22 or buff.type == 24) then
 				return false,false -- block everything
 			end
-			if (buff.type == 25) then -- cant attack
+			if (buff.type == 25 or buff.type == 9) then -- cant attack
 				canattack = false
 			end
 			if (buff.type == 11) then -- cant move 
@@ -1518,7 +1518,6 @@ function __Utilities:StringEndsWith(str, word)
 end
 
 function __Utilities:IsAutoAttack(name)
-	PrintChat(name)
 	return (self.NoAutoAttacks[name] == nil and name:lower():find("attack")) or self.SpecialAutoAttacks[name] ~= nil;
 end
 
@@ -2756,6 +2755,7 @@ function __Orbwalker:__init()
 	self.AutoAttackResets = {
 		["Blitzcrank"] = { Slot = _E, toggle = true },
 		["Camille"] = { Slot = _Q },
+		["Chogath"] = { Slot = _E, toggle = true },
 		["Darius"] = { Slot = _W, toggle = true },
 		["DrMundo"] = { Slot = _E },
 		["Elise"] = { Slot = _W, Name = "EliseSpiderW"},
