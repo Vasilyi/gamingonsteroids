@@ -76,6 +76,7 @@ function Diana:LoadMenu()
 	self.Menu.Combo:MenuElement({id = "secondR", name = "Second R if kill", value = true})
 	self.Menu.Combo:MenuElement({id = "comboActive", name = "Combo key", key = string.byte(" ")})
 	self.Menu.Combo:MenuElement({id = "rCombo", name = "R>Q combo", key = string.byte("G")})
+	self.Menu.Combo:MenuElement({id = "misayaCombo", name = "Misaya combo", key = string.byte("T")})
 	for i, hero in pairs(self:GetEnemyHeroes()) do
 		self.Menu.Combo:MenuElement({id = "RU"..hero.charName, name = "UseR in rCombo only on: "..hero.charName, value = true})
 	end
@@ -162,6 +163,7 @@ end
 function Diana:Tick()
 	if myHero.dead then return end
 	local combomodeactive = self.Menu.Combo.comboActive:Value()
+	local misayacombo = self.Menu.Combo.misayaCombo:Value()
 	local HarassMinMana = self.Menu.Harass.harassMana:Value()
 	local harassactive = self.Menu.Harass.harassActive:Value()
 	local KillSteal = self.Menu.KSMenu.KillStealW:Value() or self.Menu.KSMenu.KillStealR:Value()
@@ -193,7 +195,7 @@ function Diana:Tick()
 		end
 	end
 	
-	if combomodeactive then
+	if combomodeactive or misayacombo then
 		local MoonlightedEnemy = self:MoonlightedEnemy()
 		if self.Menu.Combo.comboUseQ:Value() and self:CanCast(_Q) then
 			self:CastQ()
@@ -206,11 +208,17 @@ function Diana:Tick()
 		end
 		local RTarget = (_G.SDK and _G.SDK.TargetSelector:GetTarget(R.Range, _G.SDK.DAMAGE_TYPE_MAGICAL)) or (_G.GOS and _G.GOS:GetTarget(R.Range,"AP"))
 		local Rdamage = getdmg("R",RTarget,myHero)
-		if MoonlightedEnemy and self.Menu.Combo.comboUseR:Value() and self:CanCast(_R) then
+		
+		if self:CanCast(_R)  then
+		if misayacombo and self.Menu.Combo.comboUseR:Value() then
+			self:CastR(RTarget)
+		end
+		if MoonlightedEnemy and self.Menu.Combo.comboUseR:Value() then
 			self:CastR(MoonlightedEnemy)
 		end
-		if self:CanCast(_R) and Rdamage > RTarget.health and self.Menu.Combo.secondR:Value() then
+		if Rdamage > RTarget.health and self.Menu.Combo.secondR:Value() then
 			self:CastR(RTarget)
+		end
 		end
 	elseif (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana) then 
 		if self.Menu.Harass.harassUseQ:Value() and self:CanCast(_Q) then
