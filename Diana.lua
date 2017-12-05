@@ -209,16 +209,16 @@ function Diana:Tick()
 		local RTarget = (_G.SDK and _G.SDK.TargetSelector:GetTarget(R.Range, _G.SDK.DAMAGE_TYPE_MAGICAL)) or (_G.GOS and _G.GOS:GetTarget(R.Range,"AP"))
 		local Rdamage = getdmg("R",RTarget,myHero)
 		
-		if self:CanCast(_R)  then
-		if misayacombo and self.Menu.Combo.comboUseR:Value() then
-			self:CastR(RTarget)
-		end
-		if MoonlightedEnemy and self.Menu.Combo.comboUseR:Value() then
-			self:CastR(MoonlightedEnemy)
-		end
-		if Rdamage > RTarget.health and self.Menu.Combo.secondR:Value() then
-			self:CastR(RTarget)
-		end
+		if self:CanCast(_R) then
+			if misayacombo and self.Menu.Combo.comboUseR:Value() then
+				self:CastR(RTarget)
+			end
+			if MoonlightedEnemy and self.Menu.Combo.comboUseR:Value() then
+				self:CastR(MoonlightedEnemy)
+			end
+			if Rdamage > RTarget.health and self.Menu.Combo.secondR:Value() then
+				self:CastR(RTarget)
+			end
 		end
 	elseif (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana) then 
 		if self.Menu.Harass.harassUseQ:Value() and self:CanCast(_Q) then
