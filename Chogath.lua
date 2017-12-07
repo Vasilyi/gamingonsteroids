@@ -284,7 +284,7 @@ function Chogath:AutoR()
 	for i, target in pairs(self:GetEnemyHeroes()) do
 		if GetDistance(myHero.pos, target.pos) <= rrange then
 			local RDamage = self:GetRDMG()
-			if self.Menu.RUse["RU"..target.charName] and self.Menu.RUse["RU"..target.charName]:Value() and RDamage > target.health then
+			if self.Menu.RUse["RU"..target.charName] and self.Menu.RUse["RU"..target.charName]:Value() and RDamage > target.health and self:IsValidTarget(target) then
 				self:CastSpell(HK_R, target.pos)
 			end
 		end
@@ -320,6 +320,14 @@ function Chogath:AutoR()
 			end
 		end
 	end
+end
+function Chogath:IsValidTarget(unit, range, checkTeam, from)
+	local range = range == nil and math.huge or range
+	if unit == nil or not unit.valid or not unit.visible or unit.dead or not unit.isTargetable or (checkTeam and unit.isAlly) then
+		return false
+	end
+	if myHero.pos:DistanceTo(unit.pos)>range then return false end 
+	return true 
 end
 
 function Chogath:ForceR()
