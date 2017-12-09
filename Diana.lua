@@ -22,6 +22,9 @@ end
 class "Diana"
 local Scriptname,Version,Author,LVersion = "TRUSt in my Diana","v1.0","TRUS","7.23"
 
+
+
+
 if FileExist(COMMON_PATH .. "TPred.lua") then
 	require 'TPred'
 end
@@ -66,7 +69,13 @@ end
 
 function Diana:LoadMenu()
 	self.Menu = MenuElement({type = MENU, id = "TRUStinymyDiana", name = Scriptname})
-	
+
+	--[[Prediction]]
+	self.Menu:MenuElement({type = MENU, id = "Prediction", name = "Prediction Settings"})
+	self.Menu.Prediction:MenuElement({id = "thetaIterator", name = "thetaIterator", value = 4, min = 0, max = 10, tooltip = "Increase to improve performance"})
+	self.Menu.Prediction:MenuElement({id = "rangeIterator", name = "rangeIterator", value = 30, min = 0, max = 100, tooltip = "Increase to improve performance"})
+	self.Menu.Prediction:MenuElement({id = "roundRange", name = "roundRange", value = 30, min = 0, max = 100, tooltip = "higher means more minions collected, but possibly less accurate"})
+		
 	--[[Combo]]
 	self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
 	self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
