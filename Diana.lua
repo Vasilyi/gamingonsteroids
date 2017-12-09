@@ -22,9 +22,6 @@ end
 class "Diana"
 local Scriptname,Version,Author,LVersion = "TRUSt in my Diana","v1.0","TRUS","7.23"
 
-
-
-
 if FileExist(COMMON_PATH .. "TPred.lua") then
 	require 'TPred'
 end
@@ -50,7 +47,7 @@ end
 
 --[[Spells]]
 function Diana:LoadSpells()
-	Q = {Range = 900, Width = 150, Delay = 0.25, Speed = math.huge}
+	Q = {Range = 830, Width = 200, Delay = 0.35, Speed = 1800}
 	W = {Range = 200}
 	E = {Range = 450}
 	R = {Range = 825}
@@ -69,13 +66,7 @@ end
 
 function Diana:LoadMenu()
 	self.Menu = MenuElement({type = MENU, id = "TRUStinymyDiana", name = Scriptname})
-
-	--[[Prediction]]
-	self.Menu:MenuElement({type = MENU, id = "Prediction", name = "Prediction Settings"})
-	self.Menu.Prediction:MenuElement({id = "thetaIterator", name = "thetaIterator", value = 4, min = 0, max = 10, tooltip = "Increase to improve performance"})
-	self.Menu.Prediction:MenuElement({id = "rangeIterator", name = "rangeIterator", value = 30, min = 0, max = 100, tooltip = "Increase to improve performance"})
-	self.Menu.Prediction:MenuElement({id = "roundRange", name = "roundRange", value = 30, min = 0, max = 100, tooltip = "higher means more minions collected, but possibly less accurate"})
-		
+	
 	--[[Combo]]
 	self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
 	self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
@@ -189,7 +180,7 @@ function Diana:Tick()
 			if KSDamage == 0 then
 				KSTarget = (_G.SDK and _G.SDK.TargetSelector:GetTarget(W.Range, _G.SDK.DAMAGE_TYPE_MAGICAL)) or (_G.GOS and _G.GOS:GetTarget(W.Range,"AP"))
 				if KSTarget then 
-					KSDamage = KSDamage + getdmg("W",KSTarget,myHero)
+					KSDamage = KSDamage + getdmg("W",KSTarget,myHero)		
 					if KSDamage > KSTarget.health then 
 						self:CastW()
 					end
@@ -389,6 +380,7 @@ end
 
 
 function Diana:IsReady(spellSlot)
+	
 	return myHero:GetSpellData(spellSlot).currentCd == 0 and myHero:GetSpellData(spellSlot).level > 0
 end
 
