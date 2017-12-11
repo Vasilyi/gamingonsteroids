@@ -177,8 +177,10 @@ function TargetSpell:CastSpell(spell,pos)
 					_G.GOS.BlockMovement = true
 				end
 				Control.SetCursorPos(pos)
+				Control.KeyDown(HK_TCO)
 				Control.KeyDown(spell)
 				Control.KeyUp(spell)
+				Control.KeyUp(HK_TCO)
 				DelayAction(LeftClick,delay/1000,{castSpell.mouse})
 				castSpell.casting = ticker + 500
 			end
