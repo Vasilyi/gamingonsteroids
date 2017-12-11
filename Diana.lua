@@ -21,7 +21,7 @@ end
 
 class "Diana"
 local Scriptname,Version,Author,LVersion = "TRUSt in my Diana","v1.0","TRUS","7.23"
-
+require "DamageLib"
 if FileExist(COMMON_PATH .. "TPred.lua") then
 	require 'TPred'
 end
