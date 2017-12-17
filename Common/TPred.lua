@@ -1,22 +1,22 @@
 --[[
 API:
 TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, collision, spelltype)
-	Delay 	 -- in seconds
-	Collision -- is boolean
-	From -- Vector3
+Delay 	 -- in seconds
+Collision -- is boolean
+From -- Vector3
 Spelltypes:
-	"line"
-	"circular"
+"line"
+"circular"
 
 return CastPosition, HitChance, Position
 CastPosition = Prediction position according to spell radius/width
 Position = Just target position after prediction
 HitChance:
-	5 - Unit cant move and its 99.9% skillshot land
-	2 - Unit is close || doing some action on place (like attacking/casting etc/not moving) || just changed move direction
-	0 - Predicted position is out of range
-	-1 - Didnt pass collision check
-	1 - All other cases
+5 - Unit cant move and its 99.9% skillshot land
+2 - Unit is close || doing some action on place (like attacking/casting etc/not moving) || just changed move direction
+0 - Predicted position is out of range
+-1 - Didnt pass collision check
+1 - All other cases
 ]]
 
 class "TPred"
@@ -106,6 +106,7 @@ function TPred:GetCurrentWayPoints(object)
 end
 function GetDistanceSqr(p1, p2)
 	assert(p1, "GetDistance: invalid argument: cannot calculate distance to "..type(p1))
+	assert(p2, "GetDistance: invalid argument: cannot calculate distance to "..type(p2))
 	return (p1.x - p2.x) ^ 2 + ((p1.z or p1.y) - (p2.z or p2.y)) ^ 2
 end
 
@@ -316,8 +317,11 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 		Position, CastPosition = self:CalculateTargetPosition(unit, delay*0.5, radius, speed*2, from, spelltype)
 		Position = CastPosition
 	end
-	if Vector(from):AngleBetween(Vector(unit.pos), Vector(CastPosition)) > 60 then
+	local angletemp = Vector(from):AngleBetween(Vector(unit.pos), Vector(CastPosition))
+	if angletemp > 60 then
 		HitChance = 1
+	elseif angletemp < 30 then
+		HitChance = 2
 	end
 	
 	--[[Out of range]]
@@ -343,6 +347,8 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 			HitChance = -1
 		end
 	end
-	
+	if not CastPosition or not Position then
+		HitChance = -1
+	end
 	return CastPosition, HitChance, Position
 end
