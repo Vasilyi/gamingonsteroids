@@ -289,7 +289,7 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 	radius = radius == 0 and 1 or radius - 4
 	speed = speed and speed or math.huge
 	
-	if from.networkID and from.networkID == myHero.networkID then
+	if not from or not from.pos then
 		from = Vector(myHero.pos)
 	end
 	local IsFromMyHero = GetDistanceSqr(from, myHero.pos) < 50*50 and true or false
