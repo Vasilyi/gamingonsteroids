@@ -66,8 +66,8 @@ require "DamageLib"
 local chainedally = nil
 local barHeight = 8
 local barWidth = 103
-local barXOffset = 0
-local barYOffset = 0
+local barXOffset = 24
+local barYOffset = -8
 
 JungleHpBarOffset = {
 	["SRU_Dragon_Water"] = {Width = 140, Height = 4, XOffset = -9, YOffset = -60},
@@ -618,7 +618,7 @@ function Kalista:Draw()
 					local percentHealthAfterDamage = math.max(0, hero.hero.health - damage) / hero.hero.maxHealth
 					local xPosEnd = barPos.x + barXOffset + barWidth * hero.hero.health/hero.hero.maxHealth
 					local xPosStart = barPos.x + barXOffset + percentHealthAfterDamage * 100
-					Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 10, self.Menu.Draw.DrawColor:Value())
+					Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 12, self.Menu.Draw.DrawColor:Value())
 				end
 			end
 			if self.Menu.Draw.DrawEDamage:Value() then 

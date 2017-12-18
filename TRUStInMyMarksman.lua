@@ -1093,8 +1093,8 @@ if myHero.charName == "Twitch" then
 	local qtarget
 	local barHeight = 8
 	local barWidth = 103
-	local barXOffset = 0
-	local barYOffset = 0
+	local barXOffset = 24
+	local barYOffset = -8
 	function Twitch:__init()
 		self:LoadMenu()
 		Callback.Add("Tick", function() self:Tick() end)
@@ -1253,8 +1253,8 @@ if myHero.charName == "Twitch" then
 					if barPos.onScreen then
 						local damage = hero.damage
 						local percentHealthAfterDamage = math.max(0, hero.hero.health - damage) / hero.hero.maxHealth
-						local xPosEnd = barPos.x + barXOffset + barWidth * hero.hero.health/hero.hero.maxHealth
-						local xPosStart = barPos.x + barXOffset + percentHealthAfterDamage * 100
+						local xPosEnd = barPos.x + 200 + barWidth * hero.hero.health/hero.hero.maxHealth
+						local xPosStart = barPos.x + 200 + percentHealthAfterDamage * 100
 						Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 10, self.Menu.DrawColor:Value())
 					end
 				end
@@ -1545,8 +1545,8 @@ if myHero.charName == "Kalista" then
 	local chainedally = nil
 	local barHeight = 8
 	local barWidth = 103
-	local barXOffset = 0
-	local barYOffset = 0
+	local barXOffset = 24
+	local barYOffset = -8
 	
 	JungleHpBarOffset = {
 		["SRU_Dragon_Water"] = {Width = 140, Height = 4, XOffset = -9, YOffset = -60},
@@ -1651,6 +1651,7 @@ if myHero.charName == "Kalista" then
 		self.Menu.Draw:MenuElement({id = "DrawEDamage", name = "Draw number health after E", value = true})
 		self.Menu.Draw:MenuElement({id = "DrawEBarDamage", name = "On hpbar after E", value = true})
 		--self.Menu.Draw:MenuElement({id = "HPBarOffset", name = "Z offset for HPBar ", value = 0, min = -100, max = 100, tooltip = "change this if damage showed in wrong position"})
+		--self.Menu.Draw:MenuElement({id = "HPBarOffsetX", name = "X offset for HPBar ", value = 0, min = -100, max = 100, tooltip = "change this if damage showed in wrong position"})
 		self.Menu.Draw:MenuElement({id = "DrawInPrecent", name = "Draw numbers in percent", value = true})
 		self.Menu.Draw:MenuElement({id = "DrawE", name = "Draw Killable with E", value = true})
 		self.Menu.Draw:MenuElement({id = "TextOffset", name = "Z offset for text ", value = 0, min = -100, max = 100})
@@ -2093,11 +2094,12 @@ if myHero.charName == "Kalista" then
 					local barPos = hero.hero.hpBar
 					if barPos.onScreen then
 						--local barYOffset = self.Menu.Draw.HPBarOffset:Value()
+						--local barXOffset = self.Menu.Draw.HPBarOffsetX:Value()
 						local damage = hero.damage
 						local percentHealthAfterDamage = math.max(0, hero.hero.health - damage) / hero.hero.maxHealth
 						local xPosEnd = barPos.x + barXOffset + barWidth * hero.hero.health/hero.hero.maxHealth
 						local xPosStart = barPos.x + barXOffset + percentHealthAfterDamage * 100
-						Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 10, self.Menu.Draw.DrawColor:Value())
+						Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 12, self.Menu.Draw.DrawColor:Value())
 					end
 				end
 				if self.Menu.Draw.DrawEDamage:Value() then 

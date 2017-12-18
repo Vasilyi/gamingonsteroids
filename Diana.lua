@@ -3,6 +3,10 @@ keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3
 
 
 local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
+local barHeight = 8
+local barWidth = 103
+local barXOffset = 0
+local barYOffset = 0
 function SetMovement(bool)
 	if _G.EOWLoaded then
 		EOW:SetMovements(bool)
@@ -431,9 +435,9 @@ function Diana:Draw()
 				if self.Menu.DrawMenu.DrawOnHPBar:Value() then
 					local barPos = target.hpBar
 					local percentHealthAfterDamage = math.max(0, target.health - ComboDamage) / target.maxHealth
-					local xPosEnd = barPos.x + 103 * target.health/target.maxHealth
-					local xPosStart = barPos.x + percentHealthAfterDamage * 100
-					Draw.Line(xPosStart, barPos.y, xPosEnd, barPos.y, 10, self.Menu.DrawMenu.DrawColor:Value())
+					local xPosEnd = barPos.x + barXOffset + barWidth * hero.health/hero.maxHealth
+					local xPosStart = barPos.x + barXOffset + percentHealthAfterDamage * 100
+					Draw.Line(xPosStart, barPos.y, xPosEnd, barPos.y, 12, self.Menu.DrawMenu.DrawColor:Value())
 				end
 			end
 		end

@@ -49,8 +49,8 @@ require "DamageLib"
 local qtarget
 local barHeight = 8
 local barWidth = 103
-local barXOffset = 0
-local barYOffset = 0
+local barXOffset = 24
+local barYOffset = -8
 function Twitch:__init()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
@@ -211,7 +211,7 @@ function Twitch:Draw()
 					local percentHealthAfterDamage = math.max(0, hero.hero.health - damage) / hero.hero.maxHealth
 					local xPosEnd = barPos.x + barXOffset + barWidth * hero.hero.health/hero.hero.maxHealth
 					local xPosStart = barPos.x + barXOffset + percentHealthAfterDamage * 100
-					Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 10, self.Menu.DrawColor:Value())
+					Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 12, self.Menu.DrawColor:Value())
 				end
 			end
 		end

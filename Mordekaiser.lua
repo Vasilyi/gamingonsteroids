@@ -6,8 +6,8 @@ require "DamageLib"
 local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
 local barHeight = 8
 local barWidth = 103
-local barXOffset = 0
-local barYOffset = 0
+local barXOffset = 24
+local barYOffset = -8
 function SetMovement(bool)
 	if _G.EOWLoaded then
 		EOW:SetMovements(bool)
@@ -255,7 +255,7 @@ function Mordekaiser:Draw()
 					local percentHealthAfterDamage = math.max(0, hero.health - damage) / hero.maxHealth
 					local xPosEnd = barPos.x + barXOffset + barWidth * hero.health/hero.maxHealth
 					local xPosStart = barPos.x + barXOffset + percentHealthAfterDamage * 100
-					Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 10, Draw.Color(0xFF00FF00))
+					Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 12, Draw.Color(0xFF00FF00))
 				end
 			end
 		end	
