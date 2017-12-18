@@ -92,7 +92,7 @@ function Alistar:LoadMenu()
 		self.Menu.FlashCombo:MenuElement({id = "RU"..hero.charName, name = "Use FlashQ only on: "..hero.charName, value = true})
 	end
 	
-	self.Menu.FlashCombo:MenuElement({id = "qFlash", name = "qFlash key", key = string.byte(" ")})
+	self.Menu.FlashCombo:MenuElement({id = "qFlash", name = "qFlash key", key = string.byte("G")})
 	
 	--[[Protector]]
 	self.Menu:MenuElement({type = MENU, id = "Protector", name = "Protect from dashes"})
