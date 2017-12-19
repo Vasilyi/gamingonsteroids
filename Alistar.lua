@@ -266,7 +266,7 @@ end
 function Alistar:CastQFlash(target)
 	if (not _G.SDK and not _G.GOS and not _G.EOW) then return end
 	for i, hero in pairs(self:GetEnemyHeroes()) do 
-		if self:IsValidTarget(hero) and self.Menu.FlashCombo["RU"..hero.charName] and self.Menu.FlashCombo["RU"..hero.charName]:Value() then 
+		if self:IsValidTarget(hero,Q.Range+350) and self.Menu.FlashCombo["RU"..hero.charName] and self.Menu.FlashCombo["RU"..hero.charName]:Value() then 
 			Control.CastSpell(HK_Q)
 			self:CastSpell(flashslot == SUMMONER_1 and HK_SUMMONER_1 or HK_SUMMONER_2,hero.pos)
 		end
