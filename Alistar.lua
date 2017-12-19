@@ -190,6 +190,9 @@ function Alistar:Tick()
 	if combomodeactive then
 		if self.Menu.Combo.comboUseQ:Value() and self:CanCast(_Q) then
 			self:CastQ()
+			if myHero:GetSpellData(_W).currentCd > myHero:GetSpellData(_W).cd-1 then
+				Control.CastSpell(HK_Q)
+			end
 		end
 		if self.Menu.Combo.comboUseW:Value() and self:CanCast(_Q) and self:CanCast(_W) then
 			self:CastW()
@@ -287,9 +290,6 @@ function Alistar:CastW()
 	local target = (_G.SDK and _G.SDK.TargetSelector:GetTarget(W.Range, _G.SDK.DAMAGE_TYPE_MAGICAL)) or (_G.GOS and _G.GOS:GetTarget(W.Range,"AP"))
 	if target and GetDistance(myHero.pos,target.pos)>Q.Range then
 		self:CastSpell(HK_W, target.pos)
-		if self.Menu.Combo.comboUseQ:Value() then 
-			Control.CastSpell(HK_Q)
-		end
 	end
 end
 
