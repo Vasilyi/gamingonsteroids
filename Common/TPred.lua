@@ -27,17 +27,19 @@ function TPred:CutWaypoints(Waypoints, distance, unit)
 	if distance > 0 then
 		for i = 1, #Waypoints -1 do
 			local A, B = Waypoints[i], Waypoints[i + 1]
-			local dist = GetDistance(A, B)
-			if dist >= remaining then
-				result[1] = Vector(A) + remaining * (Vector(B) - Vector(A)):Normalized()
-				
-				for j = i + 1, #Waypoints do
-					result[j - i + 1] = Waypoints[j]
+			if A and B then 
+				local dist = GetDistance(A, B)
+				if dist >= remaining then
+					result[1] = Vector(A) + remaining * (Vector(B) - Vector(A)):Normalized()
+					
+					for j = i + 1, #Waypoints do
+						result[j - i + 1] = Waypoints[j]
+					end
+					remaining = 0
+					break
+				else
+					remaining = remaining - dist
 				end
-				remaining = 0
-				break
-			else
-				remaining = remaining - dist
 			end
 		end
 	else
@@ -107,6 +109,7 @@ end
 function GetDistanceSqr(p1, p2)
 	assert(p1, "GetDistance: invalid argument: cannot calculate distance to "..type(p1))
 	assert(p2, "GetDistance: invalid argument: cannot calculate distance to "..type(p2))
+	if not p1 or not p2 then return 999999999 end
 	return (p1.x - p2.x) ^ 2 + ((p1.z or p1.y) - (p2.z or p2.y)) ^ 2
 end
 
@@ -135,7 +138,7 @@ function TPred:CanMove(unit, delay)
 end
 
 function TPred:IsImmobile(unit, delay, radius, speed, from, spelltype)
-	local ExtraDelay = speed == math.huge and 0 or (GetDistance(from, unit.pos) / speed)
+	local ExtraDelay = speed == math.huge and 0 or from and unit and unit.pos and (GetDistance(from, unit.pos) / speed)
 	if (self:CanMove(unit, delay + ExtraDelay) == false) then
 		return true
 	end
@@ -215,14 +218,14 @@ function TPred:CheckCol(unit, minion, Position, delay, radius, range, speed, fro
 		return false
 	end
 	
-	if minion.type ~= myHero.type and _G.SDK.HealthPrediction:GetPrediction(minion, delay + GetDistance(from, minion.pos) / speed - Game.Latency()/1000) < 0 then
+	if from and minion.type ~= myHero.type and _G.SDK.HealthPrediction:GetPrediction(minion, delay + GetDistance(from, minion.pos) / speed - Game.Latency()/1000) < 0 then
 		return false
 	end
 	
 	local waypoints = self:GetCurrentWayPoints(minion)
 	local MPos, CastPosition = #waypoints == 1 and Vector(minion.pos) or self:CalculateTargetPosition(minion, delay, radius, speed, from, "line")
 	
-	if GetDistanceSqr(from, MPos) <= (range)^2 and GetDistanceSqr(from, minion.pos) <= (range + 100)^2 then
+	if from and MPos and GetDistanceSqr(from, MPos) <= (range)^2 and GetDistanceSqr(from, minion.pos) <= (range + 100)^2 then
 		local buffer = (#waypoints > 1) and 8 or 0 
 		
 		if minion.type == myHero.type then
@@ -231,13 +234,13 @@ function TPred:CheckCol(unit, minion, Position, delay, radius, range, speed, fro
 		
 		if #waypoints > 1 then
 			local proj1, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(from, Position, Vector(MPos))
-			if isOnSegment and (GetDistanceSqr(MPos, proj1) <= (minion.boundingRadius + radius + buffer) ^ 2) then
+			if proj1 and isOnSegment and (GetDistanceSqr(MPos, proj1) <= (minion.boundingRadius + radius + buffer) ^ 2) then
 				return true
 			end
 		end
 		
 		local proj2, pointLine, isOnSegment = VectorPointProjectionOnLineSegment(from, Position, Vector(minion.pos))
-		if isOnSegment and (GetDistanceSqr(minion.pos, proj2) <= (minion.boundingRadius + radius + buffer) ^ 2) then
+		if proj2 and isOnSegment and (GetDistanceSqr(minion.pos, proj2) <= (minion.boundingRadius + radius + buffer) ^ 2) then
 			return true
 		end
 	end
@@ -272,7 +275,7 @@ end
 function TPred:isSlowed(unit, delay, speed, from)
 	for i = 0, unit.buffCount do
 		local buff = unit:GetBuff(i);
-		if buff.count > 0 and buff.duration>=(delay + GetDistance(unit.pos, from) / speed) then
+		if from and buff.count > 0 and buff.duration>=(delay + GetDistance(unit.pos, from) / speed) then
 			if (buff.type == 10) then
 				return true
 			end
@@ -289,7 +292,7 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 	radius = radius == 0 and 1 or radius - 4
 	speed = speed and speed or math.huge
 	
-	if not from or not from.pos then
+	if not from then
 		from = Vector(myHero.pos)
 	end
 	local IsFromMyHero = GetDistanceSqr(from, myHero.pos) < 50*50 and true or false
@@ -332,7 +335,7 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 		if (spelltype == "circular" and (GetDistanceSqr(from, Position) >= (range + radius)^2)) then
 			HitChance = 0
 		end
-		if (GetDistanceSqr(from, Position) > range ^ 2) then
+		if from and Position and (GetDistanceSqr(from, Position) > range ^ 2) then
 			HitChance = 0
 		end
 	end
