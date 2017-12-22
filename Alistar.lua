@@ -190,7 +190,7 @@ function Alistar:Tick()
 	if combomodeactive then
 		if self.Menu.Combo.comboUseQ:Value() and self:CanCast(_Q) then
 			self:CastQ()
-			if myHero:GetSpellData(_W).currentCd > myHero:GetSpellData(_W).cd-1 then
+			if myHero:GetSpellData(_W).level > 0 and myHero:GetSpellData(_W).currentCd > myHero:GetSpellData(_W).cd-1 then
 				Control.CastSpell(HK_Q)
 			end
 		end
@@ -304,7 +304,6 @@ end
 
 
 function Alistar:IsReady(spellSlot)
-	
 	return myHero:GetSpellData(spellSlot).currentCd == 0 and myHero:GetSpellData(spellSlot).level > 0
 end
 
