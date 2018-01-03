@@ -2522,6 +2522,8 @@ if myHero.charName == "Xayah" then
 		--[[Harass]]
 		self.Menu:MenuElement({type = MENU, id = "Harass", name = "Harass Settings"})
 		self.Menu.Harass:MenuElement({id = "harassUseQ", name = "Use Q", value = true})
+		self.Menu.Harass:MenuElement({id = "harassUseE", name = "Use E", value = true})
+		self.Menu.Harass:MenuElement({id = "minEFeathers", name = "Minimal feather for E:", value = 2, min = 1, max = 8})
 		self.Menu.Harass:MenuElement({id = "harassMana", name = "Minimal mana percent:", value = 30, min = 0, max = 101, identifier = "%"})
 		
 		
@@ -2587,9 +2589,22 @@ if myHero.charName == "Xayah" then
 		if combomodeactive and self.Menu.UseBOTRK:Value() then
 			UseBotrk()
 		end
-		if self:CanCast(_Q) and self.Menu.Combo.comboUseQ:Value() and ((combomodeactive and (not savemana or myHero.mana > myHero:GetSpellData(_Q).mana + myHero:GetSpellData(_E).mana)) or (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana)) then
+		if self:CanCast(_Q) and ((combomodeactive and self.Menu.Combo.comboUseQ:Value() and (not savemana or myHero.mana > myHero:GetSpellData(_Q).mana + myHero:GetSpellData(_E).mana)) or (harassactive and self.Menu.Harass.harassUseQ:Value() and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana)) then
 			if canmove and (not canattack or not currenttarget) then
 				self:CastQ(currenttarget,combomodeactive or false)
+			end
+		end
+		if self:CanCast(_E) and (harassactive and self.Menu.Harass.harassUseE:Value()) then
+			if canmove and (not canattack or not currenttarget) then
+				local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes()) or self:GetEnemyHeroes()
+				for i, target in ipairs(heroeslist) do
+					if self:IsValidTarget(target) then
+						local hits = self:GetFeatherHits(target)
+						if hits >= self.Menu.Harass.minEFeathers:Value() then
+							Control.CastSpell(HK_E)
+						end
+					end
+				end
 			end
 		end
 		if self:CanCast(_W) and self.Menu.Combo.comboUseW:Value() and combomodeactive then
