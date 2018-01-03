@@ -101,7 +101,6 @@ function Xayah:LoadMenu()
 	
 	--[[Combo]]
 	self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
-	self.Menu:MenuElement({id = "AlwaysKS", name = "Always KS with E", value = true})
 	
 	self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
 	self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
