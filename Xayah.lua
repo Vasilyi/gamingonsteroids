@@ -90,7 +90,7 @@ end
 
 
 function Xayah:LoadSpells()
-	Q = {Range = 1100, Width = 50, Delay = 0.5, Speed = 400}
+	Q = {Range = 1100, Width = 50, Delay = 0.5, Speed = 1200}
 	E = {Range = 1000}
 	R = {Delay = 1, Range = 1100}
 	
@@ -282,7 +282,7 @@ function Xayah:CastQ(target, combo)
 	if target and target.type == "AIHeroClient" then
 		if (TPred) then
 			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,false)
-			if (HitChance >= 0) then
+			if (HitChance >= 1) then
 				local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 				self:CastSpell(HK_Q, newpos)
 			end
