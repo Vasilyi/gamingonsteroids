@@ -259,7 +259,7 @@ function Kalista:Tick()
 		self:CastE(false,combomodeactive or false)
 	end
 	if self:CanCast(_E) then 
-		if self.Menu.Harass.harassUseELasthit:Value() then
+		if harassactive and self.Menu.Harass.harassUseELasthit:Value() then
 			self:UseEOnLasthit()
 		end
 		if self.Menu.AutLastHit.Active:Value() or self.Menu.keyActive.Active:Value() then
