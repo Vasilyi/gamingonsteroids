@@ -106,7 +106,9 @@ function Xayah:LoadMenu()
 	self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
 	self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
 	self.Menu.Combo:MenuElement({id = "comboUseW", name = "Use W", value = true})
-	self.Menu.Combo:MenuElement({id = "savemana", name = "Save mana for E:", value = 30, min = 0, max = 101, identifier = "%"})
+	self.Menu.Combo:MenuElement({id = "comboUseE", name = "Use E", value = true})
+	self.Menu.Combo:MenuElement({id = "comboEFeathers", name = "Minimal feather for E:", value = 2, min = 1, max = 8})
+	self.Menu.Combo:MenuElement({id = "savemana", name = "Save mana for E:", value = true})
 	
 	self.Menu:MenuElement({type = MENU, id = "EUsage", name = "EUsage"})
 	self.Menu.EUsage:MenuElement({id = "autoroot", name = "Auto Root", value = true})
@@ -193,14 +195,32 @@ function Xayah:Tick()
 			self:CastQ(currenttarget,combomodeactive or false)
 		end
 	end
-	if self:CanCast(_E) and (harassactive and self.Menu.Harass.harassUseE:Value()) then
-		if canmove and (not canattack or not currenttarget) then
-			local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes()) or self:GetEnemyHeroes()
-			for i, target in ipairs(heroeslist) do
-				if self:IsValidTarget(target) then
-					local hits = self:GetFeatherHits(target)
-					if hits >= self.Menu.Harass.minEFeathers:Value() then
-						Control.CastSpell(HK_E)
+	if self:CanCast(_E) then 
+		if (Eautoroot or eKS) then
+			self:EUsage()
+		end
+		if (harassactive and self.Menu.Harass.harassUseE:Value()) then
+			if canmove and (not canattack or not currenttarget) then
+				local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes()) or self:GetEnemyHeroes()
+				for i, target in ipairs(heroeslist) do
+					if self:IsValidTarget(target) then
+						local hits = self:GetFeatherHits(target)
+						if hits >= self.Menu.Harass.minEFeathers:Value() then
+							Control.CastSpell(HK_E)
+						end
+					end
+				end
+			end
+		end
+		if (combomodeactive and self.Menu.Combo.comboUseE:Value()) then
+			if canmove and (not canattack or not currenttarget) then
+				local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes()) or self:GetEnemyHeroes()
+				for i, target in ipairs(heroeslist) do
+					if self:IsValidTarget(target) then
+						local hits = self:GetFeatherHits(target)
+						if hits >= self.Menu.Combo.comboEFeathers:Value() then
+							Control.CastSpell(HK_E)
+						end
 					end
 				end
 			end
@@ -209,9 +229,7 @@ function Xayah:Tick()
 	if self:CanCast(_W) and self.Menu.Combo.comboUseW:Value() and combomodeactive then
 		Control.CastSpell(HK_W)
 	end	
-	if self:CanCast(_E) and (Eautoroot or eKS) then
-		self:EUsage()
-	end
+
 end
 
 function EnableMovement()
