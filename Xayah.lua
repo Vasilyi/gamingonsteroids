@@ -77,33 +77,13 @@ function Xayah:__init()
 	if _G.SDK then
 		orbwalkername = "IC'S orbwalker"	
 		_G.SDK.Orbwalker:OnPostAttack(function() 
-			local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
-			local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
-			local QMinMana = self.Menu.Combo.qMinMana:Value()
-			if (combomodeactive or harassactive) then	
-				if (harassactive or (myHero.maxMana * QMinMana * 0.01 < myHero.mana)) then
-					self:CastQ(_G.SDK.Orbwalker:GetTarget(),combomodeactive or false)
-				end
-			end
 		end)
 	elseif _G.EOW then
 		orbwalkername = "EOW"	
-		_G.EOW:AddCallback(_G.EOW.AfterAttack, function() self:DelayedQ() end)
 	elseif _G.GOS then
 		orbwalkername = "Noddy orbwalker"
-		_G.GOS:OnAttackComplete(function() 
-			local combomodeactive = _G.GOS:GetMode() == "Combo"
-			local harassactive = _G.GOS:GetMode() == "Harass"
-			local QMinMana = self.Menu.Combo.qMinMana:Value()
-			if (combomodeactive or harassactive) then
-				if (harassactive or (myHero.maxMana * QMinMana * 0.01 < myHero.mana)) then
-					self:CastQ(_G.GOS:GetTarget(),combomodeactive or false)
-				end
-			end
-		end)
 	else
 		orbwalkername = "Orbwalker not found"
-		
 	end
 	PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 end
@@ -125,20 +105,22 @@ function Xayah:LoadMenu()
 	
 	self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
 	self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
-	self.Menu.Combo:MenuElement({id = "qMinMana", name = "Minimal mana for Q:", value = 30, min = 0, max = 101, identifier = "%"})
-
+	self.Menu.Combo:MenuElement({id = "comboUseW", name = "Use W", value = true})
+	self.Menu.Combo:MenuElement({id = "savemana", name = "Save mana for E:", value = 30, min = 0, max = 101, identifier = "%"})
+	
 	self.Menu:MenuElement({type = MENU, id = "EUsage", name = "EUsage"})
 	self.Menu.EUsage:MenuElement({id = "autoroot", name = "Auto Root", value = true})
+	self.Menu.EUsage:MenuElement({id = "rootedamount", name = "Minimal enemys for autoroot:", value = 1, min = 1, max = 5})
 	self.Menu.EUsage:MenuElement({id = "autoks", name = "Autokill with E", value = true})
 	
 	--[[Draw]]
 	self.Menu:MenuElement({type = MENU, id = "Draw", name = "Draw Settings"})
 	self.Menu.Draw:MenuElement({id = "DrawE", name = "Draw Featherhit amounts", value = true})
-
+	self.Menu.Draw:MenuElement({id = "DrawOnGround", name = "Draw Feathers on ground", value = true})
+	
 	--[[Harass]]
 	self.Menu:MenuElement({type = MENU, id = "Harass", name = "Harass Settings"})
 	self.Menu.Harass:MenuElement({id = "harassUseQ", name = "Use Q", value = true})
-	self.Menu.Harass:MenuElement({id = "HarassMinEStacks", name = "Min E stacks: ", value = 3, min = 0, max = 8})
 	self.Menu.Harass:MenuElement({id = "harassMana", name = "Minimal mana percent:", value = 30, min = 0, max = 101, identifier = "%"})
 	
 	
@@ -174,18 +156,11 @@ function Xayah:GetFeatherHits(target)
 	return HitCount
 end
 
-
-function Xayah:Tick()
-	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
-	
-	local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
-	local HarassMinMana = self.Menu.Harass.harassMana:Value()
-	local QMinMana = self.Menu.Combo.qMinMana:Value()
-	
+function Xayah:UpdateFeathers()
 	for i = 1, Game.MissileCount() do
 		local missile = Game.Missile(i)
 		if missile.missileData and missile.missileData.owner == myHero.handle and not alreadycontains(missile) then
-			if missile.missileData.name == "XayahQMissile1" or missile.missileData.name == "XayahQMissile2" then
+			if missile.missileData.name == "XayahQMissile1" or missile.missileData.name == "XayahQMissile2" or missile.missileData.name == "XayahRMissile" then
 				table.insert(XayahPassiveTable, {placetime = Game.Timer() + 6, ID = missile.networkID, Position = Vector(missile.missileData.endPos)})
 			elseif missile.missileData.name == "XayahPassiveAttack" then
 				local newpos = myHero.pos:Extended(missile.missileData.endPos,1000)
@@ -195,19 +170,33 @@ function Xayah:Tick()
 			end
 		end
 	end
+end
+
+function Xayah:Tick()
+	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
+	
+	local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
+	local HarassMinMana = self.Menu.Harass.harassMana:Value()
+	local savemana = self.Menu.Combo.savemana:Value()
+	local Eautoroot = self.Menu.EUsage.autoroot:Value()
+	local eKS = self.Menu.EUsage.autoks:Value()
+	self:UpdateFeathers()
 	
 	
 	if combomodeactive and self.Menu.UseBOTRK:Value() then
 		UseBotrk()
 	end
-	if ((combomodeactive) or (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana)) then
-		if (harassactive or (myHero.maxMana * QMinMana * 0.01 < myHero.mana)) and not currenttarget then
+	if self:CanCast(_Q) and self.Menu.Combo.comboUseQ:Value() and ((combomodeactive and (not savemana or myHero.mana > myHero:GetSpellData(_Q).mana + myHero:GetSpellData(_E).mana)) or (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana)) then
+		if canmove and (not canattack or not currenttarget) then
 			self:CastQ(currenttarget,combomodeactive or false)
 		end
-		if (not canattack or not currenttarget) and self.Menu.Combo.comboUseE:Value() then
-			self:CastE(currenttarget,combomodeactive or false)
-		end
+	end
+	if self:CanCast(_W) and self.Menu.Combo.comboUseW:Value() and combomodeactive then
+		Control.CastSpell(HK_W)
 	end	
+	if self:CanCast(_E) and (Eautoroot or eKS) then
+		self:EUsage()
+	end
 end
 
 function EnableMovement()
@@ -272,9 +261,36 @@ function Xayah:CastQ(target, combo)
 		end
 	end
 end
+function Xayah:IsValidTarget(unit, range, checkTeam, from)
+	local range = range == nil and math.huge or range
+	if unit == nil or not unit.valid or not unit.visible or unit.dead or not unit.isTargetable or (checkTeam and unit.isAlly) then
+		return false
+	end
+	if myHero.pos:DistanceTo(unit.pos)>range then return false end 
+	return true 
+end
 
-function Xayah:CastE(target,combo)
-	
+function Xayah:EUsage()
+	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes()) or self:GetEnemyHeroes()
+	local rootedenemy = 0
+	for i, target in ipairs(heroeslist) do
+		if self:IsValidTarget(target) then
+			local hits = self:GetFeatherHits(target)
+			if hits == 0 then return end 
+			if hits >= 3 then
+				rootedenemy = rootedenemy +1
+			end
+			local edamage = (45 + myHero:GetSpellData(_E).level*10 + 0.6*myHero.bonusDamage)*hits*(1+myHero.critChance/2)
+			local tempdmg = CalcPhysicalDamage(myHero,target,edamage)
+			if tempdmg > target.health then
+				Control.CastSpell(HK_E)
+			end
+			if rootedenemy >= self.Menu.EUsage.rootedamount:Value() then 
+				Control.CastSpell(HK_E)
+			end
+			
+		end
+	end
 end
 
 function Xayah:IsReady(spellSlot)
@@ -290,20 +306,24 @@ function Xayah:CanCast(spellSlot)
 end
 
 function Xayah:Draw()
-	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes()) or self:GetEnemyHeroes()
-	for i, target in ipairs(heroeslist) do
-		local hits = self:GetFeatherHits(target)
-		Draw.Text(tostring(hits), 25, target.pos:To2D().x, target.pos:To2D().y, Draw.Color(255, 255, 255, 0))
+	if self.Menu.Draw.DrawE:Value() then
+		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes()) or self:GetEnemyHeroes()
+		for i, target in ipairs(heroeslist) do
+			local hits = self:GetFeatherHits(target)
+			Draw.Text(tostring(hits), 25, target.pos:To2D().x, target.pos:To2D().y, Draw.Color(255, 255, 255, 0))
+		end
 	end
-	for i, object in ipairs(XayahPassiveTable) do
-		if object.placetime > Game.Timer() then
-			Draw.Circle(object.Position, 90, 3, Draw.Color(255, 255, 255, 0))
-		else
-			table.remove(XayahPassiveTable,i)
+	if self.Menu.Draw.DrawOnGround:Value() then
+		for i, object in ipairs(XayahPassiveTable) do
+			if object.placetime > Game.Timer() then
+				Draw.Circle(object.Position, 90, 3, Draw.Color(255, 255, 255, 0))
+			else
+				table.remove(XayahPassiveTable,i)
+			end
 		end
 	end
 end
 
 function OnLoad()
-Xayah()
+	Xayah()
 end

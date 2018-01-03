@@ -1,4 +1,4 @@
-if myHero.charName == "Ashe" or myHero.charName == "Ezreal" or myHero.charName == "Lucian" or myHero.charName == "Caitlyn" or myHero.charName == "Twitch" or myHero.charName == "KogMaw" or myHero.charName == "Kalista" or myHero.charName == "Corki" then
+if myHero.charName == "Ashe" or myHero.charName == "Ezreal" or myHero.charName == "Lucian" or myHero.charName == "Caitlyn" or myHero.charName == "Twitch" or myHero.charName == "KogMaw" or myHero.charName == "Kalista" or myHero.charName == "Corki" or myHero.charName == "Xayah" then
 	require "2DGeometry"
 	
 	
@@ -2457,5 +2457,275 @@ if myHero.charName == "Corki" then
 	
 	function OnLoad()
 		Corki()
+	end
+end
+
+if myHero.charName == "Xayah" then
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Xayah","v1.0","TRUS","7.24b"
+	class "Xayah"
+	require "DamageLib"
+	if FileExist(COMMON_PATH .. "TPred.lua") then
+		require 'TPred'
+	end
+	XayahPassiveTable = {}
+	
+	function Xayah:__init()
+		self:LoadSpells()
+		self:LoadMenu()
+		Callback.Add("Tick", function() self:Tick() end)
+		Callback.Add("Draw", function() self:Draw() end)
+		local orbwalkername = ""
+		if _G.SDK then
+			orbwalkername = "IC'S orbwalker"	
+			_G.SDK.Orbwalker:OnPostAttack(function() 
+			end)
+		elseif _G.EOW then
+			orbwalkername = "EOW"	
+		elseif _G.GOS then
+			orbwalkername = "Noddy orbwalker"
+		else
+			orbwalkername = "Orbwalker not found"
+		end
+		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
+	end
+	
+	
+	function Xayah:LoadSpells()
+		Q = {Range = 1100, Width = 50, Delay = 0.5, Speed = 400}
+		E = {Range = 1000}
+		R = {Delay = 1, Range = 1100}
+		
+	end
+	
+	function Xayah:LoadMenu()
+		self.Menu = MenuElement({type = MENU, id = "TRUStinymyXayah", name = Scriptname})
+		
+		--[[Combo]]
+		self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
+		self.Menu:MenuElement({id = "AlwaysKS", name = "Always KS with E", value = true})
+		
+		self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
+		self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
+		self.Menu.Combo:MenuElement({id = "comboUseW", name = "Use W", value = true})
+		self.Menu.Combo:MenuElement({id = "savemana", name = "Save mana for E:", value = 30, min = 0, max = 101, identifier = "%"})
+		
+		self.Menu:MenuElement({type = MENU, id = "EUsage", name = "EUsage"})
+		self.Menu.EUsage:MenuElement({id = "autoroot", name = "Auto Root", value = true})
+		self.Menu.EUsage:MenuElement({id = "rootedamount", name = "Minimal enemys for autoroot:", value = 1, min = 1, max = 5})
+		self.Menu.EUsage:MenuElement({id = "autoks", name = "Autokill with E", value = true})
+		
+		--[[Draw]]
+		self.Menu:MenuElement({type = MENU, id = "Draw", name = "Draw Settings"})
+		self.Menu.Draw:MenuElement({id = "DrawE", name = "Draw Featherhit amounts", value = true})
+		self.Menu.Draw:MenuElement({id = "DrawOnGround", name = "Draw Feathers on ground", value = true})
+		
+		--[[Harass]]
+		self.Menu:MenuElement({type = MENU, id = "Harass", name = "Harass Settings"})
+		self.Menu.Harass:MenuElement({id = "harassUseQ", name = "Use Q", value = true})
+		self.Menu.Harass:MenuElement({id = "harassMana", name = "Minimal mana percent:", value = 30, min = 0, max = 101, identifier = "%"})
+		
+		
+		
+		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
+		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
+		
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
+	end
+	
+	
+	function alreadycontains(element)
+		for _, value in pairs(XayahPassiveTable) do
+			if value.ID == element.networkID then
+				return true
+			end
+		end
+		return false
+	end
+	
+	function Xayah:GetFeatherHits(target)
+		local HitCount = 0
+		if target then	
+			for i, object in ipairs(XayahPassiveTable) do
+				local collidingLine = LineSegment(myHero.pos, object.Position)
+				if Point(target):__distance(collidingLine) < 110 then
+					HitCount = HitCount + 1
+				end
+			end
+		end
+		return HitCount
+	end
+	
+	function Xayah:UpdateFeathers()
+		for i = 1, Game.MissileCount() do
+			local missile = Game.Missile(i)
+			if missile.missileData and missile.missileData.owner == myHero.handle and not alreadycontains(missile) then
+				if missile.missileData.name == "XayahQMissile1" or missile.missileData.name == "XayahQMissile2" or missile.missileData.name == "XayahRMissile" then
+					table.insert(XayahPassiveTable, {placetime = Game.Timer() + 6, ID = missile.networkID, Position = Vector(missile.missileData.endPos)})
+				elseif missile.missileData.name == "XayahPassiveAttack" then
+					local newpos = myHero.pos:Extended(missile.missileData.endPos,1000)
+					table.insert(XayahPassiveTable, {placetime = Game.Timer() + 6, ID = missile.networkID, Position = Vector(newpos)})
+				elseif missile.missileData.name == "XayahEMissile" then
+					XayahPassiveTable = {}
+				end
+			end
+		end
+	end
+	
+	function Xayah:Tick()
+		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
+		
+		local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
+		local HarassMinMana = self.Menu.Harass.harassMana:Value()
+		local savemana = self.Menu.Combo.savemana:Value()
+		local Eautoroot = self.Menu.EUsage.autoroot:Value()
+		local eKS = self.Menu.EUsage.autoks:Value()
+		self:UpdateFeathers()
+		
+		
+		if combomodeactive and self.Menu.UseBOTRK:Value() then
+			UseBotrk()
+		end
+		if self:CanCast(_Q) and self.Menu.Combo.comboUseQ:Value() and ((combomodeactive and (not savemana or myHero.mana > myHero:GetSpellData(_Q).mana + myHero:GetSpellData(_E).mana)) or (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana)) then
+			if canmove and (not canattack or not currenttarget) then
+				self:CastQ(currenttarget,combomodeactive or false)
+			end
+		end
+		if self:CanCast(_W) and self.Menu.Combo.comboUseW:Value() and combomodeactive then
+			Control.CastSpell(HK_W)
+		end	
+		if self:CanCast(_E) and (Eautoroot or eKS) then
+			self:EUsage()
+		end
+	end
+	
+	function EnableMovement()
+		--unblock movement
+		SetMovement(true)
+	end
+	
+	function ReturnCursor(pos)
+		Control.SetCursorPos(pos)
+		Control.mouse_event(MOUSEEVENTF_RIGHTDOWN)
+		Control.mouse_event(MOUSEEVENTF_RIGHTUP)
+		DelayAction(EnableMovement,0.1)
+	end
+	
+	function LeftClick(pos)
+		Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
+		Control.mouse_event(MOUSEEVENTF_LEFTUP)
+		DelayAction(ReturnCursor,0.05,{pos})
+	end
+	
+	function Xayah:CastSpell(spell,pos)
+		local customcast = self.Menu.CustomSpellCast:Value()
+		if not customcast then
+			Control.CastSpell(spell, pos)
+			return
+		else
+			local delay = self.Menu.delay:Value()
+			local ticker = GetTickCount()
+			if castSpell.state == 0 and ticker > castSpell.casting then
+				castSpell.state = 1
+				castSpell.mouse = mousePos
+				castSpell.tick = ticker
+				if ticker - castSpell.tick < Game.Latency() then
+					--block movement
+					SetMovement(false)
+					Control.SetCursorPos(pos)
+					Control.KeyDown(spell)
+					Control.KeyUp(spell)
+					DelayAction(LeftClick,delay/1000,{castSpell.mouse})
+					castSpell.casting = ticker + 500
+				end
+			end
+		end
+	end
+	
+	
+	
+	function Xayah:CastQ(target, combo)
+		if (not _G.SDK and not _G.GOS and not _G.EOW) then return end
+		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
+		if target and target.type == "AIHeroClient" then
+			if (TPred) then
+				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,false)
+				if (HitChance >= 0) then
+					local newpos = myHero.pos:Extended(castpos,math.random(100,300))
+					self:CastSpell(HK_Q, newpos)
+				end
+			elseif (target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0) then
+				local castPos = target:GetPrediction(Q.Speed,Q.Delay)
+				local newpos = myHero.pos:Extended(castPos,math.random(100,300))
+				self:CastSpell(HK_Q, newpos)
+			end
+		end
+	end
+	function Xayah:IsValidTarget(unit, range, checkTeam, from)
+		local range = range == nil and math.huge or range
+		if unit == nil or not unit.valid or not unit.visible or unit.dead or not unit.isTargetable or (checkTeam and unit.isAlly) then
+			return false
+		end
+		if myHero.pos:DistanceTo(unit.pos)>range then return false end 
+		return true 
+	end
+	
+	function Xayah:EUsage()
+		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes()) or self:GetEnemyHeroes()
+		local rootedenemy = 0
+		for i, target in ipairs(heroeslist) do
+			if self:IsValidTarget(target) then
+				local hits = self:GetFeatherHits(target)
+				if hits == 0 then return end 
+				if hits >= 3 then
+					rootedenemy = rootedenemy +1
+				end
+				local edamage = (45 + myHero:GetSpellData(_E).level*10 + 0.6*myHero.bonusDamage)*hits*(1+myHero.critChance/2)
+				local tempdmg = CalcPhysicalDamage(myHero,target,edamage)
+				if tempdmg > target.health then
+					Control.CastSpell(HK_E)
+				end
+				if rootedenemy >= self.Menu.EUsage.rootedamount:Value() then 
+					Control.CastSpell(HK_E)
+				end
+				
+			end
+		end
+	end
+	
+	function Xayah:IsReady(spellSlot)
+		return myHero:GetSpellData(spellSlot).currentCd == 0 and myHero:GetSpellData(spellSlot).level > 0
+	end
+	
+	function Xayah:CheckMana(spellSlot)
+		return myHero:GetSpellData(spellSlot).mana < myHero.mana
+	end
+	
+	function Xayah:CanCast(spellSlot)
+		return self:IsReady(spellSlot) and self:CheckMana(spellSlot)
+	end
+	
+	function Xayah:Draw()
+		if self.Menu.Draw.DrawE:Value() then
+			local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes()) or self:GetEnemyHeroes()
+			for i, target in ipairs(heroeslist) do
+				local hits = self:GetFeatherHits(target)
+				Draw.Text(tostring(hits), 25, target.pos:To2D().x, target.pos:To2D().y, Draw.Color(255, 255, 255, 0))
+			end
+		end
+		if self.Menu.Draw.DrawOnGround:Value() then
+			for i, object in ipairs(XayahPassiveTable) do
+				if object.placetime > Game.Timer() then
+					Draw.Circle(object.Position, 90, 3, Draw.Color(255, 255, 255, 0))
+				else
+					table.remove(XayahPassiveTable,i)
+				end
+			end
+		end
+	end
+	
+	function OnLoad()
+		Xayah()
 	end
 end
