@@ -2629,7 +2629,7 @@ if myHero.charName == "Xayah" then
 				end
 			end
 		end
-		if self:CanCast(_W) and self.Menu.Combo.comboUseW:Value() and combomodeactive then
+		if currenttarget and self:CanCast(_W) and self.Menu.Combo.comboUseW:Value() and combomodeactive then
 			Control.CastSpell(HK_W)
 		end	
 		
