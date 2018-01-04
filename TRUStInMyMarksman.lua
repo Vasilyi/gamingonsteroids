@@ -2461,7 +2461,7 @@ if myHero.charName == "Corki" then
 end
 
 if myHero.charName == "Xayah" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Xayah","v1.0","TRUS","7.24b"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Xayah","v1.1","TRUS","7.24b"
 	class "Xayah"
 	require "DamageLib"
 	if FileExist(COMMON_PATH .. "TPred.lua") then
@@ -2507,18 +2507,20 @@ if myHero.charName == "Xayah" then
 		self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
 		self.Menu.Combo:MenuElement({id = "comboUseW", name = "Use W", value = true})
 		self.Menu.Combo:MenuElement({id = "comboUseE", name = "Use E", value = true})
-		self.Menu.Combo:MenuElement({id = "comboEFeathers", name = "Minimal feather for E:", value = 2, min = 1, max = 8})
+		self.Menu.Combo:MenuElement({id = "comboEFeathers", name = "Minimal feather for E:", value = 4, min = 1, max = 8})
 		self.Menu.Combo:MenuElement({id = "savemana", name = "Save mana for E:", value = true})
 		
 		self.Menu:MenuElement({type = MENU, id = "EUsage", name = "EUsage"})
 		self.Menu.EUsage:MenuElement({id = "autoroot", name = "Auto Root", value = true})
-		self.Menu.EUsage:MenuElement({id = "rootedamount", name = "Minimal enemys for autoroot:", value = 1, min = 1, max = 5})
+		self.Menu.EUsage:MenuElement({id = "rootedamount", name = "Minimal enemys for autoroot:", value = 2, min = 1, max = 5})
 		self.Menu.EUsage:MenuElement({id = "autoks", name = "Autokill with E", value = true})
 		
 		--[[Draw]]
 		self.Menu:MenuElement({type = MENU, id = "Draw", name = "Draw Settings"})
 		self.Menu.Draw:MenuElement({id = "DrawE", name = "Draw Featherhit amounts", value = true})
 		self.Menu.Draw:MenuElement({id = "DrawOnGround", name = "Draw Feathers on ground", value = true})
+		self.Menu.Draw:MenuElement({id = "DrawFLines", name = "Draw Feathers lines", value = true})
+		
 		
 		--[[Harass]]
 		self.Menu:MenuElement({type = MENU, id = "Harass", name = "Harass Settings"})
@@ -2552,8 +2554,9 @@ if myHero.charName == "Xayah" then
 		if target then	
 			for i, object in ipairs(XayahPassiveTable) do
 				local collidingLine = LineSegment(myHero.pos, object.Position)
-				if Point(target):__distance(collidingLine) < 110 then
+				if Point(target):__distance(collidingLine) < 80 + target.boundingRadius then
 					HitCount = HitCount + 1
+					object.hit = true
 				end
 			end
 		end
@@ -2565,10 +2568,10 @@ if myHero.charName == "Xayah" then
 			local missile = Game.Missile(i)
 			if missile.missileData and missile.missileData.owner == myHero.handle and not alreadycontains(missile) then
 				if missile.missileData.name == "XayahQMissile1" or missile.missileData.name == "XayahQMissile2" or missile.missileData.name == "XayahRMissile" then
-					table.insert(XayahPassiveTable, {placetime = Game.Timer() + 6, ID = missile.networkID, Position = Vector(missile.missileData.endPos)})
+					table.insert(XayahPassiveTable, {placetime = Game.Timer() + 6, ID = missile.networkID, Position = Vector(missile.missileData.endPos), hit = false})
 				elseif missile.missileData.name == "XayahPassiveAttack" then
 					local newpos = myHero.pos:Extended(missile.missileData.endPos,1000)
-					table.insert(XayahPassiveTable, {placetime = Game.Timer() + 6, ID = missile.networkID, Position = Vector(newpos)})
+					table.insert(XayahPassiveTable, {placetime = Game.Timer() + 6, ID = missile.networkID, Position = Vector(newpos), hit = false})
 				elseif missile.missileData.name == "XayahEMissile" then
 					XayahPassiveTable = {}
 				end
@@ -2746,13 +2749,19 @@ if myHero.charName == "Xayah" then
 				Draw.Text(tostring(hits), 25, target.pos:To2D().x, target.pos:To2D().y, Draw.Color(255, 255, 255, 0))
 			end
 		end
-		if self.Menu.Draw.DrawOnGround:Value() then
+		if self.Menu.Draw.DrawOnGround:Value() and self.Menu.Draw.DrawFLines:Value() then
 			for i, object in ipairs(XayahPassiveTable) do
 				if object.placetime > Game.Timer() then
-					Draw.Circle(object.Position, 90, 3, Draw.Color(255, 255, 255, 0))
+					if self.Menu.Draw.DrawOnGround:Value() then
+						Draw.Circle(object.Position, 90, 3, Draw.Color(255, 255, 255, 0))
+					end
+					if self.Menu.Draw.DrawFLines:Value() then
+						Draw.Line(myHero.pos:To2D().x, myHero.pos:To2D().y, object.Position:To2D().x, object.Position:To2D().y, 4, object.hit and Draw.Color(255, 255, 0, 0) or Draw.Color(255, 255, 255, 0))
+					end
 				else
 					table.remove(XayahPassiveTable,i)
 				end
+				object.hit = false
 			end
 		end
 	end
