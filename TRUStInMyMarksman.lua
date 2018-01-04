@@ -2749,7 +2749,7 @@ if myHero.charName == "Xayah" then
 				Draw.Text(tostring(hits), 25, target.pos:To2D().x, target.pos:To2D().y, Draw.Color(255, 255, 255, 0))
 			end
 		end
-		if self.Menu.Draw.DrawOnGround:Value() and self.Menu.Draw.DrawFLines:Value() then
+		if self.Menu.Draw.DrawOnGround:Value() or self.Menu.Draw.DrawFLines:Value() then
 			for i, object in ipairs(XayahPassiveTable) do
 				if object.placetime > Game.Timer() then
 					if self.Menu.Draw.DrawOnGround:Value() then
