@@ -663,11 +663,7 @@ if myHero.charName == "Caitlyn" then
 		end
 		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 	end
-	onetimereset = true
-	blockattack = false
-	blockmovement = false
 	
-	local lastpick = 0
 	--[[Spells]]
 	function Caitlyn:LoadSpells()
 		Q = {Range = 1190, Width = 90, Delay = 0.625, Radius = 60, Speed = 2000}
@@ -2530,7 +2526,9 @@ if myHero.charName == "Xayah" then
 		self.Menu.Harass:MenuElement({id = "harassMana", name = "Minimal mana percent:", value = 30, min = 0, max = 101, identifier = "%"})
 		
 		
-		
+		if (TPred) then
+			self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 1, min = 0, max = 5, step = 1, identifier = ""})
+		end
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 		
@@ -2686,7 +2684,7 @@ if myHero.charName == "Xayah" then
 		if target and target.type == "AIHeroClient" then
 			if (TPred) then
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,false)
-				if (HitChance >= 1) then
+				if (HitChance >= self.Menu.minchance:Value()) then
 					local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 					self:CastSpell(HK_Q, newpos)
 				end
