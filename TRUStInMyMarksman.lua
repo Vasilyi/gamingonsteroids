@@ -66,7 +66,8 @@ if myHero.charName == "Ashe" or myHero.charName == "Ezreal" or myHero.charName =
 end
 
 if myHero.charName == "Ashe" then
-	class "Ashe"
+	local Ashe = {}
+	Ashe.__index = Ashe
 	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","7.22"
 	function Ashe:GetBuffs(unit)
 		self.T = {}
@@ -345,12 +346,13 @@ if myHero.charName == "Ashe" then
 	end
 	
 	function OnLoad()
-		Ashe()
+		Ashe:__init()
 	end
 end
 
 if myHero.charName == "Lucian" then
-	class "Lucian"
+	local Lucian = {}
+	Lucian.__index = Lucian
 	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.4","TRUS","7.22"
 	local passive = true
 	local lastbuff = 0
@@ -631,13 +633,14 @@ if myHero.charName == "Lucian" then
 	
 	
 	function OnLoad()
-		Lucian()
+		Lucian:__init()
 	end
 end
 
 
 if myHero.charName == "Caitlyn" then
-	class "Caitlyn"
+	local Caitlyn = {}
+	Caitlyn.__index = Caitlyn
 	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.6","TRUS","7.22"
 	require "DamageLib"
 	local qtarget
@@ -880,12 +883,13 @@ if myHero.charName == "Caitlyn" then
 	end
 	
 	function OnLoad()
-		Caitlyn()
+		Caitlyn:__init()
 	end
 end
 
 if myHero.charName == "Ezreal" then
-	class "Ezreal"
+	local Ezreal = {}
+	Ezreal.__index = Ezreal
 	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.10","TRUS","7.22"
 	require "DamageLib"
 	
@@ -1088,7 +1092,8 @@ end
 
 if myHero.charName == "Twitch" then
 	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.5","TRUS","7.22"
-	class "Twitch"
+	local Twitch = {}
+	Twitch.__index = Twitch
 	require "DamageLib"
 	local qtarget
 	local barHeight = 8
@@ -1277,12 +1282,13 @@ if myHero.charName == "Twitch" then
 	end
 	
 	function OnLoad()
-		Twitch()
+		Twitch:__init()
 	end
 end
 
 if myHero.charName == "KogMaw" then
-	class "KogMaw"
+	local KogMaw = {}
+	KogMaw.__index = KogMaw
 	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.3","TRUS","7.22"
 	
 	if FileExist(COMMON_PATH .. "TPred.lua") then
@@ -1536,13 +1542,14 @@ if myHero.charName == "KogMaw" then
 	
 	
 	function OnLoad()
-		KogMaw()
+		KogMaw:__init()
 	end
 end
 
 if myHero.charName == "Kalista" then 
 	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.12","TRUS","7.22"
-	class "Kalista"
+	local Kalista = {}
+	Kalista.__index = Kalista
 	require "DamageLib"
 	local chainedally = nil
 	local barHeight = 8
@@ -2114,14 +2121,15 @@ if myHero.charName == "Kalista" then
 	end
 	
 	function OnLoad()
-		Kalista()
+		Kalista:__init()
 	end
 end
 
 
 if myHero.charName == "Sivir" then 
 	local Scriptname,Version,Author,LVersion = "TRUSt in my Sivir","v1.0","TRUS","7.22"
-	class "Sivir"
+	local Sivir = {}
+	Sivir.__index = Sivir
 	
 	function Sivir:__init()
 		if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
@@ -2181,12 +2189,13 @@ if myHero.charName == "Sivir" then
 	end
 	
 	function OnLoad()
-		Sivir()
+		Sivir:__init()
 	end
 end
 
 if myHero.charName == "Corki" then
-	class "Corki"
+	local Corki = {}
+	Corki.__index = Corki
 	local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.1","TRUS","7.22"
 	
 	if FileExist(COMMON_PATH .. "TPred.lua") then
@@ -2461,13 +2470,16 @@ if myHero.charName == "Corki" then
 	
 	
 	function OnLoad()
-		Corki()
+		Corki:__init()
 	end
 end
 
 if myHero.charName == "Xayah" then
 	local Scriptname,Version,Author,LVersion = "TRUSt in my Xayah","v1.1","TRUS","7.24b"
-	class "Xayah"
+	
+	local Xayah = {}
+	Xayah.__index = Xayah
+	
 	require "DamageLib"
 	if FileExist(COMMON_PATH .. "TPred.lua") then
 		require 'TPred'
@@ -2775,6 +2787,6 @@ if myHero.charName == "Xayah" then
 	end
 	
 	function OnLoad()
-		Xayah()
+		Xayah:__init()
 	end
 end
