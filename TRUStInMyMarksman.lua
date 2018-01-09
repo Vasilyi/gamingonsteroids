@@ -1,4 +1,5 @@
 if myHero.charName == "Ashe" or myHero.charName == "Ezreal" or myHero.charName == "Lucian" or myHero.charName == "Caitlyn" or myHero.charName == "Twitch" or myHero.charName == "KogMaw" or myHero.charName == "Kalista" or myHero.charName == "Corki" or myHero.charName == "Xayah" then
+	local TRUStinMyMarksmanloaded = false
 	require "2DGeometry"
 	
 	
@@ -88,6 +89,7 @@ if myHero.charName == "Ashe" then
 	end
 	
 	function Ashe:__init()
+		if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 		self:LoadSpells()
 		self:LoadMenu()
 		Callback.Add("Tick", function() self:Tick() end)
@@ -353,7 +355,7 @@ if myHero.charName == "Lucian" then
 	local passive = true
 	local lastbuff = 0
 	function Lucian:__init()
-		
+		if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 		self:LoadSpells()
 		self:LoadMenu()
 		Callback.Add("Tick", function() self:Tick() end)
@@ -646,6 +648,7 @@ if myHero.charName == "Caitlyn" then
 	local EPrediction = {}
 	local LastW
 	function Caitlyn:__init()
+		if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 		self:LoadSpells()
 		self:LoadMenu()
 		Callback.Add("Tick", function() self:Tick() end)
@@ -896,6 +899,7 @@ if myHero.charName == "Ezreal" then
 	local EPrediction = {}
 	
 	function Ezreal:__init()
+		if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 		self:LoadSpells()
 		self:LoadMenu()
 		Callback.Add("Tick", function() self:Tick() end)
@@ -1092,6 +1096,7 @@ if myHero.charName == "Twitch" then
 	local barXOffset = 24
 	local barYOffset = -8
 	function Twitch:__init()
+		if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 		self:LoadMenu()
 		Callback.Add("Tick", function() self:Tick() end)
 		Callback.Add("Draw", function() self:Draw() end)
@@ -1285,6 +1290,7 @@ if myHero.charName == "KogMaw" then
 	end
 	
 	function KogMaw:__init()
+		if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 		self:LoadSpells()
 		self:LoadMenu()
 		Callback.Add("Tick", function() self:Tick() end)
@@ -1563,6 +1569,7 @@ if myHero.charName == "Kalista" then
 	
 	
 	function Kalista:__init()
+		if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 		self:LoadSpells()
 		self:LoadMenu()
 		Callback.Add("Tick", function() self:Tick() end)
@@ -2117,6 +2124,7 @@ if myHero.charName == "Sivir" then
 	class "Sivir"
 	
 	function Sivir:__init()
+		if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 		self:LoadMenu()
 		local orbwalkername = ""
 		if _G.SDK then
@@ -2190,6 +2198,7 @@ if myHero.charName == "Corki" then
 	local EPrediction = {}
 	
 	function Corki:__init()
+		if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 		self:LoadSpells()
 		self:LoadMenu()
 		Callback.Add("Tick", function() self:Tick() end)
@@ -2466,6 +2475,7 @@ if myHero.charName == "Xayah" then
 	XayahPassiveTable = {}
 	
 	function Xayah:__init()
+		if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 		self:LoadSpells()
 		self:LoadMenu()
 		Callback.Add("Tick", function() self:Tick() end)
