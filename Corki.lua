@@ -60,20 +60,20 @@ function UseBotrk()
 	end
 end
 
-class "Corki"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.1","TRUS","7.22"
+local Corki = {}
+Corki.__index = Corki
+local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.1","TRUS","8.1"
 
 if FileExist(COMMON_PATH .. "TPred.lua") then
 	require 'TPred'
-	PrintChat("TPred library loaded")
 elseif FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
 	require 'Eternal Prediction'
-	PrintChat("Eternal Prediction library loaded")
 end
 
 local EPrediction = {}
 
 function Corki:__init()
+	if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 	self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
@@ -336,5 +336,5 @@ end
 
 
 function OnLoad()
-	Corki()
+	Corki:__init()
 end

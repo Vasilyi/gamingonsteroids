@@ -68,7 +68,7 @@ end
 if myHero.charName == "Ashe" then
 	local Ashe = {}
 	Ashe.__index = Ashe
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","7.22"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","8.1"
 	function Ashe:GetBuffs(unit)
 		self.T = {}
 		for i = 0, unit.buffCount do
@@ -256,13 +256,13 @@ if myHero.charName == "Ashe" then
 		end
 		
 		if combomodeactive and self.Menu.UseWCombo:Value() and canmove and not canattack then
-			self:CastW()
+			self:CastW(currenttarget)
 		end
 		if combomodeactive and self:QBuff() and self.Menu.UseQCombo:Value() and (not self.Menu.UseQAfterAA:Value()) and currenttarget and canmove and not canattack then
 			self:CastQ()
 		end
 		if harassactive and self.Menu.UseWHarass:Value() and ((canmove and not canattack) or not currenttarget) then
-			self:CastW()
+			self:CastW(currenttarget)
 		end
 	end
 	
@@ -311,7 +311,7 @@ if myHero.charName == "Ashe" then
 	
 	
 	function Ashe:CastW(target)
-		local target = (_G.SDK and _G.SDK.TargetSelector:GetTarget(W.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(W.Range,"AD"))
+		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(W.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(W.Range,"AD"))
 		if target and self:CanCast(_W) and target:GetCollision(W.Radius,W.Speed,W.Delay) == 0 then
 			local getposition = self:GetWPos(target)
 			if getposition then
@@ -353,7 +353,7 @@ end
 if myHero.charName == "Lucian" then
 	local Lucian = {}
 	Lucian.__index = Lucian
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.4","TRUS","7.22"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.4","TRUS","8.1"
 	local passive = true
 	local lastbuff = 0
 	function Lucian:__init()
@@ -641,7 +641,7 @@ end
 if myHero.charName == "Caitlyn" then
 	local Caitlyn = {}
 	Caitlyn.__index = Caitlyn
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.6","TRUS","7.22"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.6","TRUS","8.1"
 	require "DamageLib"
 	local qtarget
 	if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
@@ -890,7 +890,7 @@ end
 if myHero.charName == "Ezreal" then
 	local Ezreal = {}
 	Ezreal.__index = Ezreal
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.10","TRUS","7.22"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.10","TRUS","8.1"
 	require "DamageLib"
 	
 	if FileExist(COMMON_PATH .. "TPred.lua") then
@@ -1091,7 +1091,7 @@ if myHero.charName == "Ezreal" then
 end
 
 if myHero.charName == "Twitch" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.5","TRUS","7.22"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.5","TRUS","8.1"
 	local Twitch = {}
 	Twitch.__index = Twitch
 	require "DamageLib"
@@ -1289,7 +1289,7 @@ end
 if myHero.charName == "KogMaw" then
 	local KogMaw = {}
 	KogMaw.__index = KogMaw
-	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.3","TRUS","7.22"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.4","TRUS","8.1"
 	
 	if FileExist(COMMON_PATH .. "TPred.lua") then
 		require 'TPred'
@@ -1384,7 +1384,7 @@ if myHero.charName == "KogMaw" then
 			UseBotrk()
 		end
 		
-		if ((combomodeactive) or (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana)) and (canmove or not currenttarget) then
+		if ((combomodeactive) or (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana)) and canmove and (not canattack or not currenttarget) then
 			self:CastQ(currenttarget,combomodeactive or false)
 			self:CastE(currenttarget,combomodeactive or false)
 			self:CastR(currenttarget,combomodeactive or false)
@@ -1468,7 +1468,7 @@ if myHero.charName == "KogMaw" then
 		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and ((combo and self.Menu.Combo.comboUseQ:Value()) or (combo == false and self.Menu.Harass.harassUseQ:Value())) then
 			
 			if (TPred) then
-				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,false)
+				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,true)
 				if (HitChance >= self.Menu.minchance:Value()) then
 					local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 					self:CastSpell(HK_Q, newpos)
@@ -2127,7 +2127,7 @@ end
 
 
 if myHero.charName == "Sivir" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Sivir","v1.0","TRUS","7.22"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Sivir","v1.0","TRUS","8.1"
 	local Sivir = {}
 	Sivir.__index = Sivir
 	
@@ -2196,7 +2196,7 @@ end
 if myHero.charName == "Corki" then
 	local Corki = {}
 	Corki.__index = Corki
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.1","TRUS","7.22"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.1","TRUS","8.1"
 	
 	if FileExist(COMMON_PATH .. "TPred.lua") then
 		require 'TPred'
@@ -2475,7 +2475,7 @@ if myHero.charName == "Corki" then
 end
 
 if myHero.charName == "Xayah" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Xayah","v1.1","TRUS","7.24b"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Xayah","v1.1","TRUS","8.1"
 	
 	local Xayah = {}
 	Xayah.__index = Xayah

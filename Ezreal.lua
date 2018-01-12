@@ -60,8 +60,9 @@ function UseBotrk()
 	end
 end
 
-class "Ezreal"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.10","TRUS","7.22"
+local Ezreal = {}
+Ezreal.__index = Ezreal
+local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.10","TRUS","8.1"
 require "DamageLib"
 
 if FileExist(COMMON_PATH .. "TPred.lua") then
@@ -74,6 +75,7 @@ end
 local EPrediction = {}
 
 function Ezreal:__init()
+	if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 	self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
@@ -203,7 +205,7 @@ function Ezreal:CastQ(target)
 				local newpos = myHero.pos:Extended(castPos.castPos,math.random(100,300))
 				self:CastSpell(HK_Q, newpos)
 			end
-		elseif target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0  then
+		elseif target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0 then
 			castPos = target:GetPrediction(Q.Speed,Q.Delay)
 			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
 			self:CastSpell(HK_Q, newpos)
@@ -256,5 +258,5 @@ end
 
 
 function OnLoad()
-	Ezreal()
+	Ezreal:__init()
 end

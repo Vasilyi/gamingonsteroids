@@ -60,14 +60,16 @@ function UseBotrk()
 	end
 end
 
-class "KogMaw"
-local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.3","TRUS","7.22"
+local KogMaw = {}
+KogMaw.__index = KogMaw
+local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.3","TRUS","8.1"
 
 if FileExist(COMMON_PATH .. "TPred.lua") then
 	require 'TPred'
 end
 
 function KogMaw:__init()
+	if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 	self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
@@ -155,7 +157,7 @@ function KogMaw:Tick()
 		UseBotrk()
 	end
 	
-	if ((combomodeactive) or (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana)) and (canmove or not currenttarget) then
+	if ((combomodeactive) or (harassactive and myHero.maxMana * HarassMinMana * 0.01 < myHero.mana)) and canmove and (not canattack or not currenttarget) then
 		self:CastQ(currenttarget,combomodeactive or false)
 		self:CastE(currenttarget,combomodeactive or false)
 		self:CastR(currenttarget,combomodeactive or false)
@@ -239,7 +241,7 @@ function KogMaw:CastQ(target, combo)
 	if target and target.type == "AIHeroClient" and self:CanCast(_Q) and ((combo and self.Menu.Combo.comboUseQ:Value()) or (combo == false and self.Menu.Harass.harassUseQ:Value())) then
 		
 		if (TPred) then
-			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,false)
+			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,true)
 			if (HitChance >= self.Menu.minchance:Value()) then
 				local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 				self:CastSpell(HK_Q, newpos)
@@ -313,5 +315,5 @@ end
 
 
 function OnLoad()
-	KogMaw()
+	KogMaw:__init()
 end

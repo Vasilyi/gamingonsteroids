@@ -63,8 +63,9 @@ function UseBotrk()
 	end
 end
 
-class "Ashe"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","7.22"
+local Ashe = {}
+Ashe.__index = Ashe
+local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","8.1"
 function Ashe:GetBuffs(unit)
 	self.T = {}
 	for i = 0, unit.buffCount do
@@ -86,6 +87,7 @@ function Ashe:QBuff(buffname)
 end
 
 function Ashe:__init()
+	if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 	self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
@@ -341,5 +343,5 @@ function Ashe:CanCast(spellSlot)
 end
 
 function OnLoad()
-	Ashe()
+	Ashe:__init()
 end

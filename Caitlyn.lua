@@ -63,8 +63,9 @@ function UseBotrk()
 	end
 end
 
-class "Caitlyn"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.6","TRUS","7.22"
+local Caitlyn = {}
+Caitlyn.__index = Caitlyn
+local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.6","TRUS","8.1"
 require "DamageLib"
 local qtarget
 if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
@@ -74,6 +75,7 @@ end
 local EPrediction = {}
 local LastW
 function Caitlyn:__init()
+	if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 	self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
@@ -91,11 +93,7 @@ function Caitlyn:__init()
 	end
 	PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 end
-onetimereset = true
-blockattack = false
-blockmovement = false
 
-local lastpick = 0
 --[[Spells]]
 function Caitlyn:LoadSpells()
 	Q = {Range = 1190, Width = 90, Delay = 0.625, Radius = 60, Speed = 2000}
@@ -275,6 +273,7 @@ function Caitlyn:CastCombo(pos)
 end
 
 
+
 --[[CastEQ]]
 function Caitlyn:CastE(target)
 	if not _G.SDK and not _G.GOS then return end
@@ -308,5 +307,5 @@ function Caitlyn:CanCast(spellSlot)
 end
 
 function OnLoad()
-	Caitlyn()
+	Caitlyn:__init()
 end

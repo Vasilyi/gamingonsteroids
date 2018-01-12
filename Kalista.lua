@@ -61,7 +61,8 @@ function UseBotrk()
 end
 
 local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.12","TRUS","7.22"
-class "Kalista"
+local Kalista = {}
+Kalista.__index = Kalista
 require "DamageLib"
 local chainedally = nil
 local barHeight = 8
@@ -88,6 +89,7 @@ JungleHpBarOffset = {
 
 
 function Kalista:__init()
+	if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 	self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
@@ -172,6 +174,7 @@ function Kalista:LoadMenu()
 	self.Menu.Draw:MenuElement({id = "DrawEDamage", name = "Draw number health after E", value = true})
 	self.Menu.Draw:MenuElement({id = "DrawEBarDamage", name = "On hpbar after E", value = true})
 	--self.Menu.Draw:MenuElement({id = "HPBarOffset", name = "Z offset for HPBar ", value = 0, min = -100, max = 100, tooltip = "change this if damage showed in wrong position"})
+	--self.Menu.Draw:MenuElement({id = "HPBarOffsetX", name = "X offset for HPBar ", value = 0, min = -100, max = 100, tooltip = "change this if damage showed in wrong position"})
 	self.Menu.Draw:MenuElement({id = "DrawInPrecent", name = "Draw numbers in percent", value = true})
 	self.Menu.Draw:MenuElement({id = "DrawE", name = "Draw Killable with E", value = true})
 	self.Menu.Draw:MenuElement({id = "TextOffset", name = "Z offset for text ", value = 0, min = -100, max = 100})
@@ -614,6 +617,7 @@ function Kalista:Draw()
 				local barPos = hero.hero.hpBar
 				if barPos.onScreen then
 					--local barYOffset = self.Menu.Draw.HPBarOffset:Value()
+					--local barXOffset = self.Menu.Draw.HPBarOffsetX:Value()
 					local damage = hero.damage
 					local percentHealthAfterDamage = math.max(0, hero.hero.health - damage) / hero.hero.maxHealth
 					local xPosEnd = barPos.x + barXOffset + barWidth * hero.hero.health/hero.hero.maxHealth
@@ -630,5 +634,5 @@ function Kalista:Draw()
 end
 
 function OnLoad()
-	Kalista()
+	Kalista:__init()
 end

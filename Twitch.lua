@@ -43,8 +43,9 @@ function UseBotrk()
 		end
 	end
 end
-local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.5","TRUS","7.22"
-class "Twitch"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.5","TRUS","8.1"
+local Twitch = {}
+Twitch.__index = Twitch
 require "DamageLib"
 local qtarget
 local barHeight = 8
@@ -52,6 +53,7 @@ local barWidth = 103
 local barXOffset = 24
 local barYOffset = -8
 function Twitch:__init()
+	if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
 	Callback.Add("Draw", function() self:Draw() end)
@@ -126,7 +128,7 @@ function Twitch:UseERange()
 	local target = (_G.SDK and _G.SDK.TargetSelector.SelectedTarget) or (_G.GOS and _G.GOS:GetTarget())
 	if target then return end 
 	for i, hero in pairs(heroeslist) do
-		if stacks[hero.charName] and self:GetStacks(stacks[hero.charName].name) >= self.Menu.MinStacks:Value() then	
+		if stacks[hero.charName] and self:GetStacks(stacks[hero.charName].name) >= self.Menu.MinStacks:Value() then
 			if myHero.pos:DistanceTo(hero.pos)<1000 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25)) > 1000 then
 				Control.CastSpell(HK_E)
 			end
@@ -148,7 +150,7 @@ stacks = {}
 function recheckparticle()
 	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
 	for i = 1, Game.ParticleCount() do
-		local object = Game.Particle(i)		
+		local object = Game.Particle(i)			
 		if object then
 			local stacksamount = Twitch:GetStacks(object.name)
 			if stacksamount > 0 then
@@ -209,9 +211,9 @@ function Twitch:Draw()
 				if barPos.onScreen then
 					local damage = hero.damage
 					local percentHealthAfterDamage = math.max(0, hero.hero.health - damage) / hero.hero.maxHealth
-					local xPosEnd = barPos.x + barXOffset + barWidth * hero.hero.health/hero.hero.maxHealth
-					local xPosStart = barPos.x + barXOffset + percentHealthAfterDamage * 100
-					Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 12, self.Menu.DrawColor:Value())
+					local xPosEnd = barPos.x + 200 + barWidth * hero.hero.health/hero.hero.maxHealth
+					local xPosStart = barPos.x + 200 + percentHealthAfterDamage * 100
+					Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 10, self.Menu.DrawColor:Value())
 				end
 			end
 		end
@@ -232,5 +234,5 @@ function Twitch:CanCast(spellSlot)
 end
 
 function OnLoad()
-	Twitch()
+	Twitch:__init()
 end

@@ -60,8 +60,11 @@ function UseBotrk()
 	end
 end
 
-local Scriptname,Version,Author,LVersion = "TRUSt in my Xayah","v1.1","TRUS","7.24b"
-class "Xayah"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Xayah","v1.1","TRUS","8.1"
+
+local Xayah = {}
+Xayah.__index = Xayah
+
 require "DamageLib"
 if FileExist(COMMON_PATH .. "TPred.lua") then
 	require 'TPred'
@@ -69,6 +72,7 @@ end
 XayahPassiveTable = {}
 
 function Xayah:__init()
+	if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 	self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
@@ -128,10 +132,10 @@ function Xayah:LoadMenu()
 	self.Menu.Harass:MenuElement({id = "minEFeathers", name = "Minimal feather for E:", value = 2, min = 1, max = 8})
 	self.Menu.Harass:MenuElement({id = "harassMana", name = "Minimal mana percent:", value = 30, min = 0, max = 101, identifier = "%"})
 	
+	
 	if (TPred) then
 		self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 1, min = 0, max = 5, step = 1, identifier = ""})
 	end
-	
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 	
@@ -368,5 +372,5 @@ function Xayah:Draw()
 end
 
 function OnLoad()
-	Xayah()
+	Xayah:__init()
 end
