@@ -1086,7 +1086,7 @@ if myHero.charName == "Ezreal" then
 	
 	
 	function OnLoad()
-		Ezreal()
+		Ezreal:__init()
 	end
 end
 
