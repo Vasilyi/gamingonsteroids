@@ -20,7 +20,7 @@ function SetMovement(bool)
 end
 
 class "Karthus"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Karthus","v1.0","TRUS","7.22"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Karthus","v1.1","TRUS","8.1"
 
 if FileExist(COMMON_PATH .. "TPred.lua") then
 	require 'TPred'
@@ -49,7 +49,7 @@ end
 
 --[[Spells]]
 function Karthus:LoadSpells()
-	Q = {Range = 875, Width = 130, Delay = 0.8, Speed = math.huge}
+	Q = {Range = 875, Width = 130, Delay = 0.75, Speed = math.huge}
 	W = {Range = 1000, Width = 0, Delay = 0.25, Speed = math.huge}
 	E = {Range = 425}
 end
@@ -331,6 +331,11 @@ end
 function Karthus:CanCast(spellSlot)
 	return self:IsReady(spellSlot) and self:CheckMana(spellSlot)
 end
+function Karthus:GetRDMG(target)
+	local rdamage = 100 + 0.75*myHero.ap + myHero:GetSpellData(_R).level*150
+	rdamage = CalcMagicalDamage(myHero,target,rdamage)
+	return rdamage
+end
 
 function Karthus:Draw()
 	if myHero.dead then return end 
@@ -352,7 +357,7 @@ function Karthus:Draw()
 			local offset = self.Menu.RMenu.TextOffset:Value()
 			local fontsize = self.Menu.RMenu.TextSize:Value()
 			for i, target in ipairs(self:GetEnemyHeroes()) do
-				local RDamage = getdmg("R",target,myHero)*0.9
+				local RDamage = self:GetRDMG(target)
 				if RDamage > target.health then
 					if self.Menu.RMenu.DrawOnEnemy:Value() then
 						Draw.Text("killable", fontsize, target.pos2D.x, target.pos2D.y+offset,self.Menu.RMenu.DrawColor:Value())
@@ -369,5 +374,5 @@ function Karthus:Draw()
 	end
 end
 function OnLoad()
-Karthus()
+	Karthus()
 end
