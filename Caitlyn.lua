@@ -68,11 +68,11 @@ Caitlyn.__index = Caitlyn
 local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.6","TRUS","8.1"
 require "DamageLib"
 local qtarget
-if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
-	require 'Eternal Prediction'
-	PrintChat("Eternal Prediction library loaded")
+if FileExist(COMMON_PATH .. "TPred.lua") then
+	require 'TPred'
+	PrintChat("TPred library loaded")
 end
-local EPrediction = {}
+
 local LastW
 function Caitlyn:__init()
 	if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
@@ -98,13 +98,6 @@ end
 function Caitlyn:LoadSpells()
 	Q = {Range = 1190, Width = 90, Delay = 0.625, Radius = 60, Speed = 2000}
 	E = {Range = 800, Width = 70, Delay = 0.125, Radius = 80, Speed = 1600}
-	
-	if TYPE_GENERIC then
-		local QSpell = Prediction:SetSpell({range = Q.Range, speed = Q.Speed, delay = Q.Delay, width = Q.Width}, TYPE_LINE, true)
-		EPrediction[_Q] = QSpell
-		local ESpell = Prediction:SetSpell({range = E.Range, speed = E.Speed, delay = Q.Delay, width = Q.Width}, TYPE_LINE, true)
-		EPrediction[_E] = ESpell
-	end
 end
 
 function Caitlyn:LoadMenu()
@@ -116,10 +109,8 @@ function Caitlyn:LoadMenu()
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", value = true})
 	self.Menu:MenuElement({id = "DrawR", name = "Draw Killable with R", value = true})
 	self.Menu:MenuElement({id = "DrawColor", name = "Color for Killable circle", color = Draw.Color(0xBF3F3FFF)})
-	
-	if TYPE_GENERIC then
-		self.Menu:MenuElement({id = "EternalUse", name = "Use eternal prediction", value = true})
-		self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
+	if (TPred) then
+		self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 1, min = 0, max = 5, step = 1, identifier = ""})
 	end
 	
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
@@ -278,10 +269,10 @@ end
 function Caitlyn:CastE(target)
 	if not _G.SDK and not _G.GOS then return end
 	local castpos
-	if TYPE_GENERIC and self.Menu.EternalUse:Value() then
-		castPos = EPrediction[_E]:GetPrediction(target, myHero.pos)
-		if castPos.hitChance >= self.Menu.minchance:Value() and EPrediction[_E]:mCollision() == 0 then
-			local newpos = myHero.pos:Extended(castPos.castPos,math.random(100,300))
+	if (TPred) then
+		local castpos,HitChance, pos = TPred:GetBestCastPosition(target, E.Delay, E.Width, E.Range,E.Speed,myHero.pos,true, "line")
+		if (HitChance >= self.Menu.minchance:Value()) then
+			local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 			self:CastCombo(newpos)
 			qtarget = newpos
 		end
