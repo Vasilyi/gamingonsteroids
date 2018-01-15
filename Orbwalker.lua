@@ -248,7 +248,8 @@ local CONTROL_ATTACK_STEP_FINISH					= 5;
 ControlAttackTable = {
 	[CONTROL_ATTACK_STEP_SET_TARGET_POSITION] = function()
 		local CurrentTime = LocalGameTimer();
-		LocalControlSetCursorPos(ControlOrder.Target);
+		local newpos = Vector(ControlOrder.Target.pos.x, ControlOrder.Target.pos.y,ControlOrder.Target.pos.z + 50)
+		LocalControlSetCursorPos(newpos);
 		ControlOrder.NextStep = CONTROL_ATTACK_STEP_PRESS_TARGET;
 	end,
 	[CONTROL_ATTACK_STEP_PRESS_TARGET] = function()
@@ -646,6 +647,16 @@ function __Damage:__init()
 		end,
 		["Kalista"] = function(args)
 			args.RawPhysical = args.RawPhysical - args.From.totalDamage * 0.1;
+		end,
+		["Kayle"] = function(args)
+			local level = Utilities:GetSpellLevel(args.From, _E);
+			if level > 0 then
+				if BuffManager:HasBuff(args.From, "JudicatorRighteousFury") then
+					args.RawMagical = args.RawMagical + 10+ 10* level + 0.3 * args.From.ap;
+				else
+					args.RawMagical = args.RawMagical + 5+ 5* level + 0.15 * args.From.ap;
+				end
+			end
 		end,
 		["Nasus"] = function(args)
 			if BuffManager:HasBuff(args.From, "NasusQ") then
@@ -1279,11 +1290,11 @@ function __Utilities:__init()
 end
 
 function __Utilities:CanControl()
-local canattack,canmove = true,true
+	local canattack,canmove = true,true
 	for i = 0, myHero.buffCount do
 		local buff = myHero:GetBuff(i);
 		if buff.count > 0 and buff.duration>=0.1 then
-			if (buff.type == 5 or buff.type == 8 or buff.type == 21 or buff.type == 22 or buff.type == 24) then
+			if (buff.type == 5 or buff.type == 8 or buff.type == 21 or buff.type == 22 or buff.type == 24 or buff.type == 29) then
 				return false,false -- block everything
 			end
 			if (buff.type == 25 or buff.type == 9) then -- cant attack
@@ -1292,7 +1303,7 @@ local canattack,canmove = true,true
 			if (buff.type == 11) then -- cant move 
 				canmove = false
 			end
-
+			
 		end
 	end
 	return canattack,canmove
@@ -2774,7 +2785,7 @@ function __Orbwalker:__init()
 		["Mordekaiser"] = { Slot = _Q, toggle = true },
 		["Nautilus"] = { Slot = _W },
 		["Nidalee"] = { Slot = _Q, Name = "Takedown", toggle = true },
-		["Nasus"] = { Slot = _Q, toggle = true  },
+		["Nasus"] = { Slot = _Q, toggle = true },
 		["RekSai"] = { Slot = _Q, Name = "RekSaiQ" },
 		["Renekton"] = { Slot = _W, toggle = true },
 		["Rengar"] = { Slot = _Q },
@@ -2915,7 +2926,7 @@ function __Orbwalker:OnLoad()
 		end
 		self:OnDraw();
 	end);
-	
+	self.winddowntimer = 0;
 	self.Loaded = true;
 end
 
@@ -2977,7 +2988,11 @@ function __Orbwalker:OnUpdate()
 	local IsAutoAttacking = self:IsAutoAttacking(myHero);
 	if not IsAutoAttacking then
 		if self.MyHeroIsAutoAttacking then
-			self:__OnPostAttack();
+			if self.winddowntimer > LocalGameTimer() then 
+				self:__OnAutoAttackReset();
+			else
+				self:__OnPostAttack();
+			end
 		end
 	end
 	self.MyHeroIsAutoAttacking = IsAutoAttacking;
@@ -3045,7 +3060,7 @@ function __Orbwalker:Orbwalk()
 	
 	if self.Attack and self:CanAttack() then
 		local canattack,canmove = Utilities:CanControl()
-		if (not canattack) then
+		if (not canmove) then
 			return 
 		end 
 		
@@ -3135,14 +3150,14 @@ function __Orbwalker:Move()
 	end
 	if hold then
 		if self.HoldPosition == nil or (not (self.HoldPosition == myHero.pos)) then
-			LocalControlKeyDown(72);
+			--LocalControlKeyDown(72);
 			self.HoldPosition = myHero.pos;
 			self.LastHoldPosition = CurrentTime;
 		end
 	end
 end
 
-function __Orbwalker:OnDraw()
+function __Orbwalker:OnDraw()	
 	if self.Menu.Drawings.Range:Value() then
 		LocalDrawCircle(myHero.pos, Utilities:GetAutoAttackRange(myHero), 2, COLOR_LIGHT_GREEN);
 	end
@@ -3332,7 +3347,11 @@ end
 function __Orbwalker:IsAutoAttacking(unit)
 	local ExtraWindUpTime = self.Menu.General.ExtraWindUpTime:Value() * 0.001;
 	local endTime = self:GetAttackDataEndTime(unit) - self:GetAnimationTime(unit) + self:GetWindUpTime(unit) + ExtraWindUpTime;
-	return LocalGameTimer() - endTime + self:GetMovementOrderDelay() < 0;
+	local isattacking = LocalGameTimer() - endTime + self:GetMovementOrderDelay() < 0 and Utilities:IsAutoAttacking(unit)
+	if isattacking and (not self.winddowntimer or self.winddowntimer < LocalGameTimer()) then
+		self.winddowntimer = endTime
+	end
+	return isattacking;
 end
 
 function __Orbwalker:GetMaximumIssueOrderDelay()
@@ -3367,6 +3386,10 @@ end
 
 function __Orbwalker:CanAttack(unit)
 	unit = self:GetUnit(unit);
+	local canattack,canmove = Utilities:CanControl()
+	if (not canattack) then
+		return 
+	end 
 	if Utilities:IsChanneling(unit) then
 		return false;
 		--elseif Utilities:IsCastingSpell(unit) then
