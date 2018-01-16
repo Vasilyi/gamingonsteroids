@@ -1506,12 +1506,12 @@ if myHero.charName == "KogMaw" then
 		then
 			if (TPred) then
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, R.Delay, R.Width, RRange,R.Speed,myHero.pos,false, "circular")
-				if castpos.onScreen and (HitChance >= self.Menu.minchance:Value()) then
+				if castpos:To2D().onScreen and (HitChance >= self.Menu.minchance:Value()) then
 					self:CastSpell(HK_R, castpos)
 				end
 			else
 				local castPos = target:GetPrediction(R.Speed,R.Delay)
-				if (castPos.onScreen) then
+				if (castPos:To2D().onScreen) then
 					self:CastSpell(HK_R, castPos)
 				end
 			end
