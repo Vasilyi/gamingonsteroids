@@ -3059,10 +3059,6 @@ function __Orbwalker:Orbwalk()
 	end
 	
 	if self.Attack and self:CanAttack() then
-		local canattack,canmove = Utilities:CanControl()
-		if (not canmove) then
-			return 
-		end 
 		
 		local target = self:GetTarget();
 		if target ~= nil then

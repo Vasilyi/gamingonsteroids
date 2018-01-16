@@ -1747,7 +1747,7 @@ if myHero.charName == "Kalista" then
 				self:LastHitCreeps()
 			end
 		end
-		if (harassactive or combomodeactive) and self:CanCast(_E) and not canattack then
+		if (harassactive) and self:CanCast(_E) and not canattack then
 			if self.Menu.Harass.harassUseERange:Value() then 
 				self:UseERange()
 			end
