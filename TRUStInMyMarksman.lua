@@ -1123,7 +1123,7 @@ if myHero.charName == "Twitch" then
 		self.Menu = MenuElement({type = MENU, id = "TRUStinymyTwitch", name = Scriptname})
 		self.Menu:MenuElement({id = "UseEKS", name = "Use E on killable", value = true})
 		self.Menu:MenuElement({id = "UseERange", name = "Use E on running enemy", value = true})
-		self.Menu:MenuElement({id = "MinStacks", name = "Minimal E stacks", value = 2, min = 0, max = 6, step = 5, identifier = ""})
+		self.Menu:MenuElement({id = "MinStacks", name = "Minimal E stacks", value = 2, min = 0, max = 6, step = 1, identifier = ""})
 		self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", value = true})
 		self.Menu:MenuElement({id = "DrawE", name = "Draw Killable with E", value = true})
@@ -1538,7 +1538,7 @@ if myHero.charName == "KogMaw" then
 end
 
 if myHero.charName == "Kalista" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.12","TRUS","7.22"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.12","TRUS","8.1"
 	local Kalista = {}
 	Kalista.__index = Kalista
 	require "DamageLib"

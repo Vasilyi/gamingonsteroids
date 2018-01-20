@@ -60,7 +60,7 @@ function UseBotrk()
 	end
 end
 
-local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.12","TRUS","7.22"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.12","TRUS","8.1"
 local Kalista = {}
 Kalista.__index = Kalista
 require "DamageLib"
@@ -269,7 +269,7 @@ function Kalista:Tick()
 			self:LastHitCreeps()
 		end
 	end
-	if (harassactive or combomodeactive) and self:CanCast(_E) and not canattack then
+	if (harassactive) and self:CanCast(_E) and not canattack then
 		if self.Menu.Harass.harassUseERange:Value() then 
 			self:UseERange()
 		end
