@@ -60,7 +60,7 @@ function UseBotrk()
 	end
 end
 
-local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.12","TRUS","8.1"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.13","TRUS","8.1"
 local Kalista = {}
 Kalista.__index = Kalista
 require "DamageLib"
@@ -546,6 +546,26 @@ function Kalista:GetEnemyHeroes()
 	return self.EnemyHeroes
 end
 
+local DamageModifiersTable = {
+	summonerexhaustdebuff = 0.6,
+	itemphantomdancerdebuff = 0.88
+}
+function Kalista:DamageModifiers(target)
+	local currentpercent = 1
+	for K, Buff in pairs(self:GetBuffs(myHero)) do
+		if DamageModifiersTable[Buff.name:lower()] then
+			currentpercent = currentpercent*DamageModifiersTable[Buff.name:lower()]
+		end
+	end
+	for K, Buff in pairs(self:GetBuffs(target)) do
+		if Buff.count > 0 and Buff.name and Buff.name ~= "kalistaexpungemarker" and string.find(Buff.name, "PressThreeAttack") and (Buff.expireTime - Buff.startTime == 6) then
+			currentpercent = currentpercent * 1.12
+		end
+	end
+	return currentpercent
+end
+
+
 function Kalista:GetETarget()
 	self.KillableHeroes = {}
 	self.DamageHeroes = {}
@@ -554,6 +574,9 @@ function Kalista:GetETarget()
 	for i, hero in pairs(heroeslist) do
 		if self:GetSpears(hero) > 0 and myHero.pos:DistanceTo(hero.pos)<E.Range then 
 			local EDamage = getdmg("E",hero,myHero)*0.9
+			local damagemods = self:DamageModifiers(hero)
+			--PrintChat(damagemods)
+			EDamage = EDamage * damagemods
 			if hero.health and EDamage and EDamage > hero.health then
 				table.insert(self.KillableHeroes, hero)
 			else
