@@ -25,7 +25,7 @@ function SetMovement(bool)
 end
 
 class "Mordekaiser"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Mordekaiser","v0.9","TRUS","7.22"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Mordekaiser","v1.0","TRUS","7.24b"
 local passive = true
 local lastbuff = 0
 
