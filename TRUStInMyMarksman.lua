@@ -686,7 +686,7 @@ if myHero.charName == "Caitlyn" then
 		self.Menu:MenuElement({id = "DrawR", name = "Draw Killable with R", value = true})
 		self.Menu:MenuElement({id = "DrawColor", name = "Color for Killable circle", color = Draw.Color(0xBF3F3FFF)})
 		if (TPred) then
-			self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 1, min = 0, max = 5, step = 1, identifier = ""})
+			self.Menu:MenuElement({id = "Tminchance", name = "Minimal hitchance TPred", value = 1, min = 0, max = 5, step = 1, identifier = ""})
 		end
 		
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
@@ -847,7 +847,7 @@ if myHero.charName == "Caitlyn" then
 		local castpos
 		if (TPred) then
 			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, E.Delay, E.Width, E.Range,E.Speed,myHero.pos,true, "line")
-			if (HitChance >= self.Menu.minchance:Value()) then
+			if (HitChance >= self.Menu.Tminchance:Value()) then
 				local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 				self:CastCombo(newpos)
 				qtarget = newpos
@@ -929,10 +929,10 @@ if myHero.charName == "Ezreal" then
 		self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 		if TYPE_GENERIC then
 			self.Menu:MenuElement({id = "EternalUse", name = "Use eternal prediction", value = true})
-			self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
+			self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance EPred", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
 		end
 		if (TPred) then
-			self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 1, min = 0, max = 5, step = 1, identifier = ""})
+			self.Menu:MenuElement({id = "Tminchance", name = "Minimal hitchance TPred", value = 1, min = 0, max = 5, step = 1, identifier = ""})
 		end
 		
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
@@ -1014,7 +1014,7 @@ if myHero.charName == "Ezreal" then
 			local castPos
 			if (TPred) then
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,true, "line")
-				if (HitChance >= self.Menu.minchance:Value()) then
+				if (HitChance >= self.Menu.Tminchance:Value()) then
 					local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 					self:CastSpell(HK_Q, newpos)
 				end
@@ -1204,6 +1204,37 @@ if myHero.charName == "Twitch" then
 		return false
 	end
 	
+	function Twitch:GetBuffs(unit)
+		self.T = {}
+		for i = 0, unit.buffCount do
+			local Buff = unit:GetBuff(i)
+			if Buff.count > 0 then
+				table.insert(self.T, Buff)
+			end
+		end
+		return self.T
+	end
+	
+	local DamageModifiersTable = {
+		summonerexhaustdebuff = 0.6,
+		itemphantomdancerdebuff = 0.88
+	}
+	function Twitch:DamageModifiers(target)
+		local currentpercent = 1
+		for K, Buff in pairs(self:GetBuffs(myHero)) do
+			if DamageModifiersTable[Buff.name:lower()] then
+				currentpercent = currentpercent*DamageModifiersTable[Buff.name:lower()]
+			end
+		end
+		for K, Buff in pairs(self:GetBuffs(target)) do
+			if Buff.count > 0 and Buff.name and string.find(Buff.name, "PressThreeAttack") and (Buff.expireTime - Buff.startTime == 6) then
+				currentpercent = currentpercent * 1.12
+			end
+		end
+		return currentpercent
+	end
+	
+	
 	function Twitch:GetETarget()
 		self.KillableHeroes = {}
 		self.DamageHeroes = {}
@@ -1214,6 +1245,8 @@ if myHero.charName == "Twitch" then
 			if stacks[hero.charName] and self:GetStacks(stacks[hero.charName].name) > 0 then 
 				local EDamage = (self:GetStacks(stacks[hero.charName].name) * (({15, 20, 25, 30, 35})[level] + 0.2 * myHero.ap + 0.25 * myHero.bonusDamage)) + ({20, 35, 50, 65, 80})[level]
 				local tmpdmg = CalcPhysicalDamage(myHero, hero, EDamage)
+				local damagemods = self:DamageModifiers(hero)
+				tmpdmg = tmpdmg * damagemods
 				if hero.health and tmpdmg then 
 					if tmpdmg > hero.health and myHero.pos:DistanceTo(hero.pos)<1200 then
 						table.insert(self.KillableHeroes, hero)
@@ -1250,8 +1283,8 @@ if myHero.charName == "Twitch" then
 					if barPos.onScreen then
 						local damage = hero.damage
 						local percentHealthAfterDamage = math.max(0, hero.hero.health - damage) / hero.hero.maxHealth
-						local xPosEnd = barPos.x + 200 + barWidth * hero.hero.health/hero.hero.maxHealth
-						local xPosStart = barPos.x + 200 + percentHealthAfterDamage * 100
+						local xPosEnd = barPos.x + barXOffset + barWidth * hero.hero.health/hero.hero.maxHealth
+						local xPosStart = barPos.x + barXOffset + percentHealthAfterDamage * 100
 						Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 10, self.Menu.DrawColor:Value())
 					end
 				end
@@ -1354,7 +1387,7 @@ if myHero.charName == "KogMaw" then
 		self.Menu.Harass:MenuElement({id = "HarassMaxStacks", name = "Max R stacks: ", value = 3, min = 0, max = 10})
 		
 		if (TPred) then
-			self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 1, min = 0, max = 5, step = 1, identifier = ""})
+			self.Menu:MenuElement({id = "Tminchance", name = "Minimal hitchance TPred", value = 1, min = 0, max = 5, step = 1, identifier = ""})
 		end
 		
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
@@ -1383,7 +1416,9 @@ if myHero.charName == "KogMaw" then
 		
 		
 		if myHero.activeSpell and myHero.activeSpell.valid and (myHero.activeSpell.name == "KogMawQ" or myHero.activeSpell.name == "KogMawVoidOozeMissile" or myHero.activeSpell.name == "KogMawLivingArtillery") then
-			EnableMovement()
+			if castSpell.state == 1 then
+				ReturnCursor(castSpell.mouse)
+			end
 		end
 	end
 	
@@ -1460,7 +1495,7 @@ if myHero.charName == "KogMaw" then
 			
 			if (TPred) then
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,true)
-				if (HitChance >= self.Menu.minchance:Value()) then
+				if (HitChance >= self.Menu.Tminchance:Value()) then
 					local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 					self:CastSpell(HK_Q, newpos)
 				end
@@ -1481,7 +1516,7 @@ if myHero.charName == "KogMaw" then
 			
 			if (TPred) then
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, E.Delay, E.Width, E.Range,E.Speed,myHero.pos,false)
-				if (HitChance >= self.Menu.minchance:Value()) then
+				if (HitChance >= self.Menu.Tminchance:Value()) then
 					local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 					self:CastSpell(HK_E, newpos)
 				end
@@ -1506,7 +1541,7 @@ if myHero.charName == "KogMaw" then
 		then
 			if (TPred) then
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, R.Delay, R.Width, RRange,R.Speed,myHero.pos,false, "circular")
-				if castpos:To2D().onScreen and (HitChance >= self.Menu.minchance:Value()) then
+				if castpos:To2D().onScreen and (HitChance >= self.Menu.Tminchance:Value()) then
 					self:CastSpell(HK_R, castpos)
 				end
 			else
@@ -2278,6 +2313,9 @@ if myHero.charName == "Corki" then
 			self.Menu:MenuElement({id = "EternalUse", name = "Use eternal prediction", value = true})
 			self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
 		end
+		if (TPred) then
+			self.Menu:MenuElement({id = "Tminchance", name = "Minimal hitchance TPred", value = 1, min = 0, max = 5, step = 1, identifier = ""})
+		end
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 		
@@ -2380,7 +2418,7 @@ if myHero.charName == "Corki" then
 			local castpos
 			if (TPred) then
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,false, "circular")
-				if (HitChance > 0) then
+				if (HitChance >= self.Menu.Tminchance:Value()) then
 					self:CastSpell(HK_Q, castpos)
 				end
 			elseif TYPE_GENERIC and self.Menu.EternalUse:Value() then
@@ -2540,7 +2578,7 @@ if myHero.charName == "Xayah" then
 		
 		
 		if (TPred) then
-			self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 1, min = 0, max = 5, step = 1, identifier = ""})
+			self.Menu:MenuElement({id = "Tminchance", name = "Minimal hitchance TPred", value = 1, min = 0, max = 5, step = 1, identifier = ""})
 		end
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
@@ -2697,7 +2735,7 @@ if myHero.charName == "Xayah" then
 		if target and target.type == "AIHeroClient" then
 			if (TPred) then
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,false)
-				if (HitChance >= self.Menu.minchance:Value()) then
+				if (HitChance >= self.Menu.Tminchance:Value()) then
 					local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 					self:CastSpell(HK_Q, newpos)
 				end

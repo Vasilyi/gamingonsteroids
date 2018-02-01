@@ -255,10 +255,9 @@ ControlAttackTable = {
 	[CONTROL_ATTACK_STEP_PRESS_TARGET] = function()
 		if ControlOrder.TargetIsHero then
 			LocalControlKeyDown(_G.HK_TCO);
-			LocalControlMouseEvent(MOUSEEVENTF_RIGHTDOWN);
+			LocalControlKeyDown(0x39);
 		else
-			LocalControlKeyDown(0x38);
-			LocalControlMouseEvent(MOUSEEVENTF_LEFTDOWN);
+			LocalControlKeyDown(0x39);
 		end
 		
 		ControlOrder.NextStep = CONTROL_ATTACK_STEP_RELEASE_TARGET;
@@ -267,9 +266,9 @@ ControlAttackTable = {
 		LocalControlMouseEvent(MOUSEEVENTF_RIGHTUP);
 		if ControlOrder.TargetIsHero then
 			LocalControlKeyUp(_G.HK_TCO);
+			LocalControlKeyUp(0x39);
 		else
-			LocalControlKeyUp(0x38);
-			LocalControlMouseEvent(MOUSEEVENTF_LEFTUP);
+			LocalControlKeyUp(0x39);
 		end
 		
 		ControlOrder.NextStep = CONTROL_ATTACK_STEP_SET_MOUSE_POSITION;
@@ -646,7 +645,7 @@ function __Damage:__init()
 			end
 		end,
 		["Kalista"] = function(args)
-			args.RawPhysical = args.RawPhysical - args.From.totalDamage * 0.1;
+			args.RawPhysical = args.RawPhysical*0.9;
 		end,
 		["Kayle"] = function(args)
 			local level = Utilities:GetSpellLevel(args.From, _E);
@@ -1179,6 +1178,7 @@ function __Utilities:__init()
 	
 	self.SpecialAutoAttacks = {
 		["GarenQAttack"] = true,
+		["KennenMegaProc"] = true,
 		["CaitlynHeadshotMissile"] = true,
 		["MordekaiserQAttack"] = true,
 		["MordekaiserQAttack1"] = true,
@@ -1294,10 +1294,18 @@ function __Utilities:CanControl()
 	for i = 0, myHero.buffCount do
 		local buff = myHero:GetBuff(i);
 		if buff.count > 0 and buff.duration>=0.1 then
-			if (buff.type == 5 or buff.type == 8 or buff.type == 21 or buff.type == 22 or buff.type == 24 or buff.type == 29) then
+			if (buff.type == 5 --stun
+			or buff.type == 8 --taunt
+			or buff.type == 21 --Fear
+			or buff.type == 22 --charm
+			or buff.type == 24 --supression
+			or buff.type == 29) --knockup
+			then
 				return false,false -- block everything
 			end
-			if (buff.type == 25 or buff.type == 9) then -- cant attack
+			if (buff.type == 25 --blind
+			or buff.type == 9) --polymorph
+			then -- cant attack
 				canattack = false
 			end
 			if (buff.type == 11) then -- cant move 
@@ -2649,6 +2657,10 @@ function __Orbwalker:__init()
 		["Garen"] = { 
 			["GarenQAttack"] = true 
 		},
+		["Kennen"] = { 
+			["KennenMegaProc"] = true 
+		},
+		
 		["Mordekaiser"] = { 
 			["MordekaiserQAttack"] = true,
 			["MordekaiserQAttack1"] = true,
@@ -3129,7 +3141,8 @@ function __Orbwalker:Move()
 		for i = 1, #self.OnPreMovementCallbacks do
 			self.OnPreMovementCallbacks[i](args);
 		end
-		if args.Process and args.Target ~= nil then
+		if args.Process and args.Target ~= nil and (not myHero.pathing.hasMovePath 
+		or myHero:GetPath(myHero.pathing.pathCount):DistanceTo(mousePos) > 100) then
 			if args.Target == _G.mousePos then
 				local boolean = _G.Control.Move();
 				if boolean == nil or boolean == true then
