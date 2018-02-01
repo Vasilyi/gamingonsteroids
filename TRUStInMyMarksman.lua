@@ -248,7 +248,9 @@ if myHero.charName == "Ashe" then
 		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
 		
 		if myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name == "Volley" then 
-			SetMovement(true)
+			if castSpell.state == 1 then
+				ReturnCursor(castSpell.mouse)
+			end
 		end
 		local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
 		if combomodeactive and self.Menu.UseBOTRK:Value() then
