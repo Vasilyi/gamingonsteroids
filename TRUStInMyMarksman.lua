@@ -486,8 +486,8 @@ if myHero.charName == "Lucian" then
 		end
 		
 		if myHero.activeSpell and myHero.activeSpell.valid and 
-		(myHero.activeSpell.name == "LucianQ" or myHero.activeSpell.name == "LucianW") then
-			passive = true
+		(myHero.activeSpell.name == "LucianQ" or myHero.activeSpell.name == "LucianW") and passive ~=  myHero.activeSpell.endTime then
+			passive = myHero.activeSpell.endTime
 			--PrintChat("found passive1")
 		end
 		
@@ -1962,7 +1962,8 @@ if myHero.charName == "Kalista" then
 			if self:GetSpears(minion) > 0 then 
 				local EDamage = getdmg("E",minion,myHero)
 				local minionName = minion.charName
-				if EDamage*((minion.charName == "SRU_RiftHerald" and 0.65) or (self:HasBuff(myHero,"barontarget") and 0.5) or 0.79) > minion.health then
+				EDamage = EDamage*((minion.charName == "SRU_RiftHerald" and 0.65) or (self:HasBuff(myHero,"barontarget") and 0.5) or 1)
+				if EDamage > minion.health then
 					local minionName = minion.charName
 					self:DrawSmiteableMinion(SmiteTable[minionName], minion)
 				else
