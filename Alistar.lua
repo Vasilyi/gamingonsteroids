@@ -178,7 +178,7 @@ function Alistar:Tick()
 			if hero.pathing.hasMovePath and hero.pathing.isDashing and hero.pathing.dashSpeed>500 then 
 				for i, allyHero in pairs(self:GetAllyHeroes()) do 
 					if self.Menu.Protector["RU"..allyHero.charName] and self.Menu.Protector["RU"..allyHero.charName]:Value() then 
-						if GetDistance(hero.pathing.endPos,allyHero.pos)<100 then
+						if GetDistance(hero.pathing.endPos,allyHero.pos)<100 and myHero.pos:DistanceTo(allyHero.pos)< W.Range then
 							self:CastSpell(HK_W,hero.pos)
 						end
 					end
