@@ -22,6 +22,7 @@ end
 class "Alistar"
 local Scriptname,Version,Author,LVersion = "TRUSt in my Alistar","v1.0","TRUS","7.24b"
 local flashslot
+local castedWonce = false
 function Alistar:__init()
 	self:LoadSpells()
 	self:LoadMenu()
@@ -168,6 +169,9 @@ function Alistar:Tick()
 	local harassactive = self.Menu.Harass.harassActive:Value()
 	local flashcombo = self.Menu.FlashCombo.qFlash:Value()
 	local protector = self.Menu.Protector.enabled:Value()
+	if not castedWonce and myHero:GetSpellData(_W).castTime > 0 then
+		castedWonce = true
+	end
 	flashslot = self:getFlash()
 	if flashcombo and self:CanCast(_Q) and self:CanCast(flashslot) then
 		self:CastQFlash()
@@ -190,7 +194,7 @@ function Alistar:Tick()
 	if combomodeactive then
 		if self.Menu.Combo.comboUseQ:Value() and self:CanCast(_Q) then
 			self:CastQ()
-			if myHero:GetSpellData(_W).level > 0 and myHero:GetSpellData(_W).currentCd > myHero:GetSpellData(_W).cd-1 then
+			if myHero:GetSpellData(_W).level > 0 and myHero:GetSpellData(_W).currentCd > myHero:GetSpellData(_W).cd-1 and castedWonce then
 				Control.CastSpell(HK_Q)
 			end
 		end
