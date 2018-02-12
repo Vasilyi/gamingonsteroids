@@ -182,7 +182,7 @@ Champs = {
 	
 	
 	["Leona"] = {
-		[_E] = {delay = 250, range = 905, minionCollisionWidth = 70, speed = 2000, ignorecol = true}
+		[_E] = {delay = 250, range = 875, minionCollisionWidth = 70, speed = 2000, ignorecol = true}
 	},
 	
 	["Lissandra"] = {
@@ -294,6 +294,10 @@ Champs = {
 		[_W] = {delay = 1350, range = 900, minionCollisionWidth = 225, speed = math.maxinteger,ignorecol = true, circular = true}
 	},
 	
+	["Varus"] = {
+		[_Q] = { delay = 250, range = 950, minionCollisionWidth = 70, speed = 2000},
+	},
+	
 	["Velkoz"] = {
 		[_W] = {delay = 250, range = 1200, minionCollisionWidth = 88, speed = 1700,ignorecol = true},
 		[_E] = {delay = 500, range = 800, minionCollisionWidth = 225, speed = 1500,ignorecol = true, circular = true}
@@ -403,7 +407,7 @@ function IHateSkillshots:LoadMenu()
 	end
 	if (TPred) then
 		self.Menu:MenuElement({id = "TPredDraw", name = "Draw TPred position", value = true})
-		self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 1, min = 0, max = 5, step = 1, identifier = ""})
+		self.Menu:MenuElement({id = "Tminchance", name = "TPred Minimal hitchance", value = 1, min = 0, max = 5, step = 1, identifier = ""})
 	end
 	
 	
@@ -546,7 +550,7 @@ function IHateSkillshots:Tick()
 			
 			if (TPred) then
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(temptarget, spell.delay/1000, spell.minionCollisionWidth/2, spell.range,spell.speed, myHero.pos,not spell.ignorecol, spell.circular and "circular" or "line")
-				if (HitChance >= self.Menu.minchance:Value()) then
+				if (HitChance >= self.Menu.Tminchance:Value()) then
 					if (not spell.circular) then
 						castpos = myHero.pos:Extended(castpos,math.random(100,300))
 					end
@@ -594,18 +598,17 @@ function IHateSkillshots:Draw()
 			Draw.Circle(myHero.pos, spell.range, 3, self.Menu.Draw["color"..str[i]]:Value())
 		end
 	end
-	
-	for i, spell in pairs(Champs[myHero.charName]) do
-		if self:CanCast(i) then
-			local temptarget = self:GetTarget(spell.range)
-			if temptarget == nil then return end
-			local temppred
-			local collisionc = spell.ignorecol and 0 or spell.minionCollisionWidth
-			
-			if (TPred and self.Menu.TPredDraw:Value()) then
+	if (TPred and self.Menu.TPredDraw:Value()) then
+		for i, spell in pairs(Champs[myHero.charName]) do
+			if self:CanCast(i) then
+				local temptarget = self:GetTarget(spell.range)
+				if temptarget == nil then return end
+				local temppred
+				local collisionc = spell.ignorecol and 0 or spell.minionCollisionWidth	
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(temptarget, spell.delay/1000, spell.minionCollisionWidth/2, spell.range,spell.speed, myHero.pos,not spell.ignorecol, spell.circular and "circular" or "line")
-				Draw.Circle(castpos, 60, 3, self.Menu.Draw["color"..str[i]]:Value())
-				
+				if castpos then
+					Draw.Circle(castpos, 60, 3, self.Menu.Draw["color"..str[i]]:Value())
+				end
 			end
 		end
 	end

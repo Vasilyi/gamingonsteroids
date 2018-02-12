@@ -1,22 +1,21 @@
 --[[
 API:
 TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, collision, spelltype)
-Delay 	 -- in seconds
-Collision -- is boolean
-From -- Vector3
+	Delay 	 -- in seconds
+	Collision -- is boolean
+	From -- Vector3
 Spelltypes:
-"line"
-"circular"
-
+	"line"
+	"circular"
 return CastPosition, HitChance, Position
 CastPosition = Prediction position according to spell radius/width
 Position = Just target position after prediction
 HitChance:
-5 - Unit cant move and its 99.9% skillshot land
-2 - Unit is close || doing some action on place (like attacking/casting etc/not moving) || just changed move direction
-0 - Predicted position is out of range
--1 - Didnt pass collision check
-1 - All other cases
+	5 - Unit cant move and its 99.9% skillshot land
+	2 - Unit is close || doing some action on place (like attacking/casting etc/not moving) || just changed move direction
+	0 - Predicted position is out of range
+	-1 - Didnt pass collision check
+	1 - All other cases
 ]]
 
 class "TPred"
@@ -109,7 +108,7 @@ end
 function GetDistanceSqr(p1, p2)
 	assert(p1, "GetDistance: invalid argument: cannot calculate distance to "..type(p1))
 	assert(p2, "GetDistance: invalid argument: cannot calculate distance to "..type(p2))
-	if not p1 or not p2 then return 999999999 end
+	if not p1 or not p1.x or not p2 or not p2.x then return 999999999 end
 	return (p1.x - p2.x) ^ 2 + ((p1.z or p1.y) - (p2.z or p2.y)) ^ 2
 end
 
@@ -138,7 +137,7 @@ function TPred:CanMove(unit, delay)
 end
 
 function TPred:IsImmobile(unit, delay, radius, speed, from, spelltype)
-	local ExtraDelay = speed == math.huge and 0 or from and unit and unit.pos and (GetDistance(from, unit.pos) / speed)
+	local ExtraDelay = speed == math.huge and 0 or (from and unit and unit.pos and (GetDistance(from, unit.pos) / speed))
 	if (self:CanMove(unit, delay + ExtraDelay) == false) then
 		return true
 	end
@@ -218,7 +217,7 @@ function TPred:CheckCol(unit, minion, Position, delay, radius, range, speed, fro
 		return false
 	end
 	
-	if from and minion.type ~= myHero.type and _G.SDK.HealthPrediction:GetPrediction(minion, delay + GetDistance(from, minion.pos) / speed - Game.Latency()/1000) < 0 then
+	if from and minion and minion.pos and minion.type ~= myHero.type and _G.SDK.HealthPrediction:GetPrediction(minion, delay + GetDistance(from, minion.pos) / speed - Game.Latency()/1000) < 0 then
 		return false
 	end
 	
@@ -275,7 +274,7 @@ end
 function TPred:isSlowed(unit, delay, speed, from)
 	for i = 0, unit.buffCount do
 		local buff = unit:GetBuff(i);
-		if from and buff.count > 0 and buff.duration>=(delay + GetDistance(unit.pos, from) / speed) then
+		if from and unit and buff.count > 0 and buff.duration>=(delay + GetDistance(unit.pos, from) / speed) then
 			if (buff.type == 10) then
 				return true
 			end
@@ -323,8 +322,6 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 	local angletemp = Vector(from):AngleBetween(Vector(unit.pos), Vector(CastPosition))
 	if angletemp > 60 then
 		HitChance = 1
-	elseif angletemp < 30 then
-		HitChance = 2
 	end
 	
 	--[[Out of range]]
