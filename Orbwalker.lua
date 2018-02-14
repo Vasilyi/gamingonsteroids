@@ -3000,7 +3000,7 @@ function __Orbwalker:OnUpdate()
 	local IsAutoAttacking = self:IsAutoAttacking(myHero);
 	if not IsAutoAttacking then
 		if self.MyHeroIsAutoAttacking then
-			if self.winddowntimer > LocalGameTimer() then 
+			if self.winddowntimer > LocalGameTimer() and myHero.charName ~= "Jinx" then 
 				self:__OnAutoAttackReset();
 			else
 				self:__OnPostAttack();
