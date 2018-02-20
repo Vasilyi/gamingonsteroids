@@ -2906,6 +2906,7 @@ function __Orbwalker:OnLoad()
 	self:RegisterMenuKey(ORBWALKER_MODE_FLEE, self.Menu.Keys.Flee);
 	
 	self.Menu:MenuElement({ id = "General", name = "General Settings", type = MENU });
+	self.Menu.General:MenuElement({ id = "AttackResetting", name = "Auto attack reset fix [test]", value = false, tooltip = "Can be bugged so enable at your own risk" });
 	self.Menu.General:MenuElement({ id = "FastKiting", name = "Fast Kiting", value = true });
 	self.Menu.General:MenuElement({ id = "LaneClearHeroes", name = "Attack heroes in Lane Clear mode", value = true });
 	self.Menu.General:MenuElement({ id = "StickToTarget", name = "Stick to target (only melee)", value = true });
@@ -3000,7 +3001,7 @@ function __Orbwalker:OnUpdate()
 	local IsAutoAttacking = self:IsAutoAttacking(myHero);
 	if not IsAutoAttacking then
 		if self.MyHeroIsAutoAttacking then
-			if self.winddowntimer > LocalGameTimer() and myHero.charName ~= "Jinx" then 
+			if self.Menu.General.AttackResetting:Value() and self.winddowntimer > LocalGameTimer() and myHero.charName ~= "Jinx" then 
 				self:__OnAutoAttackReset();
 			else
 				self:__OnPostAttack();
