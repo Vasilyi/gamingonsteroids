@@ -322,6 +322,8 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 	local angletemp = Vector(from):AngleBetween(Vector(unit.pos), Vector(CastPosition))
 	if angletemp > 60 then
 		HitChance = 1
+	elseif angletemp < 10 then
+		HitChance = 2
 	end
 	
 	--[[Out of range]]

@@ -849,7 +849,7 @@ if myHero.charName == "Caitlyn" then
 		local castpos
 		if (TPred) then
 			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, E.Delay, E.Width, E.Range,E.Speed,myHero.pos,true, "line")
-			if (HitChance >= self.Menu.Tminchance:Value()) then
+			if (castpos and HitChance >= self.Menu.Tminchance:Value()) then
 				local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 				self:CastCombo(newpos)
 				qtarget = newpos
@@ -1013,10 +1013,9 @@ if myHero.charName == "Ezreal" then
 		if (myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name == "EzrealArcaneShift") then return end 
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
 		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and self.Menu.UseQ:Value() then
-			local castPos
 			if (TPred) then
-				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,true, "line")
-				if (HitChance >= self.Menu.Tminchance:Value()) then
+				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width/2, Q.Range,Q.Speed,myHero.pos,true, "line")
+				if (castpos and HitChance >= self.Menu.Tminchance:Value()) then
 					local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 					self:CastSpell(HK_Q, newpos)
 				end
@@ -1497,7 +1496,7 @@ if myHero.charName == "KogMaw" then
 			
 			if (TPred) then
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,true)
-				if (HitChance >= self.Menu.Tminchance:Value()) then
+				if (castpos and HitChance >= self.Menu.Tminchance:Value()) then
 					local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 					self:CastSpell(HK_Q, newpos)
 				end
@@ -1518,7 +1517,7 @@ if myHero.charName == "KogMaw" then
 			
 			if (TPred) then
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, E.Delay, E.Width, E.Range,E.Speed,myHero.pos,false)
-				if (HitChance >= self.Menu.Tminchance:Value()) then
+				if (castpos and HitChance >= self.Menu.Tminchance:Value()) then
 					local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 					self:CastSpell(HK_E, newpos)
 				end
@@ -1543,7 +1542,7 @@ if myHero.charName == "KogMaw" then
 		then
 			if (TPred) then
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, R.Delay, R.Width, RRange,R.Speed,myHero.pos,false, "circular")
-				if castpos:To2D().onScreen and (HitChance >= self.Menu.Tminchance:Value()) then
+				if castpos and castpos:To2D().onScreen and (HitChance >= self.Menu.Tminchance:Value()) then
 					self:CastSpell(HK_R, castpos)
 				end
 			else
@@ -2421,7 +2420,7 @@ if myHero.charName == "Corki" then
 			local castpos
 			if (TPred) then
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,false, "circular")
-				if (HitChance >= self.Menu.Tminchance:Value()) then
+				if (castpos and HitChance >= self.Menu.Tminchance:Value()) then
 					self:CastSpell(HK_Q, castpos)
 				end
 			elseif TYPE_GENERIC and self.Menu.EternalUse:Value() then
@@ -2738,7 +2737,7 @@ if myHero.charName == "Xayah" then
 		if target and target.type == "AIHeroClient" then
 			if (TPred) then
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,false)
-				if (HitChance >= self.Menu.Tminchance:Value()) then
+				if (castpos and HitChance >= self.Menu.Tminchance:Value()) then
 					local newpos = myHero.pos:Extended(castpos,math.random(100,300))
 					self:CastSpell(HK_Q, newpos)
 				end
