@@ -43,7 +43,7 @@ function UseBotrk()
 		end
 	end
 end
-local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.6","TRUS","8.1"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.7","TRUS","8.4"
 local Twitch = {}
 Twitch.__index = Twitch
 require "DamageLib"
@@ -55,7 +55,6 @@ local barYOffset = -8
 function Twitch:__init()
 	if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 	self:LoadMenu()
-	self.eBuffs = {}
 	Callback.Add("Tick", function() self:Tick() end)
 	Callback.Add("Draw", function() self:Draw() end)
 	local orbwalkername = ""
@@ -100,7 +99,7 @@ end
 local lastcasttime = 0
 function Twitch:Tick()
 	if myHero.dead or (not _G.SDK and not _G.GOS) then return end
-	self:DeadlyVenomCheck()
+	
 	if myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name:lower() == "twitchvenomcask" and myHero.activeSpell.startTime ~= lastcasttime then
 		lastcasttime = myHero.activeSpell.startTime
 		DelayAction(recheckparticle,0.3)
@@ -129,7 +128,7 @@ function Twitch:UseERange()
 	local target = (_G.SDK and _G.SDK.TargetSelector.SelectedTarget) or (_G.GOS and _G.GOS:GetTarget())
 	if target then return end 
 	for i, hero in pairs(heroeslist) do
-		if self.eBuffs[hero.networkID] and self.eBuffs[hero.networkID].count >= self.Menu.MinStacks:Value() then
+		if stacks[hero.charName] and self:GetStacks(stacks[hero.charName].name) >= self.Menu.MinStacks:Value() then
 			if myHero.pos:DistanceTo(hero.pos)<1000 and myHero.pos:DistanceTo(hero:GetPrediction(math.huge,0.25)) > 1000 then
 				Control.CastSpell(HK_E)
 			end
@@ -137,44 +136,34 @@ function Twitch:UseERange()
 	end
 end
 
-function Twitch:DeadlyVenomCheck()
-	for i = 1, Game.HeroCount() do
-		local target = Game.Hero(i)
-		if target.isEnemy then
-			local target = Game.Hero(i)
-			local nID = target.networkID
-			local venomed = false
-			if not self.eBuffs[nID] then
-				self.eBuffs[nID]={count=0,durT=0}
-			end
-			if target:IsValidTarget(3000,false,myHero) then
-				local cB = self.eBuffs[nID].count
-				local dB = self.eBuffs[nID].durT
-				for i = 0, target.buffCount do
-					local buff = target:GetBuff(i)
-					if buff.count > 0 and buff.name:lower() == "twitchdeadlyvenom" then
-						venomed = true
-						if cB < 6 and buff.duration > dB then
-							self.eBuffs[nID].count = cB + 1
-							self.eBuffs[nID].durT = buff.duration
-						else
-							self.eBuffs[nID].durT = buff.duration
-						end
+function Twitch:GetStacks(str)
+	if str:lower():find("twitch_base_p_stack_01.troy") then return 1
+	elseif str:lower():find("twitch_base_p_stack_02.troy") then return 2
+	elseif str:lower():find("twitch_base_p_stack_03.troy") then return 3
+	elseif str:lower():find("twitch_base_p_stack_04.troy") then return 4
+	elseif str:lower():find("twitch_base_p_stack_05.troy") then return 5
+	elseif str:lower():find("twitch_base_p_stack_06.troy") then return 6
+	end
+	return 0
+end
+stacks = {}
+function recheckparticle()
+	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1100)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+	for i = 1, Game.ParticleCount() do
+		local object = Game.Particle(i)			
+		if object then
+			local stacksamount = Twitch:GetStacks(object.name)
+			if stacksamount > 0 then
+				for i, hero in pairs(heroeslist) do
+					if object.pos:DistanceTo(hero.pos)<200 and object ~= hero then 	
+						stacks[hero.charName] = object
 					end
-				end
-				if not venomed then 
-					self.eBuffs[nID].count = 0
-					self.eBuffs[nID].durT = 0
 				end
 			end
 		end
 	end
+	return false
 end
-
-local DamageModifiersTable = {
-	summonerexhaustdebuff = 0.6,
-	itemphantomdancerdebuff = 0.88
-}
 
 function Twitch:GetBuffs(unit)
 	self.T = {}
@@ -186,6 +175,11 @@ function Twitch:GetBuffs(unit)
 	end
 	return self.T
 end
+
+local DamageModifiersTable = {
+	summonerexhaustdebuff = 0.6,
+	itemphantomdancerdebuff = 0.88
+}
 function Twitch:DamageModifiers(target)
 	local currentpercent = 1
 	for K, Buff in pairs(self:GetBuffs(myHero)) do
@@ -200,6 +194,8 @@ function Twitch:DamageModifiers(target)
 	end
 	return currentpercent
 end
+
+
 function Twitch:GetETarget()
 	self.KillableHeroes = {}
 	self.DamageHeroes = {}
@@ -207,20 +203,16 @@ function Twitch:GetETarget()
 	local level = myHero:GetSpellData(_E).level
 	if level == 0 then return end
 	for i, hero in pairs(heroeslist) do
-		if self.eBuffs[hero.networkID] then
-			local stackscount = self.eBuffs[hero.networkID].count
-			if stackscount > 0 then 
-				local EDamage = (self:GetStacks(stacks[hero.charName].name) * (({15, 20, 25, 30, 35})[level] + 0.2 * myHero.ap + 0.25 * myHero.bonusDamage)) + ({20, 25, 30, 35, 40})[level]
-				local tmpdmg = CalcPhysicalDamage(myHero, hero, EDamage)
-				local damagemods = self:DamageModifiers(hero)
-				--PrintChat(damagemods)
-				tmpdmg = tmpdmg * damagemods
-				if hero.health and tmpdmg then 
-					if tmpdmg > hero.health and myHero.pos:DistanceTo(hero.pos)<1200 then
-						table.insert(self.KillableHeroes, hero)
-					else
-						table.insert(self.DamageHeroes, {hero = hero, damage = tmpdmg})
-					end
+		if stacks[hero.charName] and self:GetStacks(stacks[hero.charName].name) > 0 then 
+			local EDamage = (self:GetStacks(stacks[hero.charName].name) * (({15, 20, 25, 30, 35})[level] + 0.2 * myHero.ap + 0.25 * myHero.bonusDamage)) + ({20, 25, 30, 35, 40})[level]
+			local tmpdmg = CalcPhysicalDamage(myHero, hero, EDamage)
+			local damagemods = self:DamageModifiers(hero)
+			tmpdmg = tmpdmg * damagemods
+			if hero.health and tmpdmg then 
+				if tmpdmg > hero.health and myHero.pos:DistanceTo(hero.pos)<1200 then
+					table.insert(self.KillableHeroes, hero)
+				else
+					table.insert(self.DamageHeroes, {hero = hero, damage = tmpdmg})
 				end
 			end
 		end
@@ -254,7 +246,7 @@ function Twitch:Draw()
 					local percentHealthAfterDamage = math.max(0, hero.hero.health - damage) / hero.hero.maxHealth
 					local xPosEnd = barPos.x + barXOffset + barWidth * hero.hero.health/hero.hero.maxHealth
 					local xPosStart = barPos.x + barXOffset + percentHealthAfterDamage * 100
-					Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 12, self.Menu.DrawColor:Value())
+					Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 10, self.Menu.DrawColor:Value())
 				end
 			end
 		end

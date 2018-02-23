@@ -1083,7 +1083,7 @@ if myHero.charName == "Ezreal" then
 end
 
 if myHero.charName == "Twitch" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.5","TRUS","8.1"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.7","TRUS","8.4"
 	local Twitch = {}
 	Twitch.__index = Twitch
 	require "DamageLib"
