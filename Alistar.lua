@@ -169,7 +169,7 @@ function Alistar:Tick()
 	local harassactive = self.Menu.Harass.harassActive:Value()
 	local flashcombo = self.Menu.FlashCombo.qFlash:Value()
 	local protector = self.Menu.Protector.enabled:Value()
-	if not castedWonce and myHero:GetSpellData(_W).castTime > 0 then
+	if not castedWonce and myHero:GetSpellData(_W).level > 0 and myHero:GetSpellData(_W).currentCd > 0 then
 		castedWonce = true
 	end
 	flashslot = self:getFlash()
@@ -194,7 +194,7 @@ function Alistar:Tick()
 	if combomodeactive then
 		if self.Menu.Combo.comboUseQ:Value() and self:CanCast(_Q) then
 			self:CastQ()
-			if myHero:GetSpellData(_W).level > 0 and myHero:GetSpellData(_W).currentCd > myHero:GetSpellData(_W).cd-1 and castedWonce then
+			if castedWonce and myHero:GetSpellData(_W).currentCd > myHero:GetSpellData(_W).cd-1 then
 				Control.CastSpell(HK_Q)
 			end
 		end
@@ -285,7 +285,10 @@ function Alistar:CastQ(target)
 	if (not _G.SDK and not _G.GOS and not _G.EOW) then return end
 	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_MAGICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AP"))
 	if target and target.type == "AIHeroClient" and self:CanCast(_Q) then
-		Control.CastSpell(HK_Q)
+		local temppred = target:GetPrediction(math.huge,0.25)
+		if temppred:DistanceTo() < Q.Range then 
+			Control.CastSpell(HK_Q)
+		end
 	end
 end
 
