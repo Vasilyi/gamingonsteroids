@@ -210,7 +210,7 @@ function Twitch:GetETarget()
 		if self.eBuffs[hero.networkID] then
 			local stackscount = self.eBuffs[hero.networkID].count
 			if stackscount > 0 then 
-				local EDamage = (stackscount * (({15, 20, 25, 30, 35})[level] + 0.2 * myHero.ap + 0.25 * myHero.bonusDamage)) + ({20, 35, 50, 65, 80})[level]
+				local EDamage = (self:GetStacks(stacks[hero.charName].name) * (({15, 20, 25, 30, 35})[level] + 0.2 * myHero.ap + 0.25 * myHero.bonusDamage)) + ({20, 25, 30, 35, 40})[level]
 				local tmpdmg = CalcPhysicalDamage(myHero, hero, EDamage)
 				local damagemods = self:DamageModifiers(hero)
 				--PrintChat(damagemods)
