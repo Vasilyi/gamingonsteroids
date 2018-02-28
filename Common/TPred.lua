@@ -108,7 +108,6 @@ end
 function GetDistanceSqr(p1, p2)
 	assert(p1, "GetDistance: invalid argument: cannot calculate distance to "..type(p1))
 	assert(p2, "GetDistance: invalid argument: cannot calculate distance to "..type(p2))
-	if not p1 or not p1.x or not p2 or not p2.x then return 999999999 end
 	return (p1.x - p2.x) ^ 2 + ((p1.z or p1.y) - (p2.z or p2.y)) ^ 2
 end
 
