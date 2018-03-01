@@ -1,17 +1,29 @@
 --[[
 API:
-TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, collision, spelltype)
+TPred:GetStasisTarget(source, range, delay, speed, timingAccuracy)
+	Source -- Vector3 spell will be cast from
+	Range -- How far the spell can travel
+	Delay -- What is the windup time of the spell to be cast
+	Speed -- How quickly does the spell travel
+	TimingAccuracy -- How long after stasis ends can we cast (longer gives more time for reaction by enemy)
+	
+TPred:GetInteruptTarget(source, range, delay, speed, timingAccuracy)
+
+TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, collision, spelltype, timeThreshold)
 	Delay 	 -- in seconds
 	Collision -- is boolean
 	From -- Vector3
 Spelltypes:
 	"line"
 	"circular"
+	
+	TimeThreshold -- How much time target has to react before our spell will hit. Higher = less accurate. Lower = misses opportunities for easy strikes. 
 return CastPosition, HitChance, Position
 CastPosition = Prediction position according to spell radius/width
 Position = Just target position after prediction
 HitChance:
 	5 - Unit cant move and its 99.9% skillshot land
+	4 - Unit is dashing or casting a skill and our spell will hit them within a small window of them being able to move ~80% chance to hit
 	2 - Unit is close || doing some action on place (like attacking/casting etc/not moving) || just changed move direction
 	0 - Predicted position is out of range
 	-1 - Didnt pass collision check
@@ -108,7 +120,6 @@ end
 function GetDistanceSqr(p1, p2)
 	assert(p1, "GetDistance: invalid argument: cannot calculate distance to "..type(p1))
 	assert(p2, "GetDistance: invalid argument: cannot calculate distance to "..type(p2))
-	if not p1 or not p1.x or not p2 or not p2.x then return 999999999 end
 	return (p1.x - p2.x) ^ 2 + ((p1.z or p1.y) - (p2.z or p2.y)) ^ 2
 end
 
@@ -283,10 +294,80 @@ function TPred:isSlowed(unit, delay, speed, from)
 	return false
 end
 
+function TPred:GetSpellInterceptTime(startPos, endPos, delay, speed)	
+	assert(startPos, "GetSpellInterceptTime: invalid argument: cannot calculate distance to "..type(p1))
+	assert(endPos, "GetSpellInterceptTime: invalid argument: cannot calculate distance to "..type(p2))
+	local interceptTime = delay + GetDistance(startPos, endPos) / speed
+	return interceptTime
+end
 
-function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, collision, spelltype)
+function TPred:TryGetBuff(unit, buffname)	
+	for i = 1, unit.buffCount do 
+		local Buff = unit:GetBuff(i)
+		if Buff.name == buffname and Buff.duration > 0 then
+			return Buff, true
+		end
+	end
+	return nil, false
+end
+
+function TPred:HasBuff(unit, buffname,D,s)
+	local D = D or 1 
+	local s = s or 1 
+	for i = 1, unit.buffCount do 
+	local Buff = unit:GetBuff(i)
+		if Buff.name == buffname and Buff.count > 0 and Game.Timer() + D/s < Buff.expireTime then
+			return true
+		end
+	end
+	return false
+end
+
+--Used to find target that is currently in stasis so we can hit them with spells as soon as it ends
+--Note: This has not been fully tested yet... It should be close to right though
+function TPred:GetStasisTarget(source, range, delay, speed, timingAccuracy)
+	local target	
+	for i = 1, Game.HeroCount() do
+		local t = Game.Hero(i)
+		local buff, success = self:TryGetBuff(t, "zhonyasringshield")
+		if success and buff ~= nil then
+			local deltaInterceptTime = self:GetSpellInterceptTime(myHero.pos, t.pos, delay, speed) - buff.duration
+			if deltaInterceptTime > -Game.Latency() / 2000 and deltaInterceptTime < timingAccuracy then
+				target = t
+				return target
+			end
+		end
+	end
+end
+
+--Used to cast spells onto targets that are dashing. 
+--Can target enemies that are dashing into range. Does not currently account for dashes which render the user un-targetable though.
+function TPred:GetInteruptTarget(source, range, delay, speed, timingAccuracy)
+	local target	
+	for i = 1, Game.HeroCount() do
+		local t = Game.Hero(i)
+		if t.isEnemy and t.pathing.hasMovePath and t.pathing.isDashing and t.pathing.dashSpeed>500  then
+			local dashEndPosition = t:GetPath(1)
+			if GetDistance(source, dashEndPosition) <= range then				
+				--The dash ends within range of our skill. We now need to find if our spell can connect with them very close to the time their dash will end
+				local dashTimeRemaining = GetDistance(t.pos, dashEndPosition) / t.pathing.dashSpeed
+				local skillInterceptTime = self:GetSpellInterceptTime(myHero.pos, dashEndPosition, delay, speed)
+				local deltaInterceptTime = math.abs(skillInterceptTime - dashTimeRemaining)
+				if deltaInterceptTime < timingAccuracy then
+					target = t
+					return target
+				end
+			end			
+		end
+	end
+end
+
+function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, collision, spelltype, timeThreshold)
 	assert(unit, "TPred: Target can't be nil")
 	
+	if not timeThreshold then
+		timeThreshold = .35
+	end	
 	range = range and range - 4 or math.huge
 	radius = radius == 0 and 1 or radius - 4
 	speed = speed and speed or math.huge
@@ -300,17 +381,11 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 	
 	local Position, CastPosition = self:CalculateTargetPosition(unit, delay, radius, speed, from, spelltype)
 	local HitChance = 1
-	if (self:IsImmobile(unit, delay, radius, speed, from, spelltype)) then
-		HitChance = 5
-	end
 	Waypoints = self:GetCurrentWayPoints(unit)
 	if (#Waypoints == 1) then
 		HitChance = 2
 	end
 	if self:isSlowed(unit, delay, speed, from) then
-		HitChance = 2
-	end
-	if (unit.activeSpell and unit.activeSpell.valid) then
 		HitChance = 2
 	end
 	
@@ -324,6 +399,21 @@ function TPred:GetBestCastPosition(unit, delay, radius, range, speed, from, coll
 		HitChance = 1
 	elseif angletemp < 10 then
 		HitChance = 2
+	end
+	if (unit.activeSpell and unit.activeSpell.valid) then
+		HitChance = 2
+		local timeToAvoid = radius / unit.ms +  unit.activeSpell.startTime + unit.activeSpell.windup - Game.Timer() 
+		local timeToIntercept = self:GetSpellInterceptTime(from, unit.pos, delay, speed)
+		local deltaInterceptTime = timeToIntercept - timeToAvoid		
+		if deltaInterceptTime < timeThreshold then
+			HitChance = 4
+			CastPosition = unit.pos
+		end		
+	end
+	
+	if (self:IsImmobile(unit, delay, radius, speed, from, spelltype)) then
+		HitChance = 5
+		CastPosition = unit.pos
 	end
 	
 	--[[Out of range]]
