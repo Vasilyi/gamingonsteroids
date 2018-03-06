@@ -2116,15 +2116,8 @@ if myHero.charName == "Kalista" then
 			end
 		elseif PrecisionCombatRune == 4 then
 			local missinghealth = 1 - myHero.health/myHero.maxHealth
-			if missinghealth > 0.7 then
-				currentpercent = currentpercent * 1.11
-			elseif missinghealth > 0.6 then
-				currentpercent = currentpercent * 1.09
-			elseif missinghealth > 0.5 then
-				currentpercent = currentpercent * 1.07 
-			elseif missinghealth > 0.4 then
-				currentpercent = currentpercent * 1.05 
-			end
+			local calculatebonus = missinghealth < 0.4 and 1 or (1.05 + (math.floor(missinghealth*10 - 4)*0.02))
+			currentpercent = currentpercent * (calculatebonus < 1.12 and calculatebonus or 1.11)
 		end
 		return currentpercent
 	end
