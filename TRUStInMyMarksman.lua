@@ -486,7 +486,7 @@ if myHero.charName == "Lucian" then
 		end
 		
 		if myHero.activeSpell and myHero.activeSpell.valid and 
-		(myHero.activeSpell.name == "LucianQ" or myHero.activeSpell.name == "LucianW") and passive ~=  myHero.activeSpell.endTime then
+		(myHero.activeSpell.name == "LucianQ" or myHero.activeSpell.name == "LucianW") and passive ~= myHero.activeSpell.endTime then
 			passive = myHero.activeSpell.endTime
 			--PrintChat("found passive1")
 		end
@@ -1574,7 +1574,7 @@ if myHero.charName == "KogMaw" then
 end
 
 if myHero.charName == "Kalista" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.12","TRUS","7.22"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.13","TRUS","8.4"
 	local Kalista = {}
 	Kalista.__index = Kalista
 	require "DamageLib"
@@ -1666,6 +1666,9 @@ if myHero.charName == "Kalista" then
 		--[[Combo]]
 		self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 		self.Menu:MenuElement({id = "AlwaysKS", name = "Always KS with E", value = true})
+		
+		self.Menu:MenuElement({type = MENU, id = "Runes", name = "Runes Settings"})
+		self.Menu.Runes:MenuElement({id = "PrecisionCombatR", name = "Precision Combat Rune", drop = {"None", "Coup de Grace", "Cut Down", "Last Stand"}})
 		
 		self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
 		self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
@@ -2029,7 +2032,7 @@ if myHero.charName == "Kalista" then
 						-- local basedmg = ({20, 30, 40, 50, 60})[level] + 0.6* (myHero.totalDamage)
 						-- local perspear = ({10, 14, 19, 25, 32})[level] + ({0.2, 0.225, 0.25, 0.275, 0.3})[level]* (myHero.totalDamage)
 						-- local tempdamage = basedmg + perspear*spearsamount
-						if EDamage*0.8 > minion.health then
+						if EDamage > minion.health then
 							Control.CastSpell(HK_E)
 						end
 					end
@@ -2060,7 +2063,71 @@ if myHero.charName == "Kalista" then
 		end
 		return self.EnemyHeroes
 	end
+	local DamageModifiersTable = {
+		summonerexhaustdebuff = 0.6,
+		itemphantomdancerdebuff = 0.88,
+		itemsmiteburn = 0.8
+	}
 	
+	local DamageModifiersTableEnemies = {
+		fioraw = 0,
+		undyingrage = 0,
+		kindredrnodeathbuff = 0,
+		taricr = 0,
+		judicatorintervention = 0
+	}
+	
+	function Kalista:DamageModifiers(target)
+		local currentpercent = 1
+		for K, Buff in pairs(self:GetBuffs(myHero)) do
+			if DamageModifiersTable[Buff.name:lower()] then
+				currentpercent = currentpercent*DamageModifiersTable[Buff.name:lower()]
+			end
+		end
+		for K, Buff in pairs(self:GetBuffs(target)) do
+			if Buff.name and DamageModifiersTableEnemies[Buff.name:lower()] then
+				return 0 
+			end
+			if Buff.count > 0 and Buff.name and string.find(Buff.name, "PressTheAttack") and (Buff.expireTime - Buff.startTime == 6) then
+				currentpercent = currentpercent * 1.12
+			end
+		end
+		local PrecisionCombatRune = self.Menu.Runes.PrecisionCombatR:Value()
+		if PrecisionCombatRune == 2 then
+			if target.health/target.maxHealth < 0.4 then
+				currentpercent = currentpercent * 1.07
+			end
+		elseif PrecisionCombatRune == 3 then
+			local healthdifference = target.maxHealth - myHero.maxHealth
+			if healthdifference > 2000 then
+				currentpercent = currentpercent * 1.10
+			elseif healthdifference > 1691 then
+				currentpercent = currentpercent * 1.09
+			elseif healthdifference > 1383 then
+				currentpercent = currentpercent * 1.08
+			elseif healthdifference > 1075 then
+				currentpercent = currentpercent * 1.07
+			elseif healthdifference > 766 then
+				currentpercent = currentpercent * 1.06
+			elseif healthdifference > 458 then
+				currentpercent = currentpercent * 1.05
+			elseif healthdifference > 150 then
+				currentpercent = currentpercent * 1.04
+			end
+		elseif PrecisionCombatRune == 4 then
+			local missinghealth = 1 - myHero.health/myHero.maxHealth
+			if missinghealth > 0.7 then
+				currentpercent = currentpercent * 1.11
+			elseif missinghealth > 0.6 then
+				currentpercent = currentpercent * 1.09
+			elseif missinghealth > 0.5 then
+				currentpercent = currentpercent * 1.07 
+			elseif missinghealth > 0.4 then
+				currentpercent = currentpercent * 1.05 
+			end
+		end
+		return currentpercent
+	end
 	function Kalista:GetETarget()
 		self.KillableHeroes = {}
 		self.DamageHeroes = {}
@@ -2068,7 +2135,9 @@ if myHero.charName == "Kalista" then
 		local level = myHero:GetSpellData(_E).level
 		for i, hero in pairs(heroeslist) do
 			if self:GetSpears(hero) > 0 and myHero.pos:DistanceTo(hero.pos)<E.Range then 
-				local EDamage = getdmg("E",hero,myHero)*0.9
+				local EDamage = getdmg("E",hero,myHero)
+				local damagemods = self:DamageModifiers(hero)
+				EDamage = EDamage * damagemods
 				if hero.health and EDamage and EDamage > hero.health then
 					table.insert(self.KillableHeroes, hero)
 				else
