@@ -1083,7 +1083,7 @@ if myHero.charName == "Ezreal" then
 end
 
 if myHero.charName == "Twitch" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.7","TRUS","8.4"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.7","TRUS","8.5"
 	local Twitch = {}
 	Twitch.__index = Twitch
 	require "DamageLib"
@@ -1244,7 +1244,7 @@ if myHero.charName == "Twitch" then
 		if level == 0 then return end
 		for i, hero in pairs(heroeslist) do
 			if stacks[hero.charName] and self:GetStacks(stacks[hero.charName].name) > 0 then 
-				local EDamage = (self:GetStacks(stacks[hero.charName].name) * (({15, 20, 25, 30, 35})[level] + 0.2 * myHero.ap + 0.25 * myHero.bonusDamage)) + ({20, 25, 30, 35, 40})[level]
+				local EDamage = (self:GetStacks(stacks[hero.charName].name) * (({15, 20, 25, 30, 35})[level] + 0.2 * myHero.ap + 0.25 * myHero.bonusDamage)) + ({20, 30, 40, 50, 60})[level]
 				local tmpdmg = CalcPhysicalDamage(myHero, hero, EDamage)
 				local damagemods = self:DamageModifiers(hero)
 				tmpdmg = tmpdmg * damagemods
