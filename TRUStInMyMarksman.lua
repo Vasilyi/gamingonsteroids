@@ -1574,7 +1574,7 @@ if myHero.charName == "KogMaw" then
 end
 
 if myHero.charName == "Kalista" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.13","TRUS","8.4"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.14","TRUS","8.5"
 	local Kalista = {}
 	Kalista.__index = Kalista
 	require "DamageLib"
@@ -1693,7 +1693,8 @@ if myHero.charName == "Kalista" then
 		--self.Menu.Draw:MenuElement({id = "HPBarOffset", name = "Z offset for HPBar ", value = 0, min = -100, max = 100, tooltip = "change this if damage showed in wrong position"})
 		--self.Menu.Draw:MenuElement({id = "HPBarOffsetX", name = "X offset for HPBar ", value = 0, min = -100, max = 100, tooltip = "change this if damage showed in wrong position"})
 		self.Menu.Draw:MenuElement({id = "DrawInPrecent", name = "Draw numbers in percent", value = true})
-		self.Menu.Draw:MenuElement({id = "DrawE", name = "Draw Killable with E", value = true})
+		self.Menu.Draw:MenuElement({id = "DrawE", name = "Draw heroes Killable with E", value = true})
+		self.Menu.Draw:MenuElement({id = "DrawLastHit", name = "Draw minion Killable with E", value = true})
 		self.Menu.Draw:MenuElement({id = "TextOffset", name = "Z offset for text ", value = 0, min = -100, max = 100})
 		self.Menu.Draw:MenuElement({id = "TextSize", name = "Font size ", value = 30, min = 2, max = 64})
 		self.Menu.Draw:MenuElement({id = "DrawColor", name = "Color for drawing", color = Draw.Color(0xBF3F3FFF)})
@@ -1782,7 +1783,7 @@ if myHero.charName == "Kalista" then
 			if harassactive and self.Menu.Harass.harassUseELasthit:Value() then
 				self:UseEOnLasthit()
 			end
-			if self.Menu.AutLastHit.Active:Value() or self.Menu.keyActive.Active:Value() then
+			if self.Menu.AutLastHit.Active:Value() or self.Menu.keyActive.Active:Value() or self.Menu.Draw.DrawLastHit:Value() then
 				self:LastHitCreeps()
 			end
 		end
@@ -1860,10 +1861,11 @@ if myHero.charName == "Kalista" then
 		SRU_Krug = "MarkKrugs",
 		Sru_Crab = "MarkCrab",
 	}
-	
+	local killableminions = {}
 	function Kalista:LastHitCreeps()
 		local minionlist = {}
 		local lhcount = 0
+		killableminions = {}
 		if _G.SDK then
 			minionlist = _G.SDK.ObjectManager:GetEnemyMinions(E.Range)
 			for i, minion in pairs(minionlist) do
@@ -1871,6 +1873,9 @@ if myHero.charName == "Kalista" then
 					local EDamage = getdmg("E",minion,myHero) 
 					if EDamage > minion.health then
 						lhcount = lhcount + 1
+						if self.Menu.Draw.DrawLastHit:Value() then
+							table.insert(killableminions, minion)
+						end
 					end
 				end
 			end
@@ -1881,11 +1886,14 @@ if myHero.charName == "Kalista" then
 					local EDamage = getdmg("E",minion,myHero) 
 					if EDamage > minion.health then
 						lhcount = lhcount + 1
+						if self.Menu.Draw.DrawLastHit:Value() then
+							table.insert(killableminions, minion)
+						end
 					end
 				end
 			end
 		end
-		if lhcount >= self.Menu.AutLastHit.MinTargets:Value() then
+		if (self.Menu.AutLastHit.Active:Value() or self.Menu.keyActive.Active:Value()) and lhcount >= self.Menu.AutLastHit.MinTargets:Value() then
 			Control.CastSpell(HK_E)
 		end
 	end
@@ -2177,6 +2185,11 @@ if myHero.charName == "Kalista" then
 	function Kalista:Draw()
 		if self.Menu.SmiteMarker.Enabled:Value() then
 			self:CheckKillableMinion()
+		end
+		if self.Menu.Draw.DrawLastHit:Value() then
+			for i, minion in pairs(killableminions) do
+				Draw.Circle(minion.pos, minion.boundingRadius, 6, self.Menu.Draw.DrawColor:Value())
+			end
 		end
 		local killable, damaged = self:GetETarget()
 		local offset = self.Menu.Draw.TextOffset:Value()

@@ -60,7 +60,7 @@ function UseBotrk()
 	end
 end
 
-local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.13","TRUS","8.1"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.14","TRUS","8.5"
 local Kalista = {}
 Kalista.__index = Kalista
 require "DamageLib"
@@ -153,6 +153,9 @@ function Kalista:LoadMenu()
 	self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 	self.Menu:MenuElement({id = "AlwaysKS", name = "Always KS with E", value = true})
 	
+	self.Menu:MenuElement({type = MENU, id = "Runes", name = "Runes Settings"})
+	self.Menu.Runes:MenuElement({id = "PrecisionCombatR", name = "Precision Combat Rune", drop = {"None", "Coup de Grace", "Cut Down", "Last Stand"}})
+	
 	self.Menu:MenuElement({type = MENU, id = "Combo", name = "Combo Settings"})
 	self.Menu.Combo:MenuElement({id = "comboUseQ", name = "Use Q", value = true})
 	self.Menu.Combo:MenuElement({id = "qMinMana", name = "Minimal mana for Q:", value = 30, min = 0, max = 101, identifier = "%"})
@@ -176,7 +179,8 @@ function Kalista:LoadMenu()
 	--self.Menu.Draw:MenuElement({id = "HPBarOffset", name = "Z offset for HPBar ", value = 0, min = -100, max = 100, tooltip = "change this if damage showed in wrong position"})
 	--self.Menu.Draw:MenuElement({id = "HPBarOffsetX", name = "X offset for HPBar ", value = 0, min = -100, max = 100, tooltip = "change this if damage showed in wrong position"})
 	self.Menu.Draw:MenuElement({id = "DrawInPrecent", name = "Draw numbers in percent", value = true})
-	self.Menu.Draw:MenuElement({id = "DrawE", name = "Draw Killable with E", value = true})
+	self.Menu.Draw:MenuElement({id = "DrawE", name = "Draw heroes Killable with E", value = true})
+	self.Menu.Draw:MenuElement({id = "DrawLastHit", name = "Draw minion Killable with E", value = true})
 	self.Menu.Draw:MenuElement({id = "TextOffset", name = "Z offset for text ", value = 0, min = -100, max = 100})
 	self.Menu.Draw:MenuElement({id = "TextSize", name = "Font size ", value = 30, min = 2, max = 64})
 	self.Menu.Draw:MenuElement({id = "DrawColor", name = "Color for drawing", color = Draw.Color(0xBF3F3FFF)})
@@ -343,10 +347,11 @@ local SmiteTable = {
 	SRU_Krug = "MarkKrugs",
 	Sru_Crab = "MarkCrab",
 }
-
+local killableminions = {}
 function Kalista:LastHitCreeps()
 	local minionlist = {}
 	local lhcount = 0
+	killableminions = {}
 	if _G.SDK then
 		minionlist = _G.SDK.ObjectManager:GetEnemyMinions(E.Range)
 		for i, minion in pairs(minionlist) do
@@ -354,6 +359,9 @@ function Kalista:LastHitCreeps()
 				local EDamage = getdmg("E",minion,myHero) 
 				if EDamage > minion.health then
 					lhcount = lhcount + 1
+					if self.Menu.Draw.DrawLastHit:Value() then
+						table.insert(killableminions, minion)
+					end
 				end
 			end
 		end
@@ -364,11 +372,14 @@ function Kalista:LastHitCreeps()
 				local EDamage = getdmg("E",minion,myHero) 
 				if EDamage > minion.health then
 					lhcount = lhcount + 1
+					if self.Menu.Draw.DrawLastHit:Value() then
+						table.insert(killableminions, minion)
+					end
 				end
 			end
 		end
 	end
-	if lhcount >= self.Menu.AutLastHit.MinTargets:Value() then
+	if (self.Menu.AutLastHit.Active:Value() or self.Menu.keyActive.Active:Value()) and lhcount >= self.Menu.AutLastHit.MinTargets:Value() then
 		Control.CastSpell(HK_E)
 	end
 end
@@ -447,7 +458,8 @@ function Kalista:CheckKillableMinion()
 		if self:GetSpears(minion) > 0 then 
 			local EDamage = getdmg("E",minion,myHero)
 			local minionName = minion.charName
-			if EDamage*((minion.charName == "SRU_RiftHerald" and 0.65) or (self:HasBuff(myHero,"barontarget") and 0.5) or 0.79) > minion.health then
+			EDamage = EDamage*((minion.charName == "SRU_RiftHerald" and 0.65) or (self:HasBuff(myHero,"barontarget") and 0.5) or 1)
+			if EDamage > minion.health then
 				local minionName = minion.charName
 				self:DrawSmiteableMinion(SmiteTable[minionName], minion)
 			else
@@ -514,7 +526,7 @@ function Kalista:UseEOnLasthit()
 					-- local basedmg = ({20, 30, 40, 50, 60})[level] + 0.6* (myHero.totalDamage)
 					-- local perspear = ({10, 14, 19, 25, 32})[level] + ({0.2, 0.225, 0.25, 0.275, 0.3})[level]* (myHero.totalDamage)
 					-- local tempdamage = basedmg + perspear*spearsamount
-					if EDamage*0.8 > minion.health then
+					if EDamage > minion.health then
 						Control.CastSpell(HK_E)
 					end
 				end
@@ -545,11 +557,20 @@ function Kalista:GetEnemyHeroes()
 	end
 	return self.EnemyHeroes
 end
-
 local DamageModifiersTable = {
 	summonerexhaustdebuff = 0.6,
-	itemphantomdancerdebuff = 0.88
+	itemphantomdancerdebuff = 0.88,
+	itemsmiteburn = 0.8
 }
+
+local DamageModifiersTableEnemies = {
+	fioraw = 0,
+	undyingrage = 0,
+	kindredrnodeathbuff = 0,
+	taricr = 0,
+	judicatorintervention = 0
+}
+
 function Kalista:DamageModifiers(target)
 	local currentpercent = 1
 	for K, Buff in pairs(self:GetBuffs(myHero)) do
@@ -558,14 +579,42 @@ function Kalista:DamageModifiers(target)
 		end
 	end
 	for K, Buff in pairs(self:GetBuffs(target)) do
-		if Buff.count > 0 and Buff.name and Buff.name ~= "kalistaexpungemarker" and string.find(Buff.name, "PressThreeAttack") and (Buff.expireTime - Buff.startTime == 6) then
+		if Buff.name and DamageModifiersTableEnemies[Buff.name:lower()] then
+			return 0 
+		end
+		if Buff.count > 0 and Buff.name and string.find(Buff.name, "PressTheAttack") and (Buff.expireTime - Buff.startTime == 6) then
 			currentpercent = currentpercent * 1.12
 		end
 	end
+	local PrecisionCombatRune = self.Menu.Runes.PrecisionCombatR:Value()
+	if PrecisionCombatRune == 2 then
+		if target.health/target.maxHealth < 0.4 then
+			currentpercent = currentpercent * 1.07
+		end
+	elseif PrecisionCombatRune == 3 then
+		local healthdifference = target.maxHealth - myHero.maxHealth
+		if healthdifference > 2000 then
+			currentpercent = currentpercent * 1.10
+		elseif healthdifference > 1691 then
+			currentpercent = currentpercent * 1.09
+		elseif healthdifference > 1383 then
+			currentpercent = currentpercent * 1.08
+		elseif healthdifference > 1075 then
+			currentpercent = currentpercent * 1.07
+		elseif healthdifference > 766 then
+			currentpercent = currentpercent * 1.06
+		elseif healthdifference > 458 then
+			currentpercent = currentpercent * 1.05
+		elseif healthdifference > 150 then
+			currentpercent = currentpercent * 1.04
+		end
+	elseif PrecisionCombatRune == 4 then
+		local missinghealth = 1 - myHero.health/myHero.maxHealth
+		local calculatebonus = missinghealth < 0.4 and 1 or (1.05 + (math.floor(missinghealth*10 - 4)*0.02))
+		currentpercent = currentpercent * (calculatebonus < 1.12 and calculatebonus or 1.11)
+	end
 	return currentpercent
 end
-
-
 function Kalista:GetETarget()
 	self.KillableHeroes = {}
 	self.DamageHeroes = {}
@@ -573,9 +622,8 @@ function Kalista:GetETarget()
 	local level = myHero:GetSpellData(_E).level
 	for i, hero in pairs(heroeslist) do
 		if self:GetSpears(hero) > 0 and myHero.pos:DistanceTo(hero.pos)<E.Range then 
-			local EDamage = getdmg("E",hero,myHero)*0.9
+			local EDamage = getdmg("E",hero,myHero)
 			local damagemods = self:DamageModifiers(hero)
-			--PrintChat(damagemods)
 			EDamage = EDamage * damagemods
 			if hero.health and EDamage and EDamage > hero.health then
 				table.insert(self.KillableHeroes, hero)
@@ -623,6 +671,11 @@ end
 function Kalista:Draw()
 	if self.Menu.SmiteMarker.Enabled:Value() then
 		self:CheckKillableMinion()
+	end
+	if self.Menu.Draw.DrawLastHit:Value() then
+		for i, minion in pairs(killableminions) do
+			Draw.Circle(minion.pos, minion.boundingRadius, 6, self.Menu.Draw.DrawColor:Value())
+		end
 	end
 	local killable, damaged = self:GetETarget()
 	local offset = self.Menu.Draw.TextOffset:Value()
