@@ -1,10 +1,6 @@
 if myHero.charName == "Ashe" or myHero.charName == "Ezreal" or myHero.charName == "Lucian" or myHero.charName == "Caitlyn" or myHero.charName == "Twitch" or myHero.charName == "KogMaw" or myHero.charName == "Kalista" or myHero.charName == "Corki" or myHero.charName == "Xayah" then
 	local TRUStinMyMarksmanloaded = false
 	require "2DGeometry"
-	
-	
-	keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
-	
 	castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
 	function SetMovement(bool)
 		if _G.EOWLoaded then
@@ -59,6 +55,7 @@ if myHero.charName == "Ashe" or myHero.charName == "Ezreal" or myHero.charName =
 		if target then 
 			local botrkitem = GetInventorySlotItem(3153) or GetInventorySlotItem(3144)
 			if botrkitem then
+			local keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
 				Control.CastSpell(keybindings[botrkitem],target.pos)
 			end
 		end
