@@ -55,7 +55,7 @@ if myHero.charName == "Ashe" or myHero.charName == "Ezreal" or myHero.charName =
 		if target then 
 			local botrkitem = GetInventorySlotItem(3153) or GetInventorySlotItem(3144)
 			if botrkitem then
-			local keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
+				local keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
 				Control.CastSpell(keybindings[botrkitem],target.pos)
 			end
 		end
@@ -1581,6 +1581,10 @@ if myHero.charName == "Kalista" then
 	local barXOffset = 24
 	local barYOffset = -8
 	
+	if FileExist(COMMON_PATH .. "TPred.lua") then
+		require 'TPred'
+		PrintChat("TPred library loaded")
+	end
 	JungleHpBarOffset = {
 		["SRU_Dragon_Water"] = {Width = 140, Height = 4, XOffset = -9, YOffset = -60},
 		["SRU_Dragon_Fire"] = {Width = 140, Height = 4, XOffset = -9, YOffset = -60},
@@ -1653,7 +1657,7 @@ if myHero.charName == "Kalista" then
 	end
 	--[[Spells]]
 	function Kalista:LoadSpells()
-		Q = {Range = 1150, width = 40, Delay = 0.25, Speed = 2100}
+		Q = {Range = 1150, Width = 40, Delay = 0.25, Speed = 2100}
 		E = {Range = 1000}
 	end
 	
@@ -2150,9 +2154,17 @@ if myHero.charName == "Kalista" then
 	function Kalista:CastQ(target, combo)
 		if (not _G.SDK and not _G.GOS) then return end
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
-		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and ((combo and self.Menu.Combo.comboUseQ:Value()) or (combo == false and self.Menu.Harass.harassUseQ:Value())) and target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0 then
-			local castPos = target:GetPrediction(Q.Speed,Q.Delay)
-			self:CastSpell(HK_Q, castPos)
+		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and ((combo and self.Menu.Combo.comboUseQ:Value()) or (combo == false and self.Menu.Harass.harassUseQ:Value())) then
+			local castPos
+			if (TPred) then
+				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,true, "line")
+				if (HitChance >= 1) then
+					self:CastSpell(HK_Q, pos)
+				end
+			elseif target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0 then
+				castPos = target:GetPrediction(Q.Speed,Q.Delay)
+				self:CastSpell(HK_Q, castPos)
+			end
 		end
 	end
 	
