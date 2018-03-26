@@ -352,7 +352,7 @@ end
 if myHero.charName == "Lucian" then
 	local Lucian = {}
 	Lucian.__index = Lucian
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.4","TRUS","8.1"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.5","TRUS","8.6"
 	local passive = true
 	local lastbuff = 0
 	function Lucian:__init()
@@ -465,20 +465,22 @@ if myHero.charName == "Lucian" then
 			UseBotrk()
 		end
 		if harassactive and self.Menu.UseQHarass:Value() and self:CanCast(_Q) then self:Harass() end 
-		if combomodeactive and canmove and not canattack and Game.Timer() > lastbuff - 3 then 
-			if self:CanCast(_E) and self.Menu.UseE:Value() and currenttarget then
-				self:CastSpell(HK_E,mousePos)
-				return
+		if not (myHero.activeSpell and myHero.activeSpell.valid and 
+		(myHero.activeSpell.name == "LucianQ" or myHero.activeSpell.name == "LucianW")) then
+			if combomodeactive and canmove and not canattack and Game.Timer() > lastbuff - 3 then 
+				if self:CanCast(_E) and self.Menu.UseE:Value() and currenttarget then
+					self:CastSpell(HK_E,mousePos)
+					return
+				end
+				if self:CanCast(_Q) and self.Menu.UseQ:Value() and currenttarget then
+					self:CastQ(currenttarget)
+					return
+				end
+				if self:CanCast(_W) and self.Menu.UseW:Value() and currenttarget then
+					self:CastW(currenttarget)
+					return
+				end
 			end
-			if self:CanCast(_Q) and self.Menu.UseQ:Value() and currenttarget then
-				self:CastQ(currenttarget)
-				return
-			end
-			if self:CanCast(_W) and self.Menu.UseW:Value() and currenttarget then
-				self:CastW(currenttarget)
-				return
-			end
-			
 			
 		end
 		
