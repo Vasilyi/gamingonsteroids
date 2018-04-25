@@ -1082,7 +1082,7 @@ if myHero.charName == "Ezreal" then
 end
 
 if myHero.charName == "Twitch" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.7","TRUS","8.5"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.7","TRUS","8.8"
 	local Twitch = {}
 	Twitch.__index = Twitch
 	require "DamageLib"
@@ -1176,12 +1176,12 @@ if myHero.charName == "Twitch" then
 	end
 	
 	function Twitch:GetStacks(str)
-		if str:lower():find("twitch_base_p_stack_01.troy") then return 1
-		elseif str:lower():find("twitch_base_p_stack_02.troy") then return 2
-		elseif str:lower():find("twitch_base_p_stack_03.troy") then return 3
-		elseif str:lower():find("twitch_base_p_stack_04.troy") then return 4
-		elseif str:lower():find("twitch_base_p_stack_05.troy") then return 5
-		elseif str:lower():find("twitch_base_p_stack_06.troy") then return 6
+		if str:lower():find("twitch_base_p_stack_01") then return 1
+		elseif str:lower():find("twitch_base_p_stack_02") then return 2
+		elseif str:lower():find("twitch_base_p_stack_03") then return 3
+		elseif str:lower():find("twitch_base_p_stack_04") then return 4
+		elseif str:lower():find("twitch_base_p_stack_05") then return 5
+		elseif str:lower():find("twitch_base_p_stack_06") then return 6
 		end
 		return 0
 	end
