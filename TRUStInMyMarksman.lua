@@ -765,7 +765,7 @@ if myHero.charName == "Caitlyn" then
 	function Caitlyn:Stunned(enemy)
 		for i = 0, enemy.buffCount do
 			local buff = enemy:GetBuff(i);
-			if (buff.type == 5 or buff.type == 11 or buff.type == 24) and buff.duration > 0.5 and buff.name ~= "caitlynyordletrapdebuff" then
+			if (buff.type == 5 or buff.type == 11 or buff.type == 24) and buff.duration > 0.9 and buff.name ~= "caitlynyordletrapdebuff" then
 				return true
 			end
 		end
@@ -776,8 +776,12 @@ if myHero.charName == "Caitlyn" then
 		if not self.Menu.autoW:Value() then return end
 		local ImmobileEnemy = self:GetImmobileTarget()
 		if ImmobileEnemy and myHero.pos:DistanceTo(ImmobileEnemy.pos)<800 and (not LastW or LastW:DistanceTo(ImmobileEnemy.pos)>60) then
+			if ImmobileEnemy.pathing.isDashing and myHero.pos:DistanceTo(ImmobileEnemy.pathing.endPos)<800 then
+				self:CastSpell(HK_W,ImmobileEnemy.pathing.endPos)
+			else
+				self:CastSpell(HK_W,ImmobileEnemy.pos)
+			end
 			LastW = ImmobileEnemy.pos
-			self:CastSpell(HK_W,ImmobileEnemy.pos)
 		end
 	end
 	
