@@ -1,5 +1,5 @@
 if myHero.charName ~= "TwistedFate" then return end
-local Scriptname,Version,Author,LVersion = "TRUSt in my Cards","v1.2","TRUS","7.22"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Cards","v1.3","TRUS","8.17"
 
 class "TwistedFate"
 
@@ -69,7 +69,7 @@ function TwistedFate:LoadMenu()
 	self.Menu:MenuElement({id = "AutoW", name = "Autopick goldcard on ult", value = true})
 	self.Menu:MenuElement({id = "AutoQ", name = "AutoQ on immobile", value = true})
 	self.Menu:MenuElement({id = "AutoQSelf", name = "AutoQ on Goldcard", value = true})
-	
+
 	--[[Draw]]
 	self.Menu:MenuElement({type = MENU, id = "Draw", name = "Drawing Settings"})
 	self.Menu.Draw:MenuElement({id = "DrawQ", name = "Draw Q Range", value = true})
@@ -88,7 +88,7 @@ function TwistedFate:Tick()
 	if myHero.dead then return end
 	local WName = myHero:GetSpellData(_W).name
 	local WStatus = myHero:GetSpellData(_W).toggleState
-	if (self:CanCast(_W)) and WName == "PickACard" and GetTickCount() > lastpick + 500 then
+	if (self:CanCast(_W)) and GetTickCount() > lastpick + 1000 then
 		ToSelect = "NONE"
 		if self.Menu.CardPicker.GoldCard:Value() then
 			--PrintChat("gold")
@@ -101,7 +101,9 @@ function TwistedFate:Tick()
 			ToSelect = "BLUE"
 		end
 		if ToSelect ~= "NONE" then
-			Control.CastSpell(HK_W)
+			if WName == "PickACard" then
+				Control.CastSpell(HK_W)
+			end
 			lastpick = GetTickCount()
 		end
 	end
@@ -116,7 +118,7 @@ function TwistedFate:Tick()
 	end
 	
 	if self:CanCast(_Q) then 
-		if self.Menu.AutoQ:Value() or self.Menu.AutoQSelf:Value() then
+		if self.Menu.AutoQ:Value() or self.Menu.AutoQSelf:Value()  then
 			local immobiletarget = self:GetImmobileTarget()
 			if immobiletarget and self:IsValidTarget(immobiletarget,Q.Range) then
 				self:CastQ(immobiletarget)
