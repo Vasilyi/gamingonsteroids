@@ -1,5 +1,5 @@
 if myHero.charName ~= "TwistedFate" then return end
-local Scriptname,Version,Author,LVersion = "TRUSt in my Cards","v1.3","TRUS","8.17"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Cards","v1.4","TRUS","8.17"
 
 class "TwistedFate"
 
@@ -89,7 +89,6 @@ function TwistedFate:Tick()
 	local WName = myHero:GetSpellData(_W).name
 	local WStatus = myHero:GetSpellData(_W).toggleState
 	if (self:CanCast(_W)) and GetTickCount() > lastpick + 1000 then
-		ToSelect = "NONE"
 		if self.Menu.CardPicker.GoldCard:Value() then
 			--PrintChat("gold")
 			ToSelect = "GOLD"
@@ -102,9 +101,9 @@ function TwistedFate:Tick()
 		end
 		if ToSelect ~= "NONE" then
 			if WName == "PickACard" then
+				lastpick = GetTickCount()
 				Control.CastSpell(HK_W)
 			end
-			lastpick = GetTickCount()
 		end
 	end
 	
@@ -214,6 +213,7 @@ end
 
 function TwistedFate:Draw()
 	if myHero.dead then return end
+	--Draw.Text(ToSelect, 15, myHero.pos:To2D().x, myHero.pos:To2D().y, Draw.Color(0xFFFFFFFF))
 	if self:IsReady(_Q) and self.Menu.Draw.DrawQ:Value() then
 		Draw.Circle(myHero.pos, Q.Range, 3, Draw.Color(255, 255, 0, 10))
 	end
