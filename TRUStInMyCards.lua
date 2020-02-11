@@ -1,5 +1,5 @@
 if myHero.charName ~= "TwistedFate" then return end
-local Scriptname,Version,Author,LVersion = "TRUSt in my Cards","v1.4","TRUS","8.17"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Cards","v1.5","TRUS","10.3"
 
 class "TwistedFate"
 
@@ -134,6 +134,7 @@ function TwistedFate:Tick()
 	or ((ToSelect == "RED" or self.Menu.CardPicker.RedCard:Value()) and WName == "RedCardLock") 
 	or ((ToSelect == "BLUE" or self.Menu.CardPicker.BlueCard:Value()) and WName == "BlueCardLock") then
 		Control.CastSpell(HK_W)
+		ToSelect = "NONE"
 	end
 	
 end
