@@ -721,16 +721,14 @@ if myHero.charName == "Caitlyn" then
 		
 		for j, enemy in pairs(lasttrappedtime) do
 			if enemy then 
-			if Game.Timer() < enemy then
-			enemy = nil
-				return
-			end
+				if Game.Timer() < enemy then
+				enemy = nil
+					return
+				end
 
-			if Game.Timer() > enemy and Game.Timer() - 0.1 < enemy then
-				self:GetTrapped()
-				PrintChat(enemy .. " : " .. Game.Timer())
-				PrintChat("Rechecking expiring trap")
-			end
+				if Game.Timer() > enemy and Game.Timer() - 0.1 < enemy then
+					self:GetTrapped()
+				end
 			end
 		end
 		
