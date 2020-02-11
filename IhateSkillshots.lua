@@ -1,14 +1,8 @@
 class "IHateSkillshots"
-local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.6","TRUS","10.3"
-if FileExist(COMMON_PATH .. "TPred.lua") then
-	require 'TPred'
-	PrintChat("TPred library loaded")
-elseif FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
-	require 'Eternal Prediction'
-	PrintChat("Eternal Prediction library loaded")
-elseif FileExist(COMMON_PATH .. "Collision.lua") then
-	require 'Collision'
-	PrintChat("Collision library loaded")
+local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.7","TRUS","10.3"
+if FileExist(COMMON_PATH .. "PremiumPrediction.lua") then
+	require 'PremiumPrediction'
+	PrintChat("PremiumPrediction library loaded")
 end
 
 
@@ -338,70 +332,21 @@ Champs = {
 }
 
 local CollSpell = {}
-local EPrediction = {}
 function IHateSkillshots:__init()
-	--PrintChat(myHero.charName.." : ".." Speed: "..myHero:GetSpellData(_Q).speed.." Range: "..myHero:GetSpellData(_Q).range.." Width: "..myHero:GetSpellData(_Q).width.." minSpeed: " .. myHero:GetSpellData(_Q).minSpeed .. " acceleration ".. myHero:GetSpellData(_Q).acceleration)
 	if Champs[myHero.charName] == nil then
 		PrintChat "Hero didnt have skillshots, IHateSkillshots unloaded"
 		return
 	end
-	
-	
 	PrintChat("IHateSkillshots loaded for "..myHero.charName)
-	-- self:LoadSpells()
 	self:LoadMenu()
 	Callback.Add("Tick", function() self:Tick() end)
 	Callback.Add("Draw", function() self:Draw() end)
-	--Callback.Add("Draw", function() self:Draw() end)
-	--Callback.Add("WndMsg", function() self:OnWndMsg() end)
-	
-	if TYPE_GENERIC then 
-		for i, spell in pairs(Champs[myHero.charName]) do
-			if i == _Q then
-				local QSpell = Prediction:SetSpell({range = spell.range, speed = spell.speed, delay = spell.delay, width = spell.minionCollisionWidth}, spell.circular and TYPE_CIRCULAR or TYPE_LINE, true)
-				EPrediction[_Q] = QSpell
-			elseif i == _W then
-				WSpell = Prediction:SetSpell({range = spell.range, speed = spell.speed, delay = spell.delay, width = spell.minionCollisionWidth}, spell.circular and TYPE_CIRCULAR or TYPE_LINE, true)
-				EPrediction[_W] = WSpell
-			elseif i == _E then
-				ESpell = Prediction:SetSpell({range = spell.range, speed = spell.speed, delay = spell.delay, width = spell.minionCollisionWidth}, spell.circular and TYPE_CIRCULAR or TYPE_LINE, true)
-				EPrediction[_E] = ESpell
-			elseif i == _R then
-				RSpell = Prediction:SetSpell({range = spell.range, speed = spell.speed, delay = spell.delay, width = spell.minionCollisionWidth}, spell.circular and TYPE_CIRCULAR or TYPE_LINE, true)
-				EPrediction[_R] = RSpell
-			end
-		end
-	end
-	
-	
-	
-	if _G.Collision then 
-		for i, spell in pairs(Champs[myHero.charName]) do
-			if i == _Q then
-				QSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth + (not self.Menu.addcollision and 0 or self.Menu.addcollision:Value()), spell.ignorecol and false or true)
-				CollSpell[_Q] = QSpell
-			elseif i == _W then
-				WSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth + (not self.Menu.addcollision and 0 or self.Menu.addcollision:Value()), spell.ignorecol and false or true)
-				CollSpell[_W] = WSpell
-			elseif i == _E then
-				ESpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth + (not self.Menu.addcollision and 0 or self.Menu.addcollision:Value()), spell.ignorecol and false or true)
-				CollSpell[_E] = ESpell
-			elseif i == _R then
-				RSpell = Collision:SetSpell(spell.range, spell.speed, spell.delay, (spell.ignorecol and 0) or spell.minionCollisionWidth + (not self.Menu.addcollision and 0 or self.Menu.addcollision:Value()), spell.ignorecol and false or true)
-				CollSpell[_R] = RSpell
-			end
-		end
-	end
 end
 str = { [_Q] = "Q", [_W] = "W", [_E] = "E", [_R] = "R" }
 keybindings = { [_Q] = 0x5A, [_W] = 0x58, [_E] = 0x43, [_R] = 0x56 }
 castbuttons = { [_Q] = HK_Q, [_W] = HK_W, [_E] = HK_E, [_R] = HK_R }
 
 function IHateSkillshots:LoadMenu()
-	--Prodict = ProdictManager.GetInstance()
-	--print(Prodiction.GetUserStatus())
-	
-	
 	self.Menu = MenuElement({type = MENU, id = "I Hate skillshots : Settings", name = Scriptname})
 	
 	--[[Skills list]]
@@ -412,18 +357,14 @@ function IHateSkillshots:LoadMenu()
 		self.Menu.Draw:MenuElement({id = "color"..str[i], name = "Color for "..str[i], color = Draw.Color(0xBF3F3FFF)})
 		self.Menu.Skillshots:MenuElement({id = str[i], name = "Use"..str[i], key = keybindings[i]})
 	end
-	if TYPE_GENERIC then
-		self.Menu:MenuElement({id = "EternalUse", name = "Use eternal prediction", value = true})
-		self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
-	end
-	if _G.Collision then
-		self.Menu:MenuElement({id = "addcollision", name = "Additional collision size", value = 50, min = 0, max = 200, step = 5, identifier = ""})
-	end
 	if (TPred) then
 		self.Menu:MenuElement({id = "TPredDraw", name = "Draw TPred position", value = true})
 		self.Menu:MenuElement({id = "Tminchance", name = "TPred Minimal hitchance", value = 1, min = 0, max = 5, step = 1, identifier = ""})
 	end
-	
+	if (_G.PremiumPrediction:Loaded()) then
+		self.Menu:MenuElement({id = "PremPredDraw", name = "Draw PremPrediction position", value = true})
+		self.Menu:MenuElement({id = "PremPredminchance", name = "PremPr Minimal hitchance", value = 1, min = 1, max = 100, step = 1, identifier = ""})
+	end
 	
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
@@ -561,24 +502,23 @@ function IHateSkillshots:Tick()
 			if temptarget == nil then return end
 			local temppred
 			local collisionc = spell.ignorecol and 0 or spell.minionCollisionWidth
-			
-			if (TPred) then
+			if (_G.PremiumPrediction:Loaded()) then
+				local spellData = {speed = spell.speed, range = spell.range, delay = spell.delay/1000, radius = spell.minionCollisionWidth, collision = spell.ignorecol and {} or {"minion"}, type = spell.circular and "circular" or "linear"}
+				local pred = _G.PremiumPrediction:GetPrediction(myHero, temptarget, spellData)
+				if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value() then
+					local castpos = pred.CastPos
+					if (not spell.circular) then
+						castpos = myHero.pos:Extended(castpos,math.random(100,300))
+					end
+					self:CastSpell(castbuttons[i],castpos)
+				end			
+			elseif (TPred) then
 				local castpos,HitChance, pos = TPred:GetBestCastPosition(temptarget, spell.delay/1000, spell.minionCollisionWidth/2, spell.range,spell.speed, myHero.pos,not spell.ignorecol, spell.circular and "circular" or "line")
 				if (HitChance >= self.Menu.Tminchance:Value()) then
 					if (not spell.circular) then
 						castpos = myHero.pos:Extended(castpos,math.random(100,300))
 					end
 					self:CastSpell(castbuttons[i],castpos)
-				end
-			elseif TYPE_GENERIC and self.Menu.EternalUse:Value() then
-				temppred = EPrediction[i]:GetPrediction(temptarget, myHero.pos)
-				if collisionc > 0 then
-					if EPrediction[i]:mCollision() > 0 then
-						return
-					end
-				end
-				if temppred and temppred.hitChance > self.Menu.minchance:Value() then
-					self:CastSpell(castbuttons[i],temppred.castPos)
 				end
 			else
 				temppred = temptarget:GetPrediction(spell.speed,spell.delay/1000)
@@ -626,7 +566,19 @@ function IHateSkillshots:Draw()
 			end
 		end
 	end
-	
+	if (_G.PremiumPrediction:Loaded() and self.Menu.PremPredDraw:Value()) then
+		for i, spell in pairs(Champs[myHero.charName]) do
+			if self:CanCast(i) then
+				local temptarget = self:GetTarget(spell.range)
+				if temptarget == nil then return end
+				local spellData = {speed = spell.speed, range = spell.range, delay = spell.delay/1000, radius = spell.minionCollisionWidth, collision = spell.ignorecol and {} or {"minion"}, type = spell.circular and "circular" or "linear"}
+				local pred = _G.PremiumPrediction:GetPrediction(myHero, temptarget, spellData)
+				if pred.CastPos then
+					Draw.Circle(pred.CastPos, 60, 3, self.Menu.Draw["color"..str[i]]:Value())
+				end
+			end
+		end
+	end
 end
 function OnLoad()
 	IHateSkillshots()
