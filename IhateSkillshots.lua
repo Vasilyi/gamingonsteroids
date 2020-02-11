@@ -1,5 +1,5 @@
 class "IHateSkillshots"
-local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.5","TRUS","7.22"
+local Scriptname,Version,Author,LVersion = "IHateSkillshots","v1.6","TRUS","10.3"
 if FileExist(COMMON_PATH .. "TPred.lua") then
 	require 'TPred'
 	PrintChat("TPred library loaded")
@@ -13,6 +13,16 @@ end
 
 
 Champs = {
+	["Aphelios"] = {
+		[_Q] = { speed = 1850, delay = 250, range = 1450, minionCollisionWidth = 60,circular = false, ignorecol = true},
+		[_R] = { speed = 1000, delay = 500, range = 1600, minionCollisionWidth = 110, ignorecol = true}
+	},
+	
+	
+	["Senna"] = {
+		[_W] = { speed = 1000, delay = 500, range = 1150, minionCollisionWidth = 60,circular = false, ignorecol = false},
+	},
+	
 	["Aatrox"] = {
 		[_Q] = { speed = 2000, delay = 600, range = 650, minionCollisionWidth = 250,circular = true, ignorecol = true},
 		[_E] = { speed = 1250, delay = 250, range = 1075, minionCollisionWidth = 35, ignorecol = true}
@@ -143,7 +153,10 @@ Champs = {
 		[_W] = {delay = 600, range = 1500, minionCollisionWidth = 60, speed = 3300}
 		
 	},
-	
+	["Kaisa"] = {
+		[_W] = {delay = 500, range = 3000, minionCollisionWidth = 100, speed = 1750}
+		
+	},
 	["Kalista"] = {
 		[_Q] = {delay = 250, range = 1200, minionCollisionWidth = 40, speed = 1700}
 		
@@ -295,7 +308,8 @@ Champs = {
 	},
 	
 	["Varus"] = {
-		[_Q] = { delay = 250, range = 950, minionCollisionWidth = 70, speed = 2000},
+		[_Q] = { delay = 250, range = 650, minionCollisionWidth = 70, speed = 2000},
+		[_E] = { delay = 250, range = 650, minionCollisionWidth = 250, speed = math.maxinteger,ignorecol = true, circular = true}
 	},
 	
 	["Velkoz"] = {
