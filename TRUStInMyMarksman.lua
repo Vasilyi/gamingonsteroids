@@ -1,4 +1,4 @@
-if myHero.charName == "Ashe" or myHero.charName == "Ezreal" or myHero.charName == "Lucian" or myHero.charName == "Caitlyn" or myHero.charName == "Twitch" or myHero.charName == "KogMaw" or myHero.charName == "Kalista" or myHero.charName == "Corki" or myHero.charName == "Xayah" then
+if myHero.charName == "Ashe" or myHero.charName == "Ezreal" or myHero.charName == "Lucian" or myHero.charName == "Caitlyn" or myHero.charName == "Twitch" or myHero.charName == "KogMaw" or myHero.charName == "Kalista" or myHero.charName == "Corki" or myHero.charName == "Xayah" or myHero.charName == "Senna" then
 	local TRUStinMyMarksmanloaded = false
 	require "2DGeometry"
 	castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
@@ -65,7 +65,7 @@ end
 if myHero.charName == "Ashe" then
 	local Ashe = {}
 	Ashe.__index = Ashe
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","10.3"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","8.1"
 	function Ashe:GetBuffs(unit)
 		self.T = {}
 		for i = 0, unit.buffCount do
@@ -352,7 +352,7 @@ end
 if myHero.charName == "Lucian" then
 	local Lucian = {}
 	Lucian.__index = Lucian
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.5","TRUS","10.3"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.5","TRUS","8.6"
 	local passive = true
 	local lastbuff = 0
 	function Lucian:__init()
@@ -668,15 +668,15 @@ if myHero.charName == "Caitlyn" then
 		elseif _G.EOW then
 			orbwalkername = "EOW"	
 			_G.EOW:AddCallback(_G.EOW.AfterAttack, function() 
-								self:GetTrapped()
+				self:GetTrapped()
 			end)
 		elseif _G.GOS then
 			orbwalkername = "Noddy orbwalker"
 			_G.GOS:OnAttackComplete(function() 
-			self:GetTrapped()
+				self:GetTrapped()
 			end)
 		else
-		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
+			PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 		end
 	end
 	
@@ -722,10 +722,10 @@ if myHero.charName == "Caitlyn" then
 		for j, enemy in pairs(lasttrappedtime) do
 			if enemy then 
 				if Game.Timer() < enemy then
-				enemy = nil
+					enemy = nil
 					return
 				end
-
+				
 				if Game.Timer() > enemy and Game.Timer() - 0.1 < enemy then
 					self:GetTrapped()
 				end
@@ -775,7 +775,7 @@ if myHero.charName == "Caitlyn" then
 		end
 		return self.KillableHeroes
 	end
-
+	
 	function Caitlyn:IsValidTarget(unit, range, checkTeam, from)
 		local range = range == nil and math.huge or range
 		if unit == nil or not unit.valid or not unit.visible or unit.dead or not unit.isTargetable or (checkTeam and unit.isAlly) then
@@ -786,20 +786,20 @@ if myHero.charName == "Caitlyn" then
 	end
 	
 	
-		
+	
 	function Caitlyn:GetTrapped()
-	if not self.Menu.AttackMoveHeadshots:Value() then return end
-	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(RRange)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+		if not self.Menu.AttackMoveHeadshots:Value() then return end
+		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(RRange)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
 		for j, enemy in pairs(heroeslist) do
-		for i = 0, enemy.buffCount do
-			local buff = enemy:GetBuff(i);
-			if (not myHero.isChanneling) and  (buff.count > 0 and buff.duration > 0 and buff.name == "caitlynyordletrapinternal" and (lasttrappedtime[enemy.handle] == nil or lasttrappedtime[enemy.handle] < Game.Timer())) then
-				lasttrappedtime[enemy] = buff.expireTime
-				if self:IsValidTarget(enemy,1300) then
-					self:AttackMoveShit(enemy)
+			for i = 0, enemy.buffCount do
+				local buff = enemy:GetBuff(i);
+				if (not myHero.isChanneling) and (buff.count > 0 and buff.duration > 0 and buff.name == "caitlynyordletrapinternal" and (lasttrappedtime[enemy.handle] == nil or lasttrappedtime[enemy.handle] < Game.Timer())) then
+					lasttrappedtime[enemy] = buff.expireTime
+					if self:IsValidTarget(enemy,1300) then
+						self:AttackMoveShit(enemy)
+					end
 				end
 			end
-		end
 		end
 	end
 	
@@ -846,22 +846,22 @@ if myHero.charName == "Caitlyn" then
 	
 	
 	function Caitlyn:AttackMoveShit(enemy)
-			local delay = self.Menu.delay:Value()
-			local ticker = GetTickCount()
-			if castSpell.state == 0 and ticker > castSpell.casting then
-				castSpell.state = 1
-				castSpell.mouse = mousePos
-				castSpell.tick = ticker
-				if ticker - castSpell.tick < Game.Latency() then
-					--block movement
-					local newpos = Vector(enemy.pos.x, enemy.pos.y,enemy.pos.z + 200)
-					Control.SetCursorPos(newpos)
-					Control.KeyDown(0x39)
-					Control.KeyUp(0x39)
-					DelayAction(LeftClick,delay/1000,{castSpell.mouse})
-					castSpell.casting = ticker
-				end
+		local delay = self.Menu.delay:Value()
+		local ticker = GetTickCount()
+		if castSpell.state == 0 and ticker > castSpell.casting then
+			castSpell.state = 1
+			castSpell.mouse = mousePos
+			castSpell.tick = ticker
+			if ticker - castSpell.tick < Game.Latency() then
+				--block movement
+				local newpos = Vector(enemy.pos.x, enemy.pos.y,enemy.pos.z + 200)
+				Control.SetCursorPos(newpos)
+				Control.KeyDown(0x39)
+				Control.KeyUp(0x39)
+				DelayAction(LeftClick,delay/1000,{castSpell.mouse})
+				castSpell.casting = ticker
 			end
+		end
 	end
 	
 	function Caitlyn:CastSpell(spell,pos)
@@ -1397,7 +1397,7 @@ end
 if myHero.charName == "KogMaw" then
 	local KogMaw = {}
 	KogMaw.__index = KogMaw
-	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.4","TRUS","10.3"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.4","TRUS","8.1"
 	
 	if FileExist(COMMON_PATH .. "TPred.lua") then
 		require 'TPred'
@@ -2325,7 +2325,7 @@ end
 
 
 if myHero.charName == "Sivir" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Sivir","v1.0","TRUS","10.3"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Sivir","v1.0","TRUS","8.1"
 	local Sivir = {}
 	Sivir.__index = Sivir
 	
@@ -2394,7 +2394,7 @@ end
 if myHero.charName == "Corki" then
 	local Corki = {}
 	Corki.__index = Corki
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.1","TRUS","10.3"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.1","TRUS","8.1"
 	
 	if FileExist(COMMON_PATH .. "TPred.lua") then
 		require 'TPred'
@@ -2676,7 +2676,7 @@ if myHero.charName == "Corki" then
 end
 
 if myHero.charName == "Xayah" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Xayah","v1.1","TRUS","10.3"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Xayah","v1.1","TRUS","8.1"
 	
 	local Xayah = {}
 	Xayah.__index = Xayah
@@ -2989,5 +2989,210 @@ if myHero.charName == "Xayah" then
 	
 	function OnLoad()
 		Xayah:__init()
+	end
+end
+
+
+if myHero.charName == "Xayah" then
+	local Senna = {}
+	Senna.__index = Senna
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Senna","v1.0","TRUS","10.3"
+	local passive = true
+	local lastbuff = 0
+	function Senna:__init()
+		if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
+		self:LoadSpells()
+		self:LoadMenu()
+		Callback.Add("Tick", function() self:Tick() end)
+		
+		local orbwalkername = ""
+		if _G.SDK then
+			orbwalkername = "IC'S orbwalker"		
+		elseif _G.EOW then
+			orbwalkername = "EOW"	
+		elseif _G.GOS then
+			orbwalkername = "Noddy orbwalker"		
+		else
+			orbwalkername = "Orbwalker not found"
+			
+		end
+		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
+	end
+	
+	--[[Spells]]
+	function Senna:LoadSpells()
+		Q = {Range = 1190, width = nil, Delay = 0.25, Radius = 60, Speed = 2000, Collision = false, aoe = false, type = "linear"}
+	end
+	
+	function Senna:LoadMenu()
+		self.Menu = MenuElement({type = MENU, id = "TRUStinymySenna", name = Scriptname})
+		self.Menu:MenuElement({id = "UseQ", name = "UseQ", value = true})
+		self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
+		self.Menu:MenuElement({id = "UseQHarass", name = "Harass with Q", value = true})
+		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
+		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
+		
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
+	end
+	
+	
+	function Senna:Tick()
+		if myHero.dead or (not _G.SDK and not _G.GOS) then return end
+		local combomodeactive, harassactive, canmove, canattack, currenttarget = CurrentModes()
+		if combomodeactive and self.Menu.UseBOTRK:Value() then
+			UseBotrk()
+		end
+		if harassactive and self.Menu.UseQHarass:Value() and self:CanCast(_Q) then 
+			self:Harass() 
+		end 
+		if combomodeactive and canmove and not canattack then 
+			if self:CanCast(_Q) and self.Menu.UseQ:Value() and currenttarget then
+				self:CastQ(currenttarget)
+				return
+			end		
+			
+		end
+		
+	end
+	
+	function EnableMovement()
+		--unblock movement
+		SetMovement(true)
+	end
+	
+	function ReturnCursor(pos)
+		Control.SetCursorPos(pos)
+		DelayAction(EnableMovement,0.1)
+	end
+	
+	function LeftClick(pos)
+		Control.mouse_event(MOUSEEVENTF_LEFTDOWN)
+		Control.mouse_event(MOUSEEVENTF_LEFTUP)
+		DelayAction(ReturnCursor,0.05,{pos})
+	end
+	
+	function Senna:CastSpell(spell,pos)
+		local customcast = self.Menu.CustomSpellCast:Value()
+		if not customcast then
+			Control.CastSpell(spell, pos)
+			return
+		else
+			local delay = self.Menu.delay:Value()
+			local ticker = GetTickCount()
+			if castSpell.state == 0 and ticker > castSpell.casting then
+				castSpell.state = 1
+				castSpell.mouse = mousePos
+				castSpell.tick = ticker
+				if ticker - castSpell.tick < Game.Latency() then
+					--block movement
+					SetMovement(false)
+					Control.SetCursorPos(pos)
+					Control.KeyDown(spell)
+					Control.KeyUp(spell)
+					DelayAction(LeftClick,delay/1000,{castSpell.mouse})
+					castSpell.casting = ticker + 500
+				end
+			end
+		end
+	end
+	
+	
+	--[[CastQ]]
+	function Senna:CastQ(target)
+		if target and self:CanCast(_Q) then
+			self:CastSpell(HK_Q, target.pos)
+		end
+	end
+	
+	function Senna:IsReady(spellSlot)
+		return myHero:GetSpellData(spellSlot).currentCd == 0 and myHero:GetSpellData(spellSlot).level > 0
+	end
+	
+	function Senna:CheckMana(spellSlot)
+		return myHero:GetSpellData(spellSlot).mana < myHero.mana
+	end
+	
+	function Senna:CanCast(spellSlot)
+		return self:IsReady(spellSlot) and self:CheckMana(spellSlot)
+	end
+	
+	
+	
+	function Senna:Harass()
+		local temptarget = self:FarQTarget()
+		if temptarget then
+			self:CastSpell(HK_Q,temptarget.pos)
+		end
+	end
+	
+	
+	
+	
+	function Senna:FarQTarget()
+		local qtarget = (_G.SDK and _G.SDK.TargetSelector:GetTarget(1300, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(1300,"AD"))
+		if qtarget then
+			
+			if myHero.pos:DistanceTo(qtarget.pos)<myHero.range then
+				return qtarget
+			end
+			
+			
+			local qdelay = 0.4 - myHero.levelData.lvl*0.01
+			local pos = qtarget:GetPrediction(math.huge,qdelay)
+			if not pos then return false end 
+			local minionlist = {}
+			for i = 1, Game.MinionCount() do
+				local minion = Game.Minion(i)
+				if minion.valid and minion.pos:DistanceTo(myHero.pos) < myHero.range then
+					table.insert(minionlist, minion)
+				end
+			end
+			
+			for i = 1, Game.HeroCount() do
+				local minion = Game.Hero(i)
+				if minion.valid and minion.pos:DistanceTo(myHero.pos) < myHero.range then
+					table.insert(minionlist, minion)
+				end
+			end
+			V = Vector(pos) - Vector(myHero.pos)
+			
+			Vn = V:Normalized()
+			Distance = myHero.pos:DistanceTo(pos)
+			tx, ty, tz = Vn:Unpack()
+			TopX = pos.x - (tx * Distance)
+			TopY = pos.y - (ty * Distance)
+			TopZ = pos.z - (tz * Distance)
+			
+			Vr = V:Perpendicular():Normalized()
+			Radius = qtarget.boundingRadius or 65
+			tx, ty, tz = Vr:Unpack()
+			
+			LeftX = pos.x + (tx * Radius)
+			LeftY = pos.y + (ty * Radius)
+			LeftZ = pos.z + (tz * Radius)
+			RightX = pos.x - (tx * Radius)
+			RightY = pos.y - (ty * Radius)
+			RightZ = pos.z - (tz * Radius)
+			
+			Left = Point(LeftX, LeftY, LeftZ)
+			Right = Point(RightX, RightY, RightZ)
+			Top = Point(TopX, TopY, TopZ)
+			Poly = Polygon(Left, Right, Top)
+			
+			for i, minion in pairs(minionlist) do
+				toPoint = Point(minion.pos.x, minion.pos.y,minion.pos.z)
+				if Poly:__contains(toPoint) then
+					return minion
+				end
+			end
+		end
+		return false 
+	end
+	
+	
+	function OnLoad()
+		Senna:__init()
 	end
 end
