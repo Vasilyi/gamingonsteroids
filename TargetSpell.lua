@@ -1,17 +1,20 @@
 class "TargetSpell"
-local Scriptname,Version,Author,LVersion = "Simple TargetSpell","v1.0","TRUS","7.22"
+local Scriptname,Version,Author,LVersion = "Simple TargetSpell","v1.1","TRUS","10.3"
 
 function TargetSpell:__init()
 	Champs = {
 		["Alistar"] = { slot = _W, range = myHero:GetSpellData(_W).range},
-		["Anivia"] = { slot = _E, range = myHero:GetSpellData(_E).range},
-		["Annie"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
-		["Akali"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
-		["Brand"] = { slot = _E, range = myHero:GetSpellData(_E).range},
-		["Fiddlesticks"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
-		["Gangplank"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
+		["Anivia"] = { slot = _E, range = 650},
+		["Annie"] = { slot = _Q, range = 625},
+		["Akali"] = { slot = _Q, range = 600},
+		["Brand"] = { slot = _E, range = 625},
+		["Fizz"] = { slot = _Q, range = 550},
+		["Fiddlesticks"] = { slot = _Q, range = 575},
+		["Gangplank"] = { slot = _Q, range = 625},
+		["Jax"] = { slot = _Q, range = 700},
 		["Janna"] = { slot = _W, range = myHero:GetSpellData(_W).range},
-		["Kayle"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
+		["Kayle"] = { slot = _Q, range = 650},
+		["Katarina"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
 		["Kassadin"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
 		["Khazix"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
 		["LeBlanc"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
@@ -20,13 +23,15 @@ function TargetSpell:__init()
 		["Nunu"] = { slot = _E, range = myHero:GetSpellData(_E).range},
 		["Olaf"] = { slot = _E, range = myHero:GetSpellData(_E).range},
 		["Pantheon"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
+		["Quinn"] = { slot = _E, range = myHero:GetSpellData(_E).range},
 		["Shaco"] = { slot = _E, range = myHero:GetSpellData(_E).range},
+		["Singed"] = { slot = _E, range = myHero:GetSpellData(_E).range},
 		["Swain"] = { slot = _E, range = myHero:GetSpellData(_E).range},
 		["Talon"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
 		["Teemo"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
 		["Vladimir"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
 		["Warwick"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
-		["Yasuo"] = { slot = _Q, range = myHero:GetSpellData(_Q).range},
+		["Yasuo"] = { slot = _Q, range = 475},
 	}
 	if Champs[myHero.charName] == nil then
 		PrintChat "Hero didnt have TargetSpells, TargetSpell unloaded"
@@ -95,8 +100,10 @@ function TargetSpell:ValidTarget(unit,range,from)
 end
 
 function TargetSpell:GetTarget(range)
+	local range = range + myHero.boundingRadius
 	local selected
 	for i, _gameHero in ipairs(self:GetEnemyHeroes()) do
+		local range = range + _gameHero.boundingRadius
 		local distance = GetDistanceSqr(_gameHero.pos)
 		if self:ValidTarget(_gameHero,range) and (not selected or distance < value) then
 			selected = _gameHero
