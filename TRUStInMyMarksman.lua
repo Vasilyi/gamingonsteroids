@@ -642,14 +642,16 @@ end
 if myHero.charName == "Caitlyn" then
 	local Caitlyn = {}
 	Caitlyn.__index = Caitlyn
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.6","TRUS","8.1"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.7","TRUS","10.3"
 	require "DamageLib"
 	local qtarget
 	if FileExist(COMMON_PATH .. "TPred.lua") then
 		require 'TPred'
 		PrintChat("TPred library loaded")
 	end
-	
+	local lastcastspell = {}
+	local lasttrappedtime = {}
+	local Alreadycheckedbuff = {}
 	local LastW
 	function Caitlyn:__init()
 		if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
@@ -659,16 +661,23 @@ if myHero.charName == "Caitlyn" then
 		Callback.Add("Draw", function() self:Draw() end)
 		local orbwalkername = ""
 		if _G.SDK then
-			orbwalkername = "IC'S orbwalker"
+			orbwalkername = "IC'S orbwalker"		
+			_G.SDK.Orbwalker:OnPostAttack(function(arg) 		
+				self:GetTrapped()
+			end)
 		elseif _G.EOW then
 			orbwalkername = "EOW"	
+			_G.EOW:AddCallback(_G.EOW.AfterAttack, function() 
+								self:GetTrapped()
+			end)
 		elseif _G.GOS then
 			orbwalkername = "Noddy orbwalker"
+			_G.GOS:OnAttackComplete(function() 
+			self:GetTrapped()
+			end)
 		else
-			orbwalkername = "Orbwalker not found"
-			
-		end
 		PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
+		end
 	end
 	
 	--[[Spells]]
@@ -682,6 +691,7 @@ if myHero.charName == "Caitlyn" then
 		self.Menu:MenuElement({id = "UseUlti", name = "Use R", tooltip = "On killable target which is on screen", key = string.byte("R")})
 		self.Menu:MenuElement({id = "UseEQ", name = "UseEQ", key = string.byte("X")})
 		self.Menu:MenuElement({id = "autoW", name = "Use W on cc", value = true})
+		self.Menu:MenuElement({id = "AttackMoveHeadshots", name = "Attack move headshots", value = true})
 		self.Menu:MenuElement({id = "UseBOTRK", name = "Use botrk", value = true})
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", value = true})
 		self.Menu:MenuElement({id = "DrawR", name = "Draw Killable with R", value = true})
@@ -703,13 +713,37 @@ if myHero.charName == "Caitlyn" then
 		if combomodeactive and self.Menu.UseBOTRK:Value() then
 			UseBotrk()
 		end
+		if (myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name == "CaitlynHeadshotMissile" and lasttrappedtime[myHero.activeSpell.target]) then
+			lasttrappedtime[myHero.activeSpell.target] = nil
+			PrintChat("attack done: "..myHero.activeSpell.target)
+			self:GetTrapped()
+		end
 		
+		for j, enemy in pairs(lasttrappedtime) do
+			if enemy then 
+			if Game.Timer() < enemy then
+			enemy = nil
+				return
+			end
+
+			if Game.Timer() > enemy and Game.Timer() - 0.1 < enemy then
+				self:GetTrapped()
+				PrintChat(enemy .. " : " .. Game.Timer())
+				PrintChat("Rechecking expiring trap")
+			end
+			end
+		end
+		
+		if (myHero.attackData and myHero.attackData.target and myHero.attackData.state ~= 1 and lasttrappedtime[myHero.attackData.target]) then
+			--PrintChat("attack dropped")
+		end
 		local useEQ = self.Menu.UseEQ:Value()
-		
 		if self.Menu.UseUlti:Value() and self:CanCast(_R) then
 			self:UseR()
 		end
-		
+		if not currenttarget then 
+			self:GetTrapped()
+		end
 		if self:CanCast(_Q) and self:CanCast(_E) and useEQ and currenttarget then
 			self:CastE(currenttarget)
 		end
@@ -742,6 +776,33 @@ if myHero.charName == "Caitlyn" then
 			end
 		end
 		return self.KillableHeroes
+	end
+
+	function Caitlyn:IsValidTarget(unit, range, checkTeam, from)
+		local range = range == nil and math.huge or range
+		if unit == nil or not unit.valid or not unit.visible or unit.dead or not unit.isTargetable or (checkTeam and unit.isAlly) then
+			return false
+		end
+		if myHero.pos:DistanceTo(unit.pos)>range then return false end 
+		return true 
+	end
+	
+	
+		
+	function Caitlyn:GetTrapped()
+	if not self.Menu.AttackMoveHeadshots:Value() then return end
+	local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(RRange)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
+		for j, enemy in pairs(heroeslist) do
+		for i = 0, enemy.buffCount do
+			local buff = enemy:GetBuff(i);
+			if (not myHero.isChanneling) and  (buff.count > 0 and buff.duration > 0 and buff.name == "caitlynyordletrapinternal" and (lasttrappedtime[enemy.handle] == nil or lasttrappedtime[enemy.handle] < Game.Timer())) then
+				lasttrappedtime[enemy] = buff.expireTime
+				if self:IsValidTarget(enemy,1300) then
+					self:AttackMoveShit(enemy)
+				end
+			end
+		end
+		end
 	end
 	
 	function Caitlyn:UseR()
@@ -785,6 +846,26 @@ if myHero.charName == "Caitlyn" then
 		end
 	end
 	
+	
+	function Caitlyn:AttackMoveShit(enemy)
+			local delay = self.Menu.delay:Value()
+			local ticker = GetTickCount()
+			if castSpell.state == 0 and ticker > castSpell.casting then
+				castSpell.state = 1
+				castSpell.mouse = mousePos
+				castSpell.tick = ticker
+				if ticker - castSpell.tick < Game.Latency() then
+					--block movement
+					local newpos = Vector(enemy.pos.x, enemy.pos.y,enemy.pos.z + 200)
+					Control.SetCursorPos(newpos)
+					Control.KeyDown(0x39)
+					Control.KeyUp(0x39)
+					DelayAction(LeftClick,delay/1000,{castSpell.mouse})
+					castSpell.casting = ticker
+				end
+			end
+	end
+	
 	function Caitlyn:CastSpell(spell,pos)
 		local customcast = self.Menu.CustomSpellCast:Value()
 		if not customcast then
@@ -799,6 +880,7 @@ if myHero.charName == "Caitlyn" then
 				castSpell.tick = ticker
 				if ticker - castSpell.tick < Game.Latency() then
 					--block movement
+					SetMovement(false)
 					Control.SetCursorPos(pos)
 					Control.KeyDown(spell)
 					Control.KeyUp(spell)
@@ -1577,7 +1659,7 @@ if myHero.charName == "KogMaw" then
 end
 
 if myHero.charName == "Kalista" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.14","TRUS","8.5"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.2","TRUS","10.3"
 	local Kalista = {}
 	Kalista.__index = Kalista
 	require "DamageLib"
@@ -1790,7 +1872,7 @@ if myHero.charName == "Kalista" then
 			if harassactive and self.Menu.Harass.harassUseELasthit:Value() then
 				self:UseEOnLasthit()
 			end
-			if self.Menu.AutLastHit.Active:Value() or self.Menu.keyActive.Active:Value() or self.Menu.Draw.DrawLastHit:Value() then
+			if self.Menu.AutLastHit.Active:Value() or self.Menu.AutLastHit.keyActive:Value() or self.Menu.Draw.DrawLastHit:Value() then
 				self:LastHitCreeps()
 			end
 		end
@@ -1979,7 +2061,7 @@ if myHero.charName == "Kalista" then
 			if self:GetSpears(minion) > 0 then 
 				local EDamage = getdmg("E",minion,myHero)
 				local minionName = minion.charName
-				EDamage = EDamage*((minion.charName == "SRU_RiftHerald" and 0.65) or (self:HasBuff(myHero,"barontarget") and 0.5) or 1)
+				EDamage = EDamage*(((minion.charName == "SRU_RiftHerald" or minion.charName == "SRU_Baron" or string.find(minion.charName, "ragon")) and 0.45) or (self:HasBuff(myHero,"barontarget") and 0.5) or 1)
 				if EDamage > minion.health then
 					local minionName = minion.charName
 					self:DrawSmiteableMinion(SmiteTable[minionName], minion)
