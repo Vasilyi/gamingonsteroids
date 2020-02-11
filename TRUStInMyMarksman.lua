@@ -65,7 +65,7 @@ end
 if myHero.charName == "Ashe" then
 	local Ashe = {}
 	Ashe.__index = Ashe
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","8.1"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","10.3"
 	function Ashe:GetBuffs(unit)
 		self.T = {}
 		for i = 0, unit.buffCount do
@@ -352,7 +352,7 @@ end
 if myHero.charName == "Lucian" then
 	local Lucian = {}
 	Lucian.__index = Lucian
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.5","TRUS","8.6"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.5","TRUS","10.3"
 	local passive = true
 	local lastbuff = 0
 	function Lucian:__init()
@@ -1397,7 +1397,7 @@ end
 if myHero.charName == "KogMaw" then
 	local KogMaw = {}
 	KogMaw.__index = KogMaw
-	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.4","TRUS","8.1"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.4","TRUS","10.3"
 	
 	if FileExist(COMMON_PATH .. "TPred.lua") then
 		require 'TPred'
@@ -2325,7 +2325,7 @@ end
 
 
 if myHero.charName == "Sivir" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Sivir","v1.0","TRUS","8.1"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Sivir","v1.0","TRUS","10.3"
 	local Sivir = {}
 	Sivir.__index = Sivir
 	
@@ -2394,7 +2394,7 @@ end
 if myHero.charName == "Corki" then
 	local Corki = {}
 	Corki.__index = Corki
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.1","TRUS","8.1"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.1","TRUS","10.3"
 	
 	if FileExist(COMMON_PATH .. "TPred.lua") then
 		require 'TPred'
@@ -2676,7 +2676,7 @@ if myHero.charName == "Corki" then
 end
 
 if myHero.charName == "Xayah" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Xayah","v1.1","TRUS","8.1"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Xayah","v1.1","TRUS","10.3"
 	
 	local Xayah = {}
 	Xayah.__index = Xayah
