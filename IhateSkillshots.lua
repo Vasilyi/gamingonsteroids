@@ -499,7 +499,7 @@ function IHateSkillshots:Tick()
 			if (_G.PremiumPrediction:Loaded()) then
 				local spellData = {speed = spell.speed, range = spell.range, delay = spell.delay/1000, radius = spell.minionCollisionWidth, collision = spell.ignorecol and {} or {"minion"}, type = spell.circular and "circular" or "linear"}
 				local pred = _G.PremiumPrediction:GetPrediction(myHero, temptarget, spellData)
-				if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value() then
+				if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
 					local castpos = pred.CastPos
 					if (not spell.circular) then
 						castpos = myHero.pos:Extended(castpos,math.random(100,300))
