@@ -55,7 +55,7 @@ Champs = {
 	
 	["Caitlyn"] = {
 		[_Q] = {delay = 625, range = 1300, minionCollisionWidth = 90, speed = 2200, ignorecol = true},
-		[_W] = { delay = 600, range = 800, minionCollisionWidth = 80, ignorecol = true,circular = true},
+		[_W] = {delay = 600, range = 800, minionCollisionWidth = 80, ignorecol = true,circular = true},
 		[_E] = {delay = 125, range = 1000, minionCollisionWidth = 70, speed = 1600}
 	},
 	
@@ -163,7 +163,7 @@ Champs = {
 	
 	
 	["Karthus"] = {
-		[_Q] = {delay = 625, range = 875, minionCollisionWidth = 160, speed = math.maxinteger,circular = true,ignorecol = true}
+		[_Q] = {delay = 625, range = 875, minionCollisionWidth = 160, speed = math.huge,circular = true,ignorecol = true}
 	},
 	["Kennen"] = {
 		[_Q] = {delay = 125, range = 1050, minionCollisionWidth = 50, speed = 1700}
@@ -175,7 +175,7 @@ Champs = {
 	["KogMaw"] = {
 		[_Q] = {delay = 250, range = 1200, minionCollisionWidth = 70, speed = 1650},
 		[_E] = {delay = 250, range = 1360, minionCollisionWidth = 120, speed = 1400, ignorecol = true},
-		[_R] = {delay = 1200, range = 1800, minionCollisionWidth = 225, speed = math.maxinteger, ignorecol = true}
+		[_R] = {delay = 1200, range = 1800, minionCollisionWidth = 225, speed = math.huge, ignorecol = true}
 	},
 	
 	["Leblanc"] = {
@@ -497,13 +497,10 @@ function IHateSkillshots:Tick()
 			local temppred
 			local collisionc = spell.ignorecol and 0 or spell.minionCollisionWidth
 			if (_G.PremiumPrediction:Loaded()) then
-				local spellData = {speed = spell.speed, range = spell.range, delay = spell.delay/1000, radius = spell.minionCollisionWidth, collision = spell.ignorecol and {} or {"minion"}, type = spell.circular and "circular" or "linear"}
+				local spellData = {speed = spell.speed or math.huge, range = spell.range, delay = spell.delay/1000, radius = spell.minionCollisionWidth, collision = spell.ignorecol and {} or {"minion"}, type = spell.circular and "circular" or "linear"}
 				local pred = _G.PremiumPrediction:GetPrediction(myHero, temptarget, spellData)
 				if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
 					local castpos = pred.CastPos
-					if (not spell.circular) then
-						castpos = myHero.pos:Extended(castpos,math.random(100,300))
-					end
 					self:CastSpell(castbuttons[i],castpos)
 				end			
 			else
@@ -543,7 +540,7 @@ function IHateSkillshots:Draw()
 			if self:CanCast(i) then
 				local temptarget = self:GetTarget(spell.range)
 				if temptarget == nil then return end
-				local spellData = {speed = spell.speed, range = spell.range, delay = spell.delay/1000, radius = spell.minionCollisionWidth, collision = spell.ignorecol and {} or {"minion"}, type = spell.circular and "circular" or "linear"}
+				local spellData = {speed = spell.speed or math.huge, range = spell.range, delay = spell.delay/1000, radius = spell.minionCollisionWidth, collision = spell.ignorecol and {} or {"minion"}, type = spell.circular and "circular" or "linear"}
 				local pred = _G.PremiumPrediction:GetPrediction(myHero, temptarget, spellData)
 				if pred.CastPos then
 					Draw.Circle(pred.CastPos, 60, 3, self.Menu.Draw["color"..str[i]]:Value())
