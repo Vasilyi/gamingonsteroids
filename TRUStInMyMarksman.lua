@@ -65,7 +65,7 @@ end
 if myHero.charName == "Ashe" then
 	local Ashe = {}
 	Ashe.__index = Ashe
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.5","TRUS","10.3"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.7","TRUS","10.3"
 	function Ashe:GetBuffs(unit)
 		self.T = {}
 		for i = 0, unit.buffCount do
@@ -237,7 +237,7 @@ if myHero.charName == "Ashe" then
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 		
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
-		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. "" .. (_G.PremiumPrediction:Loaded() and " PremiumPr" or "")})
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 	end
 	
@@ -324,8 +324,7 @@ if myHero.charName == "Ashe" then
 		if unit then
 			local temppos = GetConeAOECastPosition(unit, W.Delay, 45, W.Range, W.Speed)
 			if temppos then 
-				local newpos = myHero.pos:Extended(temppos,math.random(100,300))
-				return newpos
+				return temppos
 			end
 		end
 		
@@ -352,7 +351,7 @@ end
 if myHero.charName == "Lucian" then
 	local Lucian = {}
 	Lucian.__index = Lucian
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.5","TRUS","10.3"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.6","TRUS","10.3"
 	local passive = true
 	local lastbuff = 0
 	function Lucian:__init()
@@ -428,7 +427,7 @@ if myHero.charName == "Lucian" then
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 		
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
-		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. "" .. (_G.PremiumPrediction:Loaded() and " PremiumPr" or "")})
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 	end
 	
@@ -584,7 +583,14 @@ if myHero.charName == "Lucian" then
 			
 			
 			local qdelay = 0.4 - myHero.levelData.lvl*0.01
-			local pos = qtarget:GetPrediction(math.huge,qdelay)
+			local pos
+			
+			if (_G.PremiumPrediction:Loaded()) then
+				pos = _G.PremiumPrediction:GetPositionAfterTime(qtarget, qdelay)
+			else 
+				pos = qtarget:GetPrediction(math.huge,qdelay)
+			end
+			
 			if not pos then return false end 
 			local minionlist = {}
 			if _G.SDK then
@@ -642,12 +648,12 @@ end
 if myHero.charName == "Caitlyn" then
 	local Caitlyn = {}
 	Caitlyn.__index = Caitlyn
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.7","TRUS","10.3"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Caitlyn","v1.8","TRUS","10.3"
 	require "DamageLib"
 	local qtarget
-	if FileExist(COMMON_PATH .. "TPred.lua") then
-		require 'TPred'
-		PrintChat("TPred library loaded")
+	if FileExist(COMMON_PATH .. "PremiumPrediction.lua") then
+		require 'PremiumPrediction'
+		PrintChat("PremiumPrediction library loaded")
 	end
 	local lastcastspell = {}
 	local lasttrappedtime = {}
@@ -696,14 +702,15 @@ if myHero.charName == "Caitlyn" then
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", value = true})
 		self.Menu:MenuElement({id = "DrawR", name = "Draw Killable with R", value = true})
 		self.Menu:MenuElement({id = "DrawColor", name = "Color for Killable circle", color = Draw.Color(0xBF3F3FFF)})
-		if (TPred) then
-			self.Menu:MenuElement({id = "Tminchance", name = "Minimal hitchance TPred", value = 1, min = 0, max = 5, step = 1, identifier = ""})
+		if (_G.PremiumPrediction:Loaded()) then
+			
+			self.Menu:MenuElement({id = "PremPredminchance", name = "PremPr Minimal hitchance", value = 1, min = 1, max = 100, step = 1, identifier = ""})
 		end
 		
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 		
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
-		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. "" .. (_G.PremiumPrediction:Loaded() and " PremiumPr" or "")})
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 	end
 	
@@ -742,7 +749,7 @@ if myHero.charName == "Caitlyn" then
 		if not currenttarget then 
 			self:GetTrapped()
 		end
-		if self:CanCast(_Q) and self:CanCast(_E) and useEQ and currenttarget then
+		if self:CanCast(_Q) and self:CanCast(_E) and useEQ then
 			self:CastE(currenttarget)
 		end
 		
@@ -929,19 +936,19 @@ if myHero.charName == "Caitlyn" then
 	--[[CastEQ]]
 	function Caitlyn:CastE(target)
 		if not _G.SDK and not _G.GOS then return end
+		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(E.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(E.Range,"AD"))
 		local castpos
-		if (TPred) then
-			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, E.Delay, E.Width, E.Range,E.Speed,myHero.pos,true, "line")
-			if (castpos and HitChance >= self.Menu.Tminchance:Value()) then
-				local newpos = myHero.pos:Extended(castpos,math.random(100,300))
-				self:CastCombo(newpos)
-				qtarget = newpos
+		if (_G.PremiumPrediction:Loaded() and target) then
+			local spellData = {speed = E.Speed, range = E.Range, delay = E.Delay, radius = E.Width, collision = {"minion"}, type = "linear"}
+			local pred = _G.PremiumPrediction:GetPrediction(myHero, target, spellData)
+			if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
+				self:CastCombo(pred.CastPos)
+				qtarget = pred.CastPos
 			end
-		elseif target:GetCollision(E.Radius,E.Speed,E.Delay) == 0 then
+		elseif target and target:GetCollision(E.Radius,E.Speed,E.Delay) == 0 then
 			castPos = target:GetPrediction(E.Speed,E.Delay)
-			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-			self:CastCombo(newpos)
-			qtarget = newpos
+			self:CastCombo(castPos)
+			qtarget = castPos
 		end
 	end
 	
@@ -966,15 +973,12 @@ end
 if myHero.charName == "Ezreal" then
 	local Ezreal = {}
 	Ezreal.__index = Ezreal
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.10","TRUS","10.3"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Ezreal","v1.11","TRUS","10.3"
 	require "DamageLib"
 	
-	if FileExist(COMMON_PATH .. "TPred.lua") then
-		require 'TPred'
-		PrintChat("TPred library loaded")
-	elseif FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
-		require 'Eternal Prediction'
-		PrintChat("Eternal Prediction library loaded")
+	if FileExist(COMMON_PATH .. "PremiumPrediction.lua") then
+		require 'PremiumPrediction'
+		PrintChat("PremiumPrediction library loaded")
 	end
 	local EPrediction = {}
 	
@@ -1016,15 +1020,16 @@ if myHero.charName == "Ezreal" then
 			self.Menu:MenuElement({id = "EternalUse", name = "Use eternal prediction", value = true})
 			self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance EPred", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
 		end
-		if (TPred) then
-			self.Menu:MenuElement({id = "Tminchance", name = "Minimal hitchance TPred", value = 1, min = 0, max = 5, step = 1, identifier = ""})
+		if (_G.PremiumPrediction:Loaded()) then
+			
+			self.Menu:MenuElement({id = "PremPredminchance", name = "PremPr Minimal hitchance", value = 1, min = 1, max = 100, step = 1, identifier = ""})
 		end
 		
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 		
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
-		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. "" .. (_G.PremiumPrediction:Loaded() and " PremiumPr" or "")})
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 	end
 	
@@ -1096,22 +1101,15 @@ if myHero.charName == "Ezreal" then
 		if (myHero.activeSpell and myHero.activeSpell.valid and myHero.activeSpell.name == "EzrealArcaneShift") then return end 
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
 		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and self.Menu.UseQ:Value() then
-			if (TPred) then
-				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width/2, Q.Range,Q.Speed,myHero.pos,true, "line")
-				if (castpos and HitChance >= self.Menu.Tminchance:Value()) then
-					local newpos = myHero.pos:Extended(castpos,math.random(100,300))
-					self:CastSpell(HK_Q, newpos)
-				end
-			elseif (TYPE_GENERIC and self.Menu.EternalUse:Value()) then
-				castPos = EPrediction[_Q]:GetPrediction(target, myHero.pos)
-				if castPos.hitChance >= self.Menu.minchance:Value() and EPrediction[_Q]:mCollision() == 0 then
-					local newpos = myHero.pos:Extended(castPos.castPos,math.random(100,300))
-					self:CastSpell(HK_Q, newpos)
+			if (_G.PremiumPrediction:Loaded()) then
+				local spellData = {speed = Q.Speed, range = Q.Range, delay = Q.Delay, radius = Q.Width, collision = {"minion"}, type = "linear"}
+				local pred = _G.PremiumPrediction:GetPrediction(myHero, target, spellData)
+				if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
+					self:CastSpell(HK_Q, pred.CastPos)
 				end
 			elseif target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0 then
 				castPos = target:GetPrediction(Q.Speed,Q.Delay)
-				local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-				self:CastSpell(HK_Q, newpos)
+				self:CastSpell(HK_Q, castPos)
 			end
 			
 		end
@@ -1139,8 +1137,7 @@ if myHero.charName == "Ezreal" then
 				if _G.SDK.HealthPrediction:GetPrediction(minion, timetohit + 0.3)<0 and _G.SDK.HealthPrediction:GetPrediction(minion, timetohit)< QDamage and _G.SDK.HealthPrediction:GetPrediction(minion, timetohit)>0 then
 					if minion and self:CanCast(_Q) and minion:GetCollision(Q.Radius,Q.Speed,Q.Delay) == 1 then
 						local castPos = minion:GetPrediction(Q.Speed,Q.Delay)
-						local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-						self:CastSpell(HK_Q, newpos)
+						self:CastSpell(HK_Q, castPos)
 					end
 				end
 			end
@@ -1166,7 +1163,7 @@ if myHero.charName == "Ezreal" then
 end
 
 if myHero.charName == "Twitch" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.7","TRUS","8.8"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Twitch","v1.8","TRUS","8.8"
 	local Twitch = {}
 	Twitch.__index = Twitch
 	require "DamageLib"
@@ -1216,7 +1213,7 @@ if myHero.charName == "Twitch" then
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 		
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
-		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. "" .. (_G.PremiumPrediction:Loaded() and " PremiumPr" or "")})
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 	end
 	local lastcasttime = 0
@@ -1397,10 +1394,11 @@ end
 if myHero.charName == "KogMaw" then
 	local KogMaw = {}
 	KogMaw.__index = KogMaw
-	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.4","TRUS","10.3"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my KogMaw","v1.5","TRUS","10.3"
 	
-	if FileExist(COMMON_PATH .. "TPred.lua") then
-		require 'TPred'
+	if FileExist(COMMON_PATH .. "PremiumPrediction.lua") then
+		require 'PremiumPrediction'
+		PrintChat("PremiumPrediction library loaded")
 	end
 	
 	function KogMaw:__init()
@@ -1448,7 +1446,7 @@ if myHero.charName == "KogMaw" then
 	function KogMaw:LoadSpells()
 		Q = {Range = 1175, Width = 70, Delay = 0.25, Speed = 1650}
 		E = {Range = 1280, Width = 120, Delay = 0.5, Speed = 1350}
-		R = {Range = 1200, Delay = 1.2, Width = 120, Speed = math.huge}
+		R = {Range = 1200, Delay = 1.2, Width = 120, Speed = 99999999}
 	end
 	
 	function KogMaw:LoadMenu()
@@ -1470,15 +1468,16 @@ if myHero.charName == "KogMaw" then
 		self.Menu.Harass:MenuElement({id = "harassUseR", name = "Use R", value = true})
 		self.Menu.Harass:MenuElement({id = "HarassMaxStacks", name = "Max R stacks: ", value = 3, min = 0, max = 10})
 		
-		if (TPred) then
-			self.Menu:MenuElement({id = "Tminchance", name = "Minimal hitchance TPred", value = 1, min = 0, max = 5, step = 1, identifier = ""})
+		if (_G.PremiumPrediction:Loaded()) then
+			
+			self.Menu:MenuElement({id = "PremPredminchance", name = "PremPr Minimal hitchance", value = 1, min = 1, max = 100, step = 1, identifier = ""})
 		end
 		
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 		
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
-		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. "" .. (_G.PremiumPrediction:Loaded() and " PremiumPr" or "")})
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 	end
 	
@@ -1577,16 +1576,15 @@ if myHero.charName == "KogMaw" then
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AP"))
 		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and ((combo and self.Menu.Combo.comboUseQ:Value()) or (combo == false and self.Menu.Harass.harassUseQ:Value())) then
 			
-			if (TPred) then
-				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,true)
-				if (castpos and HitChance >= self.Menu.Tminchance:Value()) then
-					local newpos = myHero.pos:Extended(castpos,math.random(100,300))
-					self:CastSpell(HK_Q, newpos)
+			if (_G.PremiumPrediction:Loaded()) then
+				local spellData = {speed = Q.Speed, range = Q.Range, delay = Q.Delay, radius = Q.Width, collision = {"minion"}, type = "linear"}
+				local pred = _G.PremiumPrediction:GetPrediction(myHero, target, spellData)
+				if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
+					self:CastSpell(HK_Q, pred.CastPos)
 				end
 			elseif (target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0) then
 				local castPos = target:GetPrediction(Q.Speed,Q.Delay)
-				local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-				self:CastSpell(HK_Q, newpos)
+				self:CastSpell(HK_Q, castPos)
 			end
 		end
 	end
@@ -1598,17 +1596,15 @@ if myHero.charName == "KogMaw" then
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(E.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(E.Range,"AP"))
 		if target and target.type == "AIHeroClient" and self:CanCast(_E) and ((combo and self.Menu.Combo.comboUseE:Value()) or (combo == false and self.Menu.Harass.harassUseE:Value())) then
 			
-			if (TPred) then
-				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, E.Delay, E.Width, E.Range,E.Speed,myHero.pos,false)
-				if (castpos and HitChance >= self.Menu.Tminchance:Value()) then
-					local newpos = myHero.pos:Extended(castpos,math.random(100,300))
-					self:CastSpell(HK_E, newpos)
+			if (_G.PremiumPrediction:Loaded()) then
+				local spellData = {speed = E.Speed, range = E.Range, delay = E.Delay, radius = E.Width, collision = {}, type = "linear"}
+				local pred = _G.PremiumPrediction:GetPrediction(myHero, target, spellData)
+				if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
+					self:CastSpell(HK_E, pred.CastPos)
 				end
 			else
-				
 				local castPos = target:GetPrediction(E.Speed,E.Delay)
-				local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-				self:CastSpell(HK_E, newpos)
+				self:CastSpell(HK_E, castPos)
 			end
 		end
 	end
@@ -1623,10 +1619,11 @@ if myHero.charName == "KogMaw" then
 		and ((combo and self.Menu.Combo.comboUseR:Value()) or (combo == false and self.Menu.Harass.harassUseR:Value())) 
 		and ((combo == false and currentultstacks < self.Menu.Harass.HarassMaxStacks:Value()) or (currentultstacks < self.Menu.Combo.MaxStacks:Value()))
 		then
-			if (TPred) then
-				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, R.Delay, R.Width, RRange,R.Speed,myHero.pos,false, "circular")
-				if castpos and castpos:To2D().onScreen and (HitChance >= self.Menu.Tminchance:Value()) then
-					self:CastSpell(HK_R, castpos)
+			if (_G.PremiumPrediction:Loaded()) then
+				local spellData = {speed = R.Speed, range = R.Range, delay = R.Delay, radius = R.Width, collision = {}, type = "circular"}
+				local pred = _G.PremiumPrediction:GetPrediction(myHero, target, spellData)
+				if pred.CastPos and pred.CastPos:To2D().onScreen and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
+					self:CastSpell(HK_R, pred.CastPos)
 				end
 			else
 				local castPos = target:GetPrediction(R.Speed,R.Delay)
@@ -1657,7 +1654,7 @@ if myHero.charName == "KogMaw" then
 end
 
 if myHero.charName == "Kalista" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.2","TRUS","10.3"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Kalista","v1.3","TRUS","10.3"
 	local Kalista = {}
 	Kalista.__index = Kalista
 	require "DamageLib"
@@ -1667,9 +1664,9 @@ if myHero.charName == "Kalista" then
 	local barXOffset = 24
 	local barYOffset = -8
 	
-	if FileExist(COMMON_PATH .. "TPred.lua") then
-		require 'TPred'
-		PrintChat("TPred library loaded")
+	if FileExist(COMMON_PATH .. "PremiumPrediction.lua") then
+		require 'PremiumPrediction'
+		PrintChat("PremiumPrediction library loaded")
 	end
 	JungleHpBarOffset = {
 		["SRU_Dragon_Water"] = {Width = 140, Height = 4, XOffset = -9, YOffset = -60},
@@ -1823,11 +1820,16 @@ if myHero.charName == "Kalista" then
 		self.Menu.SmiteDamage:MenuElement({id = "MarkKrugs", name = "Krugs", value = true, leftIcon = "http://puu.sh/rPw6a/3096646ec4.png"})
 		self.Menu.SmiteDamage:MenuElement({id = "MarkCrab", name = "Crab", value = true, leftIcon = "http://puu.sh/rPwaw/10f0766f4d.png"})
 		
+		
+		if (_G.PremiumPrediction:Loaded()) then
+			
+			self.Menu:MenuElement({id = "PremPredminchance", name = "PremPr Minimal hitchance", value = 1, min = 1, max = 100, step = 1, identifier = ""})
+		end
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 		
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
-		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. "" .. (_G.PremiumPrediction:Loaded() and " PremiumPr" or "")})
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 	end
 	
@@ -2242,10 +2244,11 @@ if myHero.charName == "Kalista" then
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
 		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and ((combo and self.Menu.Combo.comboUseQ:Value()) or (combo == false and self.Menu.Harass.harassUseQ:Value())) then
 			local castPos
-			if (TPred) then
-				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,true, "line")
-				if (HitChance >= 1) then
-					self:CastSpell(HK_Q, pos)
+			if (_G.PremiumPrediction:Loaded()) then
+				local spellData = {speed = Q.Speed, range = Q.Range, delay = Q.Delay, radius = Q.Width, collision = {"minion"}, type = "linear"}
+				local pred = _G.PremiumPrediction:GetPrediction(myHero, target, spellData)
+				if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
+					self:CastSpell(HK_Q, pred.CastPos)
 				end
 			elseif target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0 then
 				castPos = target:GetPrediction(Q.Speed,Q.Delay)
@@ -2325,7 +2328,7 @@ end
 
 
 if myHero.charName == "Sivir" then 
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Sivir","v1.0","TRUS","10.3"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Sivir","v1.1","TRUS","10.3"
 	local Sivir = {}
 	Sivir.__index = Sivir
 	
@@ -2335,10 +2338,11 @@ if myHero.charName == "Sivir" then
 		local orbwalkername = ""
 		if _G.SDK then
 			orbwalkername = "IC'S orbwalker"	
+			
 			_G.SDK.Orbwalker:OnPostAttack(function() 
 				local combomodeactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_COMBO]
 				local harassactive = _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_HARASS]
-				if (combomodeactive or harassactive) and self:CanCast(_W) and self.Menu.UseW:Value()then
+				if (combomodeactive or harassactive) and self:CanCast(_W) and self.Menu.UseW:Value() then
 					Control.CastSpell(HK_W)
 				end
 			end)
@@ -2370,7 +2374,7 @@ if myHero.charName == "Sivir" then
 		
 		
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
-		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. "" .. (_G.PremiumPrediction:Loaded() and " PremiumPr" or "")})
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 	end
 	
@@ -2394,12 +2398,11 @@ end
 if myHero.charName == "Corki" then
 	local Corki = {}
 	Corki.__index = Corki
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.1","TRUS","10.3"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Corki","v1.2","TRUS","10.3"
 	
-	if FileExist(COMMON_PATH .. "TPred.lua") then
-		require 'TPred'
-	elseif FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
-		require 'Eternal Prediction'
+	if FileExist(COMMON_PATH .. "PremiumPrediction.lua") then
+		require 'PremiumPrediction'
+		PrintChat("PremiumPrediction library loaded")
 	end
 	
 	local EPrediction = {}
@@ -2485,14 +2488,15 @@ if myHero.charName == "Corki" then
 			self.Menu:MenuElement({id = "EternalUse", name = "Use eternal prediction", value = true})
 			self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
 		end
-		if (TPred) then
-			self.Menu:MenuElement({id = "Tminchance", name = "Minimal hitchance TPred", value = 1, min = 0, max = 5, step = 1, identifier = ""})
+		if (_G.PremiumPrediction:Loaded()) then
+			
+			self.Menu:MenuElement({id = "PremPredminchance", name = "PremPr Minimal hitchance", value = 1, min = 1, max = 100, step = 1, identifier = ""})
 		end
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 		
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
-		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. "" .. (TPred and " TPred" or "")})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. "" .. (_G.PremiumPrediction:Loaded() and " PremiumPr" or "")})
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 	end
 	
@@ -2588,9 +2592,10 @@ if myHero.charName == "Corki" then
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_MAGICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AP"))
 		if target and target.type == "AIHeroClient" and self:CanCast(_Q) and ((combo and self.Menu.Combo.comboUseQ:Value()) or (combo == false and self.Menu.Harass.harassUseQ:Value())) then
 			local castpos
-			if (TPred) then
-				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,false, "circular")
-				if (castpos and HitChance >= self.Menu.Tminchance:Value()) then
+			if (_G.PremiumPrediction:Loaded()) then
+				local spellData = {speed = Q.Speed, range = Q.Range, delay = Q.Delay, radius = Q.Width, collision = {}, type = "circular"}
+				local pred = _G.PremiumPrediction:GetPrediction(myHero, target, spellData)
+				if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
 					self:CastSpell(HK_Q, castpos)
 				end
 			elseif TYPE_GENERIC and self.Menu.EternalUse:Value() then
@@ -2626,32 +2631,26 @@ if myHero.charName == "Corki" then
 		and ((combo == false and currentultstacks > self.Menu.Harass.HarassMaxStacks:Value()) or (combo and currentultstacks > self.Menu.Combo.MaxStacks:Value()))
 		then
 			local ulttype = self:HasBig() and "R2" or "R"
-			if (TPred) then
+			if (_G.PremiumPrediction:Loaded()) then
 				if (ulttype == "R2") then
-					local castpos,HitChance, pos = TPred:GetBestCastPosition(target, R2.Delay, R2.Width, R2.Range,R2.Speed,myHero.pos,true, "line")
-					if (HitChance > 0) then
-						self:CastSpell(HK_R, castpos)
+					local spellData = {speed = R2.Speed, range = R2.Range, delay = R2.Delay, radius = R2.Width, collision = {}, type = "linear"}
+					local pred = _G.PremiumPrediction:GetPrediction(myHero, target, spellData)
+					if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
+						self:CastSpell(HK_R, pred.CastPos)
 					end
 				else
-					local castpos,HitChance, pos = TPred:GetBestCastPosition(target, R.Delay, R.Width, R.Range,R.Speed,myHero.pos,true, "line")
-					if (HitChance > 0) then
-						self:CastSpell(HK_R, castpos)
+					local spellData = {speed = R.Speed, range = R.Range, delay = R.Delay, radius = R.Width, collision = {}, type = "linear"}
+					local pred = _G.PremiumPrediction:GetPrediction(myHero, target, spellData)
+					if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
+						self:CastSpell(HK_R, pred.CastPos)
 					end
-				end
-			elseif TYPE_GENERIC and self.Menu.EternalUse:Value() then
-				castPos = EPrediction[ulttype]:GetPrediction(target, myHero.pos)
-				if castPos.hitChance >= self.Menu.minchance:Value() and EPrediction[ulttype]:mCollision() == 0 then
-					local newpos = myHero.pos:Extended(castPos.castPos,math.random(100,300))
-					self:CastSpell(HK_R, newpos)
 				end
 			elseif ulttype == "R2" and target:GetCollision(R2.Radius,R2.Speed,R2.Delay) == 0 then
 				castPos = target:GetPrediction(R2.Speed,R2.Delay)
-				local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-				self:CastSpell(HK_R, newpos)
+				self:CastSpell(HK_R, castPos)
 			elseif ulttype == "R" and target:GetCollision(R.Radius,R.Speed,R.Delay) == 0 then
 				castPos = target:GetPrediction(R.Speed,R.Delay)
-				local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-				self:CastSpell(HK_R, newpos)
+				self:CastSpell(HK_R, castPos)
 			end
 		end
 	end
@@ -2676,14 +2675,15 @@ if myHero.charName == "Corki" then
 end
 
 if myHero.charName == "Xayah" then
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Xayah","v1.1","TRUS","10.3"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Xayah","v1.2","TRUS","10.3"
 	
 	local Xayah = {}
 	Xayah.__index = Xayah
 	
 	require "DamageLib"
-	if FileExist(COMMON_PATH .. "TPred.lua") then
-		require 'TPred'
+	if FileExist(COMMON_PATH .. "PremiumPrediction.lua") then
+		require 'PremiumPrediction'
+		PrintChat("PremiumPrediction library loaded")
 	end
 	XayahPassiveTable = {}
 	
@@ -2749,14 +2749,15 @@ if myHero.charName == "Xayah" then
 		self.Menu.Harass:MenuElement({id = "harassMana", name = "Minimal mana percent:", value = 30, min = 0, max = 101, identifier = "%"})
 		
 		
-		if (TPred) then
-			self.Menu:MenuElement({id = "Tminchance", name = "Minimal hitchance TPred", value = 1, min = 0, max = 5, step = 1, identifier = ""})
+		if (_G.PremiumPrediction:Loaded()) then
+			
+			self.Menu:MenuElement({id = "PremPredminchance", name = "PremPr Minimal hitchance", value = 1, min = 1, max = 100, step = 1, identifier = ""})
 		end
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 		
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
-		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. "" .. (_G.PremiumPrediction:Loaded() and " PremiumPr" or "")})
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 	end
 	
@@ -2905,16 +2906,15 @@ if myHero.charName == "Xayah" then
 		if (not _G.SDK and not _G.GOS and not _G.EOW) then return end
 		local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(Q.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(Q.Range,"AD"))
 		if target and target.type == "AIHeroClient" then
-			if (TPred) then
-				local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,false)
-				if (castpos and HitChance >= self.Menu.Tminchance:Value()) then
-					local newpos = myHero.pos:Extended(castpos,math.random(100,300))
-					self:CastSpell(HK_Q, newpos)
+			if (_G.PremiumPrediction:Loaded()) then
+				local spellData = {speed = Q.Speed, range = Q.Range, delay = Q.Delay, radius = Q.Width, collision = {}, type = "linear"}
+				local pred = _G.PremiumPrediction:GetPrediction(myHero, target, spellData)
+				if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
+					self:CastSpell(HK_Q, pred.CastPos)
 				end
 			elseif (target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0) then
 				local castPos = target:GetPrediction(Q.Speed,Q.Delay)
-				local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-				self:CastSpell(HK_Q, newpos)
+				self:CastSpell(HK_Q, castPos)
 			end
 		end
 	end
@@ -2996,7 +2996,7 @@ end
 if myHero.charName == "Senna" then
 	local Senna = {}
 	Senna.__index = Senna
-	local Scriptname,Version,Author,LVersion = "TRUSt in my Senna","v1.0","TRUS","10.3"
+	local Scriptname,Version,Author,LVersion = "TRUSt in my Senna","v1.2","TRUS","10.3"
 	local passive = true
 	local lastbuff = 0
 	function Senna:__init()
@@ -3033,7 +3033,7 @@ if myHero.charName == "Senna" then
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 		
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
-		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. "" .. (_G.PremiumPrediction:Loaded() and " PremiumPr" or "")})
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 	end
 	
@@ -3140,7 +3140,14 @@ if myHero.charName == "Senna" then
 			
 			
 			local qdelay = 0.4 - myHero.levelData.lvl*0.01
-			local pos = qtarget:GetPrediction(math.huge,qdelay)
+			local pos
+			
+			if (_G.PremiumPrediction:Loaded()) then
+				pos = _G.PremiumPrediction:GetPositionAfterTime(qtarget, qdelay)
+			else 
+				pos = qtarget:GetPrediction(math.huge,qdelay)
+			end
+			
 			if not pos then return false end 
 			local minionlist = {}
 			for i = 1, Game.MinionCount() do
