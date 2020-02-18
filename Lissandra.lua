@@ -1,16 +1,16 @@
 if myHero.charName ~= "Lissandra" then return end
 require "2DGeometry"
 keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
-if FileExist(COMMON_PATH .. "Eternal Prediction.lua") then
-	require 'Eternal Prediction'
-	PrintChat("Eternal Prediction library loaded")
+if FileExist(COMMON_PATH .. "PremiumPrediction.lua") then
+	require 'PremiumPrediction'
+	PrintChat("PremiumPrediction library loaded")
 end
 require "DamageLib"
 local castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
 local barHeight = 8
 local barWidth = 103
-local barXOffset = 0
-local barYOffset = 0
+local barXOffset = 24
+local barYOffset = -8
 function SetMovement(bool)
 	if _G.EOWLoaded then
 		EOW:SetMovements(bool)
@@ -28,7 +28,7 @@ function SetMovement(bool)
 end
 
 class "Lissandra"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Lissandra","v1.0","TRUS","7.22"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Lissandra","v1.1","TRUS","10.3"
 local passive = true
 local lastbuff = 0
 
@@ -61,22 +61,13 @@ function Lissandra:__init()
 	end
 	PrintChat(Scriptname.." "..Version.." - Loaded...."..orbwalkername)
 end
-local EPrediction = {}
+
 --[[Spells]]
 function Lissandra:LoadSpells()
 	Q = {Range = 725, width = 75, Delay = 0.25, Speed = 2250}
 	W = {Range = 440, width = nil, Delay = 0.25, Radius = 60, Speed = math.huge, Collision = false, aoe = false, type = "linear"}
 	E = {Range = 1050, width = 110, Delay = 0.25, Speed = 850}
 	R = {Range = 550, width = 690, Delay = 0.25, Speed = 800}
-	
-	if TYPE_GENERIC then 
-		local WSpell = Prediction:SetSpell({range = W.Range, speed = W.Speed, delay = W.Delay, width = W.width}, TYPE_LINE, true)
-		EPrediction["W"] = WSpell
-		local QSpell = Prediction:SetSpell({range = Q.Range, speed = Q.Speed, delay = Q.Delay, width = Q.width}, TYPE_LINE, true)
-		EPrediction["Q"] = QSpell
-		local QSpell2 = Prediction:SetSpell({range = 825, speed = Q.Speed, delay = Q.Delay, width = Q.width}, TYPE_LINE, true)
-		EPrediction["Q2"] = QSpell2
-	end
 	
 end
 
@@ -104,15 +95,15 @@ function Lissandra:LoadMenu()
 	self.Menu.HarassMode:MenuElement({id = "UseW", name = "UseW", value = true})
 	self.Menu.HarassMode:MenuElement({id = "harassActive", name = "Harass key", key = string.byte("C")})
 	
-	
-	if TYPE_GENERIC then
-		self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 0.25, min = 0, max = 1, step = 0.05, identifier = ""})
+	if (_G.PremiumPrediction:Loaded()) then
+		
+		self.Menu:MenuElement({id = "PremPredminchance", name = "PremPr Minimal hitchance", value = 1, min = 1, max = 100, step = 1, identifier = ""})
 	end
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so", value = true})
 	self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5,tooltip = "increase this one if spells is going completely wrong direction", identifier = ""})
 	
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
-	self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. ""})
+	self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. "" .. (_G.PremiumPrediction:Loaded() and " PremiumPr" or "")})
 	self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 end
 
@@ -167,7 +158,7 @@ function Lissandra:Draw()
 					local percentHealthAfterDamage = math.max(0, hero.health - damage) / hero.maxHealth
 					local xPosEnd = barPos.x + barXOffset + barWidth * hero.health/hero.maxHealth
 					local xPosStart = barPos.x + barXOffset + percentHealthAfterDamage * 100
-					Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 10, Draw.Color(0xFF00FF00))
+					Draw.Line(xPosStart, barPos.y + barYOffset, xPosEnd, barPos.y + barYOffset, 12, Draw.Color(0xFF00FF00))
 				end
 			end
 		end	
@@ -241,15 +232,15 @@ function Lissandra:Combo()
 	if self:CanCast(_Q) then 
 		local QTarget = CurrentTarget(725)
 		if self.Menu.ComboMode.UseQ:Value() and QTarget then
-			if TYPE_GENERIC then
-				local temppredclose = EPrediction["Q"]:GetPrediction(QTarget, myHero.pos)
-				if temppredclose and temppredclose.hitChance > self.Menu.minchance:Value() then
-					self:CastSpell(HK_Q,temppredclose.castPos)
+			if (_G.PremiumPrediction:Loaded()) then
+				local spellData = {speed = Q.Speed, range = Q.Range, delay = Q.Delay, radius = Q.width, collision = {}, type = "linear"}
+				local pred = _G.PremiumPrediction:GetPrediction(myHero, QTarget, spellData)
+				if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
+					self:CastSpell(HK_Q,pred.CastPos)
 				end
 			else
-				castPos = target:GetPrediction(Q.Speed,Q.Delay)
-				local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-				self:CastSpell(HK_Q, newpos)
+				castPos = QTarget:GetPrediction(Q.Speed,Q.Delay)
+				self:CastSpell(HK_Q, castPos)
 			end
 		end
 	end
@@ -257,9 +248,9 @@ function Lissandra:Combo()
 	if self:CanCast(_W) then 
 		local WTarget = CurrentTarget(W.Range)
 		if self.Menu.ComboMode.UseW:Value() and WTarget then
-			if TYPE_GENERIC then
-				local temppred = EPrediction["W"]:GetPrediction(WTarget, myHero.pos)
-				if temppred and temppred.hitChance > self.Menu.minchance:Value() then
+			if (_G.PremiumPrediction:Loaded()) then
+				local pos = _G.PremiumPrediction:GetPositionAfterTime(WTarget, W.Delay)
+				if pos and myHero.pos:DistanceTo(pos) < W.Range then
 					Control.CastSpell(HK_W)
 				end
 			else
@@ -301,15 +292,15 @@ function Lissandra:Harass()
 		end
 		local QTarget = CurrentTarget(725)
 		if self.Menu.HarassMode.UseQ:Value() and QTarget then
-			if TYPE_GENERIC then
-				local temppredclose = EPrediction["Q"]:GetPrediction(QTarget, myHero.pos)
-				if temppredclose and temppredclose.hitChance > self.Menu.minchance:Value() then
-					self:CastSpell(HK_Q,temppredclose.castPos)
+			if (_G.PremiumPrediction:Loaded()) then
+				local spellData = {speed = Q.Speed, range = Q.Range, delay = Q.Delay, radius = Q.width, collision = {}, type = "linear"}
+				local pred = _G.PremiumPrediction:GetPrediction(myHero, QTarget, spellData)
+				if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
+					self:CastSpell(HK_Q,pred.CastPos)
 				end
 			else
 				castPos = target:GetPrediction(Q.Speed,Q.Delay)
-				local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-				self:CastSpell(HK_Q, newpos)
+				self:CastSpell(HK_Q, castPos)
 			end
 		end
 	end
@@ -317,9 +308,9 @@ function Lissandra:Harass()
 	if self:CanCast(_W) then 
 		local WTarget = CurrentTarget(W.Range)
 		if self.Menu.HarassMode.UseW:Value() and WTarget then
-			if TYPE_GENERIC then
-				local temppred = EPrediction["W"]:GetPrediction(WTarget, myHero.pos)
-				if temppred and temppred.hitChance > self.Menu.minchance:Value() then
+			if (_G.PremiumPrediction:Loaded()) then
+				local pos = _G.PremiumPrediction:GetPositionAfterTime(WTarget, W.Delay)
+				if pos and myHero.pos:DistanceTo(pos) < W.Range then
 					Control.CastSpell(HK_W)
 				end
 			else
@@ -343,16 +334,11 @@ function Lissandra:FarQTarget()
 			return qtarget
 		end
 		
-		if TYPE_GENERIC then
-			PrintChat("Q pred part")
-			local temppredclose = EPrediction["Q"]:GetPrediction(qtarget, myHero.pos)
-			local temppredfar = EPrediction["Q2"]:GetPrediction(qtarget, myHero.pos)
-			if temppredclose and temppredclose.hitChance > self.Menu.minchance:Value() then
-				self:CastSpell(HK_Q,temppredclose.castPos)
-			end
-			
-			if temppredfar and temppredfar.castPos and EPrediction["Q2"]:mCollision() > 0 and temppredfar.hitChance > self.Menu.minchance:Value() then
-				self:CastSpell(HK_Q,temppredfar.castPos)
+		if (_G.PremiumPrediction:Loaded()) then
+			local spellData = {speed = Q.Speed, range = 825, delay = Q.Delay, radius = Q.width, collision = {"minion"}, type = "linear"}
+			local pred = _G.PremiumPrediction:GetPrediction(myHero, qtarget, spellData)
+			if pred.CastPos and pred.HitChance == -1 then
+				self:CastSpell(HK_Q,pred.CastPos)
 			end
 		else
 			local pos = qtarget:GetPrediction(Q.Speed,Q.Delay)
