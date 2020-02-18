@@ -71,13 +71,13 @@ function UseTiamat()
 end
 
 class "Kled"
-local Scriptname,Version,Author,LVersion = "TRUSt in my Kled","v1.0","TRUS","7.22"
+local Scriptname,Version,Author,LVersion = "TRUSt in my Kled","v1.1","TRUS","10.3"
 require "2DGeometry"
 require "MapPositionGOS"	
 require "DamageLib"
-if FileExist(COMMON_PATH .. "TPred.lua") then
-	require 'TPred'
-	PrintChat("TPred library loaded")
+if FileExist(COMMON_PATH .. "PremiumPrediction.lua") then
+	require 'PremiumPrediction'
+	PrintChat("PremiumPrediction library loaded")
 end
 
 function Kled:__init()
@@ -101,8 +101,8 @@ end
 local lastpick = 0
 --[[Spells]]
 function Kled:LoadSpells()
-	Q = {Range = 700, Width = 40, Delay = 0.2, Speed = 3000, Collision = false, aoe = false, type = "line"}
-	SkarlQ = {Range = 800, Width = 45, Delay = 0.25, Speed = 1600, Collision = false, aoe = false, type = "line"}
+	Q = {Range = 700, Width = 40, Delay = 0.2, Speed = 3000, Collision = false, aoe = false, type = "linear"}
+	SkarlQ = {Range = 800, Width = 45, Delay = 0.25, Speed = 1600, Collision = false, aoe = false, type = "linear"}
 	E = {Range = 550, Delay = 0.1, Speed = 500, Width = 10}
 end
 
@@ -125,8 +125,8 @@ function Kled:LoadMenu()
 	self.Menu.HarassMode:MenuElement({id = "UseQMounted", name = "UseQ mounted", value = true})
 	self.Menu.HarassMode:MenuElement({id = "UseE", name = "UseE", value = false})
 	
-	if (TPred) then
-		self.Menu:MenuElement({id = "minchance", name = "Minimal hitchance", value = 1, min = 0, max = 5, step = 1, identifier = ""})
+	if (_G.PremiumPrediction:Loaded()) then
+		self.Menu:MenuElement({id = "PremPredminchance", name = "PremPr Minimal hitchance", value = 1, min = 1, max = 100, step = 1, identifier = ""})
 	end
 	
 	self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
@@ -143,7 +143,7 @@ function Kled:Tick()
 	local farmactive = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LASTHIT]) or (_G.EOW and _G.EOW:Mode() == 3) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Lasthit") 
 	local laneclear = (_G.SDK and _G.SDK.Orbwalker.Modes[_G.SDK.ORBWALKER_MODE_LANECLEAR]) or (_G.EOW and _G.EOW:Mode() == 4) or (not _G.SDK and _G.GOS and _G.GOS:GetMode() == "Clear") 
 	local mounted = self:IsKled()
-
+	
 	if combomodeactive then
 		
 		if self.Menu.Items.UseBotrk:Value() then
@@ -240,16 +240,14 @@ function Kled:UseE(target)
 				local EndLine = LineSegment(Point(myHero.pos), Point(castpos))
 				local inwall = MapPosition:intersectsWall(EndLine)
 				if not inwall and (HitChance >= self.Menu.minchance:Value()) then
-					local newpos = myHero.pos:Extended(castpos,math.random(100,300))
-					self:CastSpell(HK_E, newpos)
+					self:CastSpell(HK_E, castpos)
 				end
 			else
 				local castPos = target:GetPrediction(E.Speed,E.Delay)
 				local EndLine = LineSegment(Point(myHero.pos), Point(castPos))
 				local inwall = MapPosition:intersectsWall(EndLine)
 				if not inwall then
-					local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-					self:CastSpell(HK_E, newpos)
+					self:CastSpell(HK_E, castPos)
 				end
 			end
 			
@@ -270,16 +268,15 @@ function Kled:UseQDM(target)
 		local tempdmg = ({30, 45, 60, 75, 90})[Qlvl] + 0.8* myHero.bonusDamage
 		local runningaway = (myHero.pos:DistanceTo(target.posTo) - myHero.pos:DistanceTo(target.pos)) > 10
 		if runningaway and CalcPhysicalDamage(myHero,target,tempdmg) < target.health and myHero.mana < 75 then return end 
-		if (TPred) then
-			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, Q.Delay, Q.Width, Q.Range,Q.Speed,myHero.pos,true, "line")
-			if (HitChance >= self.Menu.minchance:Value()) then
-				local newpos = myHero.pos:Extended(castpos,math.random(100,300))
-				self:CastSpell(HK_Q, newpos)
+		if (_G.PremiumPrediction:Loaded()) then
+			local spellData = {speed = Q.Speed or math.huge, range = Q.Range, delay = Q.Delay/1000, radius = Q.Width, collision = {"minion"}, type = Q.type}
+			local pred = _G.PremiumPrediction:GetPrediction(myHero, target, spellData)
+			if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
+				self:CastSpell(HK_Q, pred.CastPos)
 			end
 		else
 			castPos = target:GetPrediction(Q.Speed,Q.Delay)
-			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-			self:CastSpell(HK_Q, newpos)
+			self:CastSpell(HK_Q, castPos)
 		end
 	end
 end
@@ -289,16 +286,15 @@ function Kled:UseQM(target)
 	local target = target or (_G.SDK and _G.SDK.TargetSelector:GetTarget(SkarlQ.Range, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(SkarlQ.Range,"AD"))
 	if target and target.type == "AIHeroClient" then
 		local castPos
-		if (TPred) then
-			local castpos,HitChance, pos = TPred:GetBestCastPosition(target, SkarlQ.Delay, SkarlQ.Width, SkarlQ.Range,SkarlQ.Speed,myHero.pos,true, "line")
-			if (HitChance >= self.Menu.minchance:Value()) then
-				local newpos = myHero.pos:Extended(castpos,math.random(100,300))
-				self:CastSpell(HK_Q, newpos)
+		if (_G.PremiumPrediction:Loaded()) then
+			local spellData = {speed = SkarlQ.Speed or math.huge, range = SkarlQ.Range, delay = SkarlQ.Delay/1000, radius = SkarlQ.Width, collision = {}, type = SkarlQ.type}
+			local pred = _G.PremiumPrediction:GetPrediction(myHero, target, spellData)
+			if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
+				self:CastSpell(HK_Q, pred.CastPos)
 			end
 		else
 			castPos = target:GetPrediction(SkarlQ.Speed,SkarlQ.Delay)
-			local newpos = myHero.pos:Extended(castPos,math.random(100,300))
-			self:CastSpell(HK_Q, newpos)
+			self:CastSpell(HK_Q, castPos)
 		end
 	end
 end
