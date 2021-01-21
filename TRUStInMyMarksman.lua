@@ -1,6 +1,5 @@
 if myHero.charName == "Ashe" or myHero.charName == "Ezreal" or myHero.charName == "Lucian" or myHero.charName == "Caitlyn" or myHero.charName == "Twitch" or myHero.charName == "KogMaw" or myHero.charName == "Kalista" or myHero.charName == "Corki" or myHero.charName == "Xayah" or myHero.charName == "Senna" then
 	local TRUStinMyMarksmanloaded = false
-	require "2DGeometry"
 	castSpell = {state = 0, tick = GetTickCount(), casting = GetTickCount() - 1000, mouse = mousePos}
 	function SetMovement(bool)
 		if _G.EOWLoaded then
@@ -45,20 +44,13 @@ if myHero.charName == "Ashe" or myHero.charName == "Ezreal" or myHero.charName =
 	function GetInventorySlotItem(itemID)
 		assert(type(itemID) == "number", "GetInventorySlotItem: wrong argument types (<number> expected)")
 		for _, j in pairs({ ITEM_1, ITEM_2, ITEM_3, ITEM_4, ITEM_5, ITEM_6}) do
-			if myHero:GetItemData(j).itemID == itemID and myHero:GetSpellData(j).currentCd == 0 then return j end
+			if myHero:GetItemData(j) and myHero:GetItemData(j).itemID == itemID and myHero:GetSpellData(j).currentCd == 0 then return j end
 		end
 		return nil
 	end
 	
 	function UseBotrk()
-		local target = (_G.SDK and _G.SDK.TargetSelector:GetTarget(300, _G.SDK.DAMAGE_TYPE_PHYSICAL)) or (_G.GOS and _G.GOS:GetTarget(300,"AD"))
-		if target then 
-			local botrkitem = GetInventorySlotItem(3153) or GetInventorySlotItem(3144)
-			if botrkitem then
-				local keybindings = { [ITEM_1] = HK_ITEM_1, [ITEM_2] = HK_ITEM_2, [ITEM_3] = HK_ITEM_3, [ITEM_4] = HK_ITEM_4, [ITEM_5] = HK_ITEM_5, [ITEM_6] = HK_ITEM_6}
-				Control.CastSpell(keybindings[botrkitem],target.pos)
-			end
-		end
+		
 	end
 end
 
@@ -68,10 +60,15 @@ if myHero.charName == "Ashe" then
 	local Scriptname,Version,Author,LVersion = "TRUSt in my Ashe","v1.7","TRUS","10.3"
 	function Ashe:GetBuffs(unit)
 		self.T = {}
-		for i = 0, unit.buffCount do
-			local Buff = unit:GetBuff(i)
-			if Buff.count > 0 then
-				table.insert(self.T, Buff)
+		
+		local count = unit.buffCount
+		if count and count >= 0 and count < 10000 then
+			
+			for i = 0, count do
+				local Buff = unit:GetBuff(i)
+				if Buff and Buff.count > 0 then
+					table.insert(self.T, Buff)
+				end
 			end
 		end
 		return self.T
@@ -237,7 +234,6 @@ if myHero.charName == "Ashe" then
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
 		
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = ""})
-		self.Menu:MenuElement({id = "blank", type = SPACE , name = "Script Ver: "..Version.. " - LoL Ver: "..LVersion.. "" .. (_G.PremiumPrediction:Loaded() and " PremiumPr" or "")})
 		self.Menu:MenuElement({id = "blank", type = SPACE , name = "by "..Author.. ""})
 	end
 	
@@ -354,6 +350,10 @@ if myHero.charName == "Lucian" then
 	local Scriptname,Version,Author,LVersion = "TRUSt in my Lucian","v1.6","TRUS","10.3"
 	local passive = true
 	local lastbuff = 0
+	if FileExist(COMMON_PATH .. "PremiumPrediction.lua") then
+		require 'PremiumPrediction'
+		PrintChat("PremiumPrediction library loaded")
+	end
 	function Lucian:__init()
 		if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 		self:LoadSpells()
@@ -433,10 +433,13 @@ if myHero.charName == "Lucian" then
 	
 	function Lucian:GetBuffs(unit)
 		self.T = {}
-		for i = 0, unit.buffCount do
-			local Buff = unit:GetBuff(i)
-			if Buff.count > 0 then
-				table.insert(self.T, Buff)
+		local count = unit.buffCount
+		if count and count >= 0 and count < 10000 then
+			for i = 0, count do
+				local Buff = unit:GetBuff(i)
+				if Buff and Buff.count > 0 then
+					table.insert(self.T, Buff)
+				end
 			end
 		end
 		return self.T
@@ -798,12 +801,15 @@ if myHero.charName == "Caitlyn" then
 		if not self.Menu.AttackMoveHeadshots:Value() then return end
 		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(RRange)) or (_G.GOS and _G.GOS:GetEnemyHeroes())
 		for j, enemy in pairs(heroeslist) do
-			for i = 0, enemy.buffCount do
-				local buff = enemy:GetBuff(i);
-				if (not myHero.isChanneling) and (buff.count > 0 and buff.duration > 0 and buff.name == "caitlynyordletrapinternal" and (lasttrappedtime[enemy.handle] == nil or lasttrappedtime[enemy.handle] < Game.Timer())) then
-					lasttrappedtime[enemy] = buff.expireTime
-					if self:IsValidTarget(enemy,1300) then
-						self:AttackMoveShit(enemy)
+			local count = enemy.buffCount
+			if count and count >= 0 and count < 10000 then
+				for i = 0, count do
+					local buff = enemy:GetBuff(i);
+					if buff and (not myHero.isChanneling) and (buff.count > 0 and buff.duration > 0 and buff.name == "caitlynyordletrapinternal" and (lasttrappedtime[enemy.handle] == nil or lasttrappedtime[enemy.handle] < Game.Timer())) then
+						lasttrappedtime[enemy] = buff.expireTime
+						if self:IsValidTarget(enemy,1300) then
+							self:AttackMoveShit(enemy)
+						end
 					end
 				end
 			end
@@ -829,10 +835,13 @@ if myHero.charName == "Caitlyn" then
 	end
 	
 	function Caitlyn:Stunned(enemy)
-		for i = 0, enemy.buffCount do
-			local buff = enemy:GetBuff(i);
-			if (buff.type == 5 or buff.type == 11 or buff.type == 24) and buff.duration > 0.9 and buff.name ~= "caitlynyordletrapdebuff" then
-				return true
+		local count = enemy.buffCount
+		if count and count >= 0 and count < 10000 then
+			for i = 0, count do
+				local buff = enemy:GetBuff(i);
+				if buff and (buff.type == 5 or buff.type == 11 or buff.type == 24 or buff.type == 29) and buff.duration > 0.9 and buff.name ~= "caitlynyordletrapdebuff" then
+					return true
+				end
 			end
 		end
 		return false
@@ -1287,10 +1296,15 @@ if myHero.charName == "Twitch" then
 	
 	function Twitch:GetBuffs(unit)
 		self.T = {}
-		for i = 0, unit.buffCount do
-			local Buff = unit:GetBuff(i)
-			if Buff.count > 0 then
-				table.insert(self.T, Buff)
+		
+		local count = unit.buffCount
+		if count and count >= 0 and count < 10000 then
+			
+			for i = 0, count do
+				local Buff = unit:GetBuff(i)
+				if Buff and Buff.count > 0 then
+					table.insert(self.T, Buff)
+				end
 			end
 		end
 		return self.T
@@ -1307,8 +1321,11 @@ if myHero.charName == "Twitch" then
 				currentpercent = currentpercent*DamageModifiersTable[Buff.name:lower()]
 			end
 		end
+		
+		
+		
 		for K, Buff in pairs(self:GetBuffs(target)) do
-			if Buff.count > 0 and Buff.name and string.find(Buff.name, "PressThreeAttack") and (Buff.expireTime - Buff.startTime == 6) then
+			if Buff and Buff.count > 0 and Buff.name and string.find(Buff.name, "PressThreeAttack") and (Buff.expireTime - Buff.startTime == 6) then
 				currentpercent = currentpercent * 1.12
 			end
 		end
@@ -1406,7 +1423,7 @@ if myHero.charName == "KogMaw" then
 		self:LoadSpells()
 		self:LoadMenu()
 		Callback.Add("Tick", function() self:Tick() end)
-		
+		Callback.Add("Draw", function() self:Draw() end)
 		local orbwalkername = ""
 		if _G.SDK then
 			orbwalkername = "IC'S orbwalker"
@@ -1470,8 +1487,18 @@ if myHero.charName == "KogMaw" then
 		
 		if (_G.PremiumPrediction:Loaded()) then
 			
-			self.Menu:MenuElement({id = "PremPredminchance", name = "PremPr Minimal hitchance", value = 1, min = 1, max = 100, step = 1, identifier = ""})
+			self.Menu:MenuElement({id = "QPremPredminchance", name = "Q Minimal hitchance", value = 1, min = 1, max = 100, step = 1, identifier = ""})
+			self.Menu:MenuElement({id = "EPremPredminchance", name = "E Minimal hitchance", value = 1, min = 1, max = 100, step = 1, identifier = ""})
+			self.Menu:MenuElement({id = "RPremPredminchance", name = "R Minimal hitchance", value = 1, min = 1, max = 100, step = 1, identifier = ""})
 		end
+		
+		
+		--[[Draw]]
+		self.Menu:MenuElement({type = MENU, id = "Draw", name = "Draw Settings"})
+		self.Menu.Draw:MenuElement({id = "DrawQ", name = "Draw Q range", value = true})
+		self.Menu.Draw:MenuElement({id = "DrawE", name = "Draw E range", value = true})
+		self.Menu.Draw:MenuElement({id = "DrawR", name = "Draw R range", value = true})
+		self.Menu.Draw:MenuElement({id = "DrawColor", name = "Color for drawing", color = Draw.Color(0xBF3F3FFF)})
 		
 		self.Menu:MenuElement({id = "CustomSpellCast", name = "Use custom spellcast", tooltip = "Can fix some casting problems with wrong directions and so (thx Noddy for this one)", value = true})
 		self.Menu:MenuElement({id = "delay", name = "Custom spellcast delay", value = 50, min = 0, max = 200, step = 5, identifier = ""})
@@ -1551,10 +1578,15 @@ if myHero.charName == "KogMaw" then
 	
 	function KogMaw:GetBuffs()
 		self.T = {}
-		for i = 0, myHero.buffCount do
-			local Buff = myHero:GetBuff(i)
-			if Buff.count > 0 then
-				table.insert(self.T, Buff)
+		
+		local count = myHero.buffCount
+		if count and count >= 0 and count < 10000 then
+			
+			for i = 0, count do
+				local Buff = myHero:GetBuff(i)
+				if Buff and Buff.count > 0 then
+					table.insert(self.T, Buff)
+				end
 			end
 		end
 		return self.T
@@ -1579,7 +1611,7 @@ if myHero.charName == "KogMaw" then
 			if (_G.PremiumPrediction:Loaded()) then
 				local spellData = {speed = Q.Speed, range = Q.Range, delay = Q.Delay, radius = Q.Width, collision = {"minion"}, type = "linear"}
 				local pred = _G.PremiumPrediction:GetPrediction(myHero, target, spellData)
-				if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
+				if pred.CastPos and pred.HitChance >= self.Menu.QPremPredminchance:Value()/100 then
 					self:CastSpell(HK_Q, pred.CastPos)
 				end
 			elseif (target:GetCollision(Q.Width,Q.Speed,Q.Delay) == 0) then
@@ -1599,7 +1631,7 @@ if myHero.charName == "KogMaw" then
 			if (_G.PremiumPrediction:Loaded()) then
 				local spellData = {speed = E.Speed, range = E.Range, delay = E.Delay, radius = E.Width, collision = {}, type = "linear"}
 				local pred = _G.PremiumPrediction:GetPrediction(myHero, target, spellData)
-				if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
+				if pred.CastPos and pred.HitChance >= self.Menu.EPremPredminchance:Value()/100 then
 					self:CastSpell(HK_E, pred.CastPos)
 				end
 			else
@@ -1620,9 +1652,9 @@ if myHero.charName == "KogMaw" then
 		and ((combo == false and currentultstacks < self.Menu.Harass.HarassMaxStacks:Value()) or (currentultstacks < self.Menu.Combo.MaxStacks:Value()))
 		then
 			if (_G.PremiumPrediction:Loaded()) then
-				local spellData = {speed = R.Speed, range = R.Range, delay = R.Delay, radius = R.Width, collision = {}, type = "circular"}
+				local spellData = {speed = R.Speed, range = RRange, delay = R.Delay, radius = R.Width, collision = {}, type = "circular"}
 				local pred = _G.PremiumPrediction:GetPrediction(myHero, target, spellData)
-				if pred.CastPos and pred.CastPos:To2D().onScreen and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
+				if pred.CastPos and pred.HitChance >= self.Menu.RPremPredminchance:Value()/100 then
 					self:CastSpell(HK_R, pred.CastPos)
 				end
 			else
@@ -1648,6 +1680,18 @@ if myHero.charName == "KogMaw" then
 	end
 	
 	
+	function KogMaw:Draw()
+		if self.Menu.Draw.DrawQ:Value() then
+			Draw.Circle(myHero.pos, Q.Range, 6, self.Menu.Draw.DrawColor:Value())
+		end
+		if self.Menu.Draw.DrawE:Value() then
+			Draw.Circle(myHero.pos, E.Range, 6, self.Menu.Draw.DrawColor:Value())
+		end
+		if self.Menu.Draw.DrawR:Value() then
+			local RRange = self:GetRRange()
+			Draw.Circle(myHero.pos, RRange, 6, self.Menu.Draw.DrawColor:Value())
+		end
+	end
 	function OnLoad()
 		KogMaw:__init()
 	end
@@ -2037,7 +2081,7 @@ if myHero.charName == "Kalista" then
 	end
 	function Kalista:HasBuff(unit, buffname)
 		for K, Buff in pairs(self:GetBuffs(unit)) do
-			if Buff.name:lower() == buffname:lower() then
+			if Buff and Buff.name:lower() == buffname:lower() then
 				return Buff.expireTime
 			end
 		end
@@ -2061,7 +2105,8 @@ if myHero.charName == "Kalista" then
 			if self:GetSpears(minion) > 0 then 
 				local EDamage = getdmg("E",minion,myHero)
 				local minionName = minion.charName
-				EDamage = EDamage*(((minion.charName == "SRU_RiftHerald" or minion.charName == "SRU_Baron" or string.find(minion.charName, "ragon")) and 0.45) or (self:HasBuff(myHero,"barontarget") and 0.5) or 1)
+				EDamage = EDamage*(((minion.charName == "SRU_RiftHerald" or minion.charName == "SRU_Baron" or string.find(minion.charName, "ragon")) and 0.45) or 1)
+				EDamage = EDamage*self:DamageModifiers(minion)
 				if EDamage > minion.health then
 					local minionName = minion.charName
 					self:DrawSmiteableMinion(SmiteTable[minionName], minion)
@@ -2073,10 +2118,15 @@ if myHero.charName == "Kalista" then
 	end
 	function Kalista:GetBuffs(unit)
 		self.T = {}
-		for i = 0, unit.buffCount do
-			local Buff = unit:GetBuff(i)
-			if Buff.count > 0 then
-				table.insert(self.T, Buff)
+		
+		local count = unit.buffCount
+		if count and count >= 0 and count < 10000 then
+			
+			for i = 0, count do
+				local Buff = unit:GetBuff(i)
+				if Buff and Buff.count > 0 then
+					table.insert(self.T, Buff)
+				end
 			end
 		end
 		return self.T
@@ -2084,7 +2134,7 @@ if myHero.charName == "Kalista" then
 	
 	function Kalista:GetSpears(unit, buffname)
 		for K, Buff in pairs(self:GetBuffs(unit)) do
-			if Buff.name:lower() == "kalistaexpungemarker" then
+			if Buff and Buff.name:lower() == "kalistaexpungemarker" then
 				return Buff.count
 			end
 		end
@@ -2163,7 +2213,8 @@ if myHero.charName == "Kalista" then
 	local DamageModifiersTable = {
 		summonerexhaustdebuff = 0.6,
 		itemphantomdancerdebuff = 0.88,
-		itemsmiteburn = 0.8
+		itemsmiteburn = 0.8,
+		barontarget = 0.5
 	}
 	
 	local DamageModifiersTableEnemies = {
@@ -2182,50 +2233,105 @@ if myHero.charName == "Kalista" then
 			end
 		end
 		for K, Buff in pairs(self:GetBuffs(target)) do
+		if (Buff) then
 			if Buff.name and DamageModifiersTableEnemies[Buff.name:lower()] then
 				return 0 
 			end
 			if Buff.count > 0 and Buff.name and string.find(Buff.name, "PressTheAttack") and (Buff.expireTime - Buff.startTime == 6) then
 				currentpercent = currentpercent * 1.12
 			end
+			end
 		end
-		local PrecisionCombatRune = self.Menu.Runes.PrecisionCombatR:Value()
-		if PrecisionCombatRune == 2 then
-			if target.health/target.maxHealth < 0.4 then
-				currentpercent = currentpercent * 1.07
+		if (target.type == "AIHeroClient") then
+			
+			local PrecisionCombatRune = self.Menu.Runes.PrecisionCombatR:Value()
+			if PrecisionCombatRune == 2 then
+				if target.health/target.maxHealth < 0.4 then
+					currentpercent = currentpercent * 1.07
+				end
+			elseif PrecisionCombatRune == 3 then
+				local healthdifference = target.maxHealth - myHero.maxHealth
+				if healthdifference > 2000 then
+					currentpercent = currentpercent * 1.10
+				elseif healthdifference > 1691 then
+					currentpercent = currentpercent * 1.09
+				elseif healthdifference > 1383 then
+					currentpercent = currentpercent * 1.08
+				elseif healthdifference > 1075 then
+					currentpercent = currentpercent * 1.07
+				elseif healthdifference > 766 then
+					currentpercent = currentpercent * 1.06
+				elseif healthdifference > 458 then
+					currentpercent = currentpercent * 1.05
+				elseif healthdifference > 150 then
+					currentpercent = currentpercent * 1.04
+				end
+			elseif PrecisionCombatRune == 4 then
+				local missinghealth = 1 - myHero.health/myHero.maxHealth
+				local calculatebonus = missinghealth < 0.4 and 1 or (1.05 + (math.floor(missinghealth*10 - 4)*0.02))
+				currentpercent = currentpercent * (calculatebonus < 1.12 and calculatebonus or 1.11)
 			end
-		elseif PrecisionCombatRune == 3 then
-			local healthdifference = target.maxHealth - myHero.maxHealth
-			if healthdifference > 2000 then
-				currentpercent = currentpercent * 1.10
-			elseif healthdifference > 1691 then
-				currentpercent = currentpercent * 1.09
-			elseif healthdifference > 1383 then
-				currentpercent = currentpercent * 1.08
-			elseif healthdifference > 1075 then
-				currentpercent = currentpercent * 1.07
-			elseif healthdifference > 766 then
-				currentpercent = currentpercent * 1.06
-			elseif healthdifference > 458 then
-				currentpercent = currentpercent * 1.05
-			elseif healthdifference > 150 then
-				currentpercent = currentpercent * 1.04
-			end
-		elseif PrecisionCombatRune == 4 then
-			local missinghealth = 1 - myHero.health/myHero.maxHealth
-			local calculatebonus = missinghealth < 0.4 and 1 or (1.05 + (math.floor(missinghealth*10 - 4)*0.02))
-			currentpercent = currentpercent * (calculatebonus < 1.12 and calculatebonus or 1.11)
 		end
 		return currentpercent
 	end
+	
+	function Kalista:CalcPhysicalDamage(source, target, amount)
+		local ArmorPenPercent = source.armorPenPercent
+		local ArmorPenFlat = (0.4 + target.levelData.lvl / 30) * source.armorPen
+		local BonusArmorPen = source.bonusArmorPenPercent
+		
+		if source.type == Obj_AI_Minion then
+			ArmorPenPercent = 1
+			ArmorPenFlat = 0
+			BonusArmorPen = 1
+		elseif source.type == Obj_AI_Turret then
+			ArmorPenFlat = 0
+			BonusArmorPen = 1
+			if source.charName:find("3") or source.charName:find("4") then
+				ArmorPenPercent = 0.25
+			else
+				ArmorPenPercent = 0.7
+			end
+		end
+		
+		if source.type == Obj_AI_Turret then
+			if target.type == Obj_AI_Minion then
+				amount = amount * 1.25
+				if string.ends(target.charName, "MinionSiege") then
+					amount = amount * 0.7
+				end
+				return amount
+			end
+		end
+		
+		local armor = target.armor
+		local bonusArmor = target.bonusArmor
+		local value = 100 / (100 + (armor * ArmorPenPercent) - (bonusArmor * (1 - BonusArmorPen)) - ArmorPenFlat)
+		
+		if armor < 0 then
+			value = 2 - 100 / (100 - armor)
+		elseif (armor * ArmorPenPercent) - (bonusArmor * (1 - BonusArmorPen)) - ArmorPenFlat < 0 then
+			value = 1
+		end
+		return PassivePercentMod(source, target, value) * amount
+	end
+	
+	
 	function Kalista:GetETarget()
 		self.KillableHeroes = {}
 		self.DamageHeroes = {}
 		local heroeslist = (_G.SDK and _G.SDK.ObjectManager:GetEnemyHeroes(1200)) or self:GetEnemyHeroes()
 		local level = myHero:GetSpellData(_E).level
 		for i, hero in pairs(heroeslist) do
-			if self:GetSpears(hero) > 0 and myHero.pos:DistanceTo(hero.pos)<E.Range then 
+			local spearsamount = self:GetSpears(hero)
+			if spearsamount > 0 and myHero.pos:DistanceTo(hero.pos)<E.Range then 
 				local EDamage = getdmg("E",hero,myHero)
+				if hero.charName == "Amumu" then
+					local basedmg = ({20, 30, 40, 50, 60})[level] + 0.6* (myHero.totalDamage)
+					local perspear = ({10, 14, 19, 25, 32})[level] + ({0.2, 0.225, 0.25, 0.275, 0.3})[level]* (myHero.totalDamage)
+					local tmpdamage = basedmg + perspear*spearsamount
+					EDamage = self:CalcPhysicalDamage(myHero, hero, tmpdamage)
+				end
 				local damagemods = self:DamageModifiers(hero)
 				EDamage = EDamage * damagemods
 				if hero.health and EDamage and EDamage > hero.health then
@@ -2565,10 +2671,15 @@ if myHero.charName == "Corki" then
 	
 	function Corki:GetBuffs()
 		self.T = {}
-		for i = 0, myHero.buffCount do
-			local Buff = myHero:GetBuff(i)
-			if Buff.count > 0 then
-				table.insert(self.T, Buff)
+		local unit = myHero
+		local count = unit.buffCount
+		if count and count >= 0 and count < 10000 then
+			
+			for i = 0, count do
+				local Buff = unit:GetBuff(i)
+				if Buff and Buff.count > 0 then
+					table.insert(self.T, Buff)
+				end
 			end
 		end
 		return self.T
@@ -2596,7 +2707,7 @@ if myHero.charName == "Corki" then
 				local spellData = {speed = Q.Speed, range = Q.Range, delay = Q.Delay, radius = Q.Width, collision = {}, type = "circular"}
 				local pred = _G.PremiumPrediction:GetPrediction(myHero, target, spellData)
 				if pred.CastPos and pred.HitChance >= self.Menu.PremPredminchance:Value()/100 then
-					self:CastSpell(HK_Q, castpos)
+					self:CastSpell(HK_Q, pred.CastPos)
 				end
 			elseif TYPE_GENERIC and self.Menu.EternalUse:Value() then
 				castPos = EPrediction["Q"]:GetPrediction(target, myHero.pos)
@@ -2786,16 +2897,19 @@ if myHero.charName == "Xayah" then
 	end
 	
 	function Xayah:UpdateFeathers()
-		for i = 1, Game.MissileCount() do
-			local missile = Game.Missile(i)
-			if missile.missileData and missile.missileData.owner == myHero.handle and not alreadycontains(missile) then
-				if missile.missileData.name == "XayahQMissile1" or missile.missileData.name == "XayahQMissile2" or missile.missileData.name == "XayahRMissile" then
-					table.insert(XayahPassiveTable, {placetime = Game.Timer() + 6, ID = missile.networkID, Position = Vector(missile.missileData.endPos), hit = false})
-				elseif missile.missileData.name == "XayahPassiveAttack" then
-					local newpos = myHero.pos:Extended(missile.missileData.endPos,1000)
-					table.insert(XayahPassiveTable, {placetime = Game.Timer() + 6, ID = missile.networkID, Position = Vector(newpos), hit = false})
-				elseif missile.missileData.name == "XayahEMissile" then
-					XayahPassiveTable = {}
+		local count = Game.MissileCount()
+		if count and count >= 0 and count < 10000 then
+			for i = 1, count do
+				local missile = Game.Missile(i)
+				if missile and missile.missileData and missile.missileData.owner == myHero.handle and not alreadycontains(missile) then
+					if missile.missileData.name == "XayahQMissile1" or missile.missileData.name == "XayahQMissile2" or missile.missileData.name == "XayahRMissile" then
+						table.insert(XayahPassiveTable, {placetime = Game.Timer() + 6, ID = missile.networkID, Position = Vector(missile.missileData.endPos), hit = false})
+					elseif missile.missileData.name == "XayahPassiveAttack" then
+						local newpos = myHero.pos:Extended(missile.missileData.endPos,1000)
+						table.insert(XayahPassiveTable, {placetime = Game.Timer() + 6, ID = missile.networkID, Position = Vector(newpos), hit = false})
+					elseif missile.missileData.name == "XayahEMissile" then
+						XayahPassiveTable = {}
+					end
 				end
 			end
 		end
@@ -2999,6 +3113,10 @@ if myHero.charName == "Senna" then
 	local Scriptname,Version,Author,LVersion = "TRUSt in my Senna","v1.2","TRUS","10.3"
 	local passive = true
 	local lastbuff = 0
+	if FileExist(COMMON_PATH .. "PremiumPrediction.lua") then
+		require 'PremiumPrediction'
+		PrintChat("PremiumPrediction library loaded")
+	end
 	function Senna:__init()
 		if not TRUStinMyMarksmanloaded then TRUStinMyMarksmanloaded = true else return end
 		self:LoadSpells()
@@ -3139,7 +3257,7 @@ if myHero.charName == "Senna" then
 			end
 			
 			
-			local qdelay = 0.4 - myHero.levelData.lvl*0.01
+			local qdelay = 0.4
 			local pos
 			
 			if (_G.PremiumPrediction:Loaded()) then
@@ -3173,7 +3291,7 @@ if myHero.charName == "Senna" then
 			TopZ = pos.z - (tz * Distance)
 			
 			Vr = V:Perpendicular():Normalized()
-			Radius = qtarget.boundingRadius or 65
+			Radius = 60
 			tx, ty, tz = Vr:Unpack()
 			
 			LeftX = pos.x + (tx * Radius)
